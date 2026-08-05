@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.">
+<title>Distribución por GitHub Releases · AI Vitals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#f6f2ea; --paper-2:#efe9dd; --card:#fffdf8;
+  --ink:#1b1812; --ink-soft:#4f483c; --ink-faint:#847a68;
+  --line:#d8d0bf; --line-strong:#b9ae97;
+  --accent:#0d5c46; --accent-soft:#e3ede7;
+  --critical:#a82e1f; --critical-bg:#f6e3df;
+  --medium:#9a6510; --medium-bg:#f5ead3;
+  --minor:#3d5a80; --minor-bg:#e2e9f1;
+  --display:'Fraunces',serif; --sans:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  min-width:320px; font-family:var(--sans); line-height:1.62; color:var(--ink);
+  background-color:var(--paper);
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgb(27 24 18 / .012) 3px,rgb(27 24 18 / .012) 4px),radial-gradient(circle at 85% -5%,rgb(13 92 70 / .08),transparent 42%);
+}
+button,input,select,textarea { font:inherit; }
+button { color:inherit; }
+a { color:inherit; }
+::selection { color:var(--paper); background:var(--accent); }
+:focus-visible { outline:3px solid var(--critical); outline-offset:3px; }
+.skip-link { position:fixed; top:12px; left:12px; z-index:50; padding:8px 12px; font:12px var(--mono); color:var(--paper); background:var(--ink); transform:translateY(-180%); }
+.skip-link:focus { transform:none; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.sheet { width:min(calc(100% - 56px),1060px); margin:0 auto; padding-bottom:96px; }
+.topnav { display:flex; justify-content:space-between; gap:18px; padding:18px 0 14px; border-bottom:1px solid var(--line-strong); font:600 10.5px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); }
+.topnav-group { display:flex; flex-wrap:wrap; gap:18px; }
+.topnav a { text-decoration-thickness:1px; text-underline-offset:4px; }
+.topnav a:hover { color:var(--accent); }
+.masthead { position:relative; padding:42px 0 48px; border-bottom:3px solid var(--ink); }
+.kicker { display:flex; align-items:center; gap:12px; font:600 12px var(--mono); letter-spacing:.22em; color:var(--accent); text-transform:uppercase; }
+.kicker::before { width:36px; height:2px; content:''; background:var(--accent); }
+h1 { max-width:15ch; margin-top:20px; font:900 clamp(48px,8vw,86px)/.94 var(--display); letter-spacing:-.025em; }
+h1 em { color:var(--accent); font-weight:600; }
+.stamp { position:absolute; top:126px; right:4px; padding:7px 13px; font:600 11px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); border:2px solid var(--accent); border-radius:4px; transform:rotate(3.5deg); }
+.lede { max-width:690px; margin-top:24px; font:400 clamp(19px,2.2vw,25px)/1.45 var(--display); color:var(--ink-soft); }
+.masthead-meta { display:flex; flex-wrap:wrap; margin-top:34px; border-top:1px solid var(--line-strong); }
+.masthead-meta div { padding:12px 26px 4px 0; margin-right:26px; border-right:1px solid var(--line); }
+.masthead-meta div:last-child { border-right:0; }
+.masthead-meta dt { font:400 10.5px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+.masthead-meta dd { margin-top:2px; font-size:14.5px; font-weight:600; }
+.summary { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr); gap:42px; align-items:start; padding:42px 0 8px; }
+.summary-copy { color:var(--ink-soft); }
+.summary-copy strong { color:var(--ink); }
+.tally { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.tally .cell { position:relative; overflow:hidden; padding:14px 14px 11px; background:var(--paper-2); border:1.5px solid var(--ink); border-radius:10px; }
+.tally .cell::after { position:absolute; inset:0 0 auto; height:5px; content:''; background:var(--accent); }
+.tally .cell.blocker::after { background:var(--critical); }
+.tally .cell.material::after { background:var(--medium); }
+.tally .cell.watch::after { background:var(--minor); }
+.tally .num { font:900 42px/1 var(--display); }
+.tally .lbl { margin-top:4px; font:400 10px var(--mono); letter-spacing:.12em; color:var(--ink-faint); text-transform:uppercase; }
+.section { padding-top:76px; }
+.section-head { display:grid; grid-template-columns:150px 1fr; gap:28px; align-items:baseline; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+.section-label { font:600 11px var(--mono); letter-spacing:.15em; color:var(--accent); text-transform:uppercase; }
+.section h2 { font:800 clamp(30px,4vw,42px)/1.05 var(--display); letter-spacing:-.015em; }
+.section-intro { max-width:760px; margin-top:16px; color:var(--ink-soft); }
+.eyebrow { display:flex; align-items:center; gap:9px; margin-bottom:12px; font:600 10.5px var(--mono); letter-spacing:.16em; color:var(--accent); text-transform:uppercase; }
+.eyebrow::after { height:1px; content:''; background:var(--line); flex:1; }
+.badge { display:inline-flex; align-items:center; padding:4px 10px; font:600 10px var(--mono); letter-spacing:.1em; text-transform:uppercase; border-radius:999px; white-space:nowrap; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); }
+.badge.blocker { color:var(--critical); background:var(--critical-bg); border-color:var(--critical); }
+.badge.material { color:var(--medium); background:var(--medium-bg); border-color:var(--medium); }
+.badge.watch { color:var(--minor); background:var(--minor-bg); border-color:var(--minor); }
+.badge.done { color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }
+.evidence-grid,.cards-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:28px; }
+.evidence-card,.mini-card { padding:22px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; box-shadow:4px 4px 0 rgb(27 24 18 / .09); }
+.evidence-card h3,.mini-card h3 { font:800 21px/1.15 var(--display); }
+.evidence-card p,.mini-card p { margin-top:9px; color:var(--ink-soft); font-size:14px; }
+.refs,.meta-list { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; list-style:none; }
+.refs code,.meta-list li { padding:3px 7px; font:500 10.5px var(--mono); color:var(--ink-faint); background:var(--paper-2); border:1px solid var(--line); border-radius:4px; word-break:break-all; }
+.decision-list,.thread-list { display:grid; gap:26px; margin-top:30px; }
+.decision-card,.thread-card { overflow:hidden; background:var(--card); border:1.5px solid var(--ink); border-radius:14px; box-shadow:6px 6px 0 rgb(27 24 18 / .1); }
+.card-head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:16px; align-items:center; padding:18px 22px; background:var(--paper-2); border-bottom:1px solid var(--line); }
+.folio { font:900 32px/1 var(--display); color:transparent; -webkit-text-stroke:1.2px var(--ink); }
+.card-head h3 { font:800 22px/1.1 var(--display); }
+.card-head-right { display:flex; align-items:center; gap:8px; }
+.card-copy { padding:22px; border-bottom:1px solid var(--line); }
+.card-copy .question { font:600 17px/1.45 var(--sans); color:var(--ink); }
+.card-copy .rationale { margin-top:7px; color:var(--ink-soft); font-size:14px; }
+.option-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:22px; }
+.option { position:relative; display:block; min-width:0; padding:17px; cursor:pointer; background:var(--paper); border:1.5px solid var(--line-strong); border-radius:10px; }
+.option:has(input:checked) { background:var(--accent-soft); border-color:var(--accent); box-shadow:3px 3px 0 rgb(13 92 70 / .15); }
+.option-top { display:flex; align-items:flex-start; gap:10px; }
+.option input { flex:0 0 auto; margin-top:4px; accent-color:var(--accent); }
+.option-title { font-weight:600; }
+.recommended { margin-left:auto; padding:2px 6px; font:600 9px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid var(--accent); border-radius:4px; }
+.option-summary { margin-top:8px; font-size:13.5px; color:var(--ink-soft); }
+.option-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:13px; }
+.option-meta div { padding-top:7px; border-top:1px dotted var(--line-strong); }
+.option-meta dt { font:500 9px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
+.option-meta dd { margin-top:2px; font:500 11px var(--mono); }
+.tradeoffs { margin-top:12px; list-style:none; }
+.tradeoffs li { position:relative; padding:5px 0 5px 16px; font-size:12.5px; color:var(--ink-soft); border-top:1px dotted var(--line); }
+.tradeoffs li::before { position:absolute; left:1px; color:var(--accent); content:'→'; }
+.response { display:grid; grid-template-columns:minmax(190px,.55fr) minmax(0,1.45fr); gap:18px; padding:20px 22px; background:linear-gradient(180deg,transparent,rgb(13 92 70 / .035)); border-top:1px dashed var(--line-strong); }
+.field label,.field .field-label { display:block; margin-bottom:6px; font:600 10px var(--mono); letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint); }
+select,textarea { width:100%; color:var(--ink); background:var(--card); border:1.5px solid var(--line-strong); border-radius:6px; }
+select { min-height:42px; padding:8px 34px 8px 10px; }
+textarea { min-height:86px; padding:10px 12px; resize:vertical; line-height:1.45; }
+select[aria-invalid='true'],textarea[aria-invalid='true'] { border-color:var(--critical); background:var(--critical-bg); }
+.thread-card.blocked { box-shadow:none; border-color:var(--line-strong); }
+.thread-card .thread-body { padding:20px 22px; }
+.thread-card p { color:var(--ink-soft); }
+.blocked-by { margin-top:12px; font:500 11px var(--mono); color:var(--minor); }
+.content-stack { display:grid; gap:22px; margin-top:28px; }
+.content-stack > * { min-width:0; max-width:100%; }
+.visual-block { min-width:0; margin:0; padding:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; box-shadow:6px 6px 0 var(--ink); }
+.visual-block img { display:block; width:100%; height:auto; border-radius:8px; border:1px solid var(--rule); background:#0b1020; }
+.visual-block figcaption { margin-top:12px; color:var(--ink-soft); font:500 12px/1.5 var(--sans); }
+.prose p + p { margin-top:12px; }
+.prose p { color:var(--ink-soft); }
+:not(pre) > code { overflow-wrap:anywhere; word-break:break-word; }
+.list-block,.steps-block,.code-block,.flow-block,.table-wrap,.callout { padding:22px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; }
+.table-wrap { overflow-x:auto; }
+.list-block h3 { font:800 20px var(--display); }
+.outcomes { margin-top:12px; list-style:none; }
+.outcomes li { position:relative; padding:8px 0 8px 22px; font-size:13.5px; color:var(--ink-soft); border-top:1px dotted var(--line-strong); }
+.outcomes li::before { position:absolute; left:2px; color:var(--accent); content:'→'; }
+ol.steps { list-style:none; counter-reset:step; }
+ol.steps li { counter-increment:step; position:relative; padding:0 0 15px 34px; font-size:14px; color:var(--ink-soft); }
+ol.steps li::before { content:counter(step); position:absolute; left:0; top:1px; display:grid; place-items:center; width:22px; height:22px; font:600 11px var(--mono); color:var(--ink); background:var(--paper); border:1.5px solid var(--ink); border-radius:50%; }
+ol.steps li:not(:last-child)::after { content:''; position:absolute; left:10.5px; top:25px; bottom:1px; width:1.5px; background:var(--line-strong); }
+.code-block .code-label { margin-bottom:8px; font:600 10px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
+pre { overflow:auto; padding:16px; color:var(--paper); background:var(--ink); border-radius:8px; }
+pre code { font:12px/1.55 var(--mono); white-space:pre; }
+.order-table { width:100%; border-collapse:collapse; font-size:14px; }
+.order-table th { padding:10px 14px; text-align:left; font:500 10.5px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); border-bottom:2px solid var(--ink); }
+.order-table td { padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+.order-table tr:hover td { background:rgb(13 92 70 / .04); }
+.flow { display:flex; align-items:stretch; gap:8px; overflow-x:auto; }
+.flow-node { min-width:180px; padding:14px; background:var(--paper); border:1.5px solid var(--ink); border-radius:9px; }
+.flow-node strong { display:block; }
+.flow-node span { display:block; margin-top:4px; font-size:12.5px; color:var(--ink-soft); }
+.flow-arrow { display:grid; place-items:center; flex:0 0 24px; color:var(--accent); font-size:22px; }
+.callout { border-left:4px solid var(--medium); border-radius:0 10px 10px 0; background:var(--medium-bg); }
+.callout.warning { border-color:var(--critical); background:var(--critical-bg); }
+.callout.success { border-color:var(--accent); background:var(--accent-soft); }
+.callout b { display:block; margin-bottom:4px; font:600 11px var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+.timeline { position:relative; display:grid; gap:0; margin-top:30px; }
+.timeline::before { position:absolute; top:15px; bottom:15px; left:23px; width:2px; content:''; background:var(--line-strong); }
+.timeline-entry { position:relative; display:grid; grid-template-columns:48px minmax(0,1fr); gap:18px; padding-bottom:24px; }
+.timeline-dot { z-index:1; display:grid; place-items:center; width:48px; height:48px; font:600 11px var(--mono); color:var(--accent); background:var(--paper); border:2px solid var(--accent); border-radius:50%; }
+.timeline-entry.current .timeline-dot { color:var(--paper); background:var(--accent); }
+.timeline-body { padding:16px 18px; background:var(--card); border:1.5px solid var(--ink); border-radius:10px; box-shadow:4px 4px 0 rgb(27 24 18 / .08); }
+.timeline-body h3 { font:800 20px var(--display); }
+.timeline-body h3 a { text-underline-offset:4px; }
+.timeline-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; font:500 10px var(--mono); color:var(--ink-faint); text-transform:uppercase; }
+.ledger { margin-top:28px; border-top:2px solid var(--ink); }
+.ledger-row { display:grid; grid-template-columns:74px 1.2fr .7fr 1.4fr; gap:14px; padding:11px 4px; border-bottom:1px dotted var(--line-strong); align-items:baseline; }
+.ledger-id { font:500 11px var(--mono); color:var(--ink-faint); }
+.dispatch { position:sticky; bottom:14px; z-index:20; margin-top:58px; padding:16px; color:var(--paper); background:var(--ink); border:1px solid var(--ink); border-radius:10px; box-shadow:7px 7px 0 rgb(27 24 18 / .18); }
+.dispatch-grid { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:12px; align-items:center; }
+.progress-label { font:500 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.progress-label span { color:#b8d5ca; }
+.progress-track { height:4px; margin-top:7px; background:rgb(246 242 234 / .2); }
+.progress-fill { width:0; height:100%; background:#72b69f; transition:width .16s ease; }
+.btn { min-height:42px; padding:8px 13px; font:600 10.5px var(--mono); letter-spacing:.07em; text-transform:uppercase; cursor:pointer; border:1.5px solid var(--paper); border-radius:6px; }
+.btn.primary { color:var(--ink); background:var(--paper); }
+.btn.primary:hover,.btn.primary[data-state='copied'] { color:var(--paper); background:var(--accent); border-color:var(--accent); }
+.btn.ghost { color:var(--paper); background:transparent; }
+.btn:disabled { cursor:not-allowed; opacity:.45; }
+.validation-hint { margin-top:7px; font-size:12px; color:#dccfba; }
+.intent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
+.intent { display:flex; gap:8px; align-items:flex-start; padding:12px; cursor:pointer; background:var(--paper-2); border:1.5px solid var(--line-strong); border-radius:8px; }
+.intent:has(input:checked) { background:var(--accent-soft); border-color:var(--accent); }
+.intent input { margin-top:4px; accent-color:var(--accent); }
+.intent b { display:block; font-size:13px; }
+.intent small { display:block; margin-top:2px; color:var(--ink-soft); }
+.colophon { display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-top:90px; padding-top:22px; font:400 10.5px var(--mono); letter-spacing:.1em; color:var(--ink-faint); text-transform:uppercase; border-top:3px solid var(--ink); }
+@media (prefers-reduced-motion:no-preference) {
+  .masthead,.summary,.section,.colophon { animation:rise .58s cubic-bezier(.2,.7,.2,1) both; }
+  .summary { animation-delay:.08s; } .section { animation-delay:.14s; } .colophon { animation-delay:.2s; }
+  .btn { transition:color .16s ease,background-color .16s ease,border-color .16s ease,transform .16s ease; }
+  .btn:active { transform:translateY(1px); }
+  @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+}
+@media (max-width:760px) {
+  .sheet { width:min(calc(100% - 32px),1060px); }
+  h1 { font-size:clamp(45px,14vw,68px); }
+  .stamp { position:static; display:inline-block; margin-top:22px; }
+  .summary,.section-head,.option-grid,.evidence-grid,.cards-grid,.response { grid-template-columns:1fr; }
+  .section { padding-top:62px; }
+  .ledger-row { grid-template-columns:64px 1fr; }
+  .ledger-row > :nth-child(n+3) { grid-column:2; }
+  .dispatch-grid { grid-template-columns:1fr auto; }
+  .dispatch-grid .progress { grid-column:1 / -1; }
+}
+@media (max-width:460px) {
+  .topnav { flex-direction:column; }
+  .card-head { grid-template-columns:auto 1fr; }
+  .card-head-right { grid-column:2; }
+  .option-grid,.card-copy,.response,.thread-card .thread-body { padding-left:17px; padding-right:17px; }
+  .intent-grid { grid-template-columns:1fr; }
+  .dispatch-grid { grid-template-columns:1fr; }
+  .btn { width:100%; }
+  .colophon { flex-direction:column; }
+}
+@media print {
+  body { background:white; }
+  .topnav,.dispatch,.interactive-only { display:none !important; }
+  .decision-card,.thread-card,.evidence-card,.mini-card,.timeline-body { box-shadow:none; break-inside:avoid; }
+  .stamp { transform:none; }
+  .section { break-before:auto; }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+<div class="sheet"><nav class="topnav" aria-label="Timeline"><div class="topnav-group"><a href="index.html">← Índice del dossier</a><a href="round-03-plan-final-validado.html">← Ronda anterior · 03</a></div><span>Ronda actual · round-04-distribucion-github-releases.html</span></nav><main id="main"><header class="masthead"><p class="kicker">AI Vitals · Plan final</p><h1>Distribución por GitHub <em>Releases</em></h1><span class="stamp">ready · 04</span><p class="lede">La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.</p><dl class="masthead-meta"><div><dt>Fecha</dt><dd>2026-08-06</dd></div><div><dt>Alcance</dt><dd>Windows desktop, adaptadores locales, widgets, bandeja, dashboard, persistencia, distribución</dd></div><div><dt>Fuente</dt><dd><code>Grill de producto y referencias Microsoft Store (2026-08-04 a 2026-08-05); grill de distribución (2026-08-06)</code></dd></div></dl></header><section class="summary"><p class="summary-copy"><strong>Objetivo.</strong> Crear una aplicación residente de Windows, local-first y sin cuenta, que observe de forma fiable el uso de Codex y Claude Code y lo presente mediante widgets always-on-top, bandeja y dashboard, sin almacenar contenido de trabajo ni inventar métricas.</p><div class="tally"><div class="cell blocker"><div class="num">0</div><div class="lbl">Blocker</div></div><div class="cell material"><div class="num">0</div><div class="lbl">Material</div></div><div class="cell watch"><div class="num">0</div><div class="lbl">Watch</div></div></div></section><form id="planning-form" novalidate><section class="section" id="evidence"><div class="section-head"><span class="section-label">Evidencia</span><h2>Lo que establece el repositorio</h2></div><p class="section-intro">Hechos observados que restringen esta ronda de planificación.</p><div class="evidence-grid"><article class="evidence-card"><h3>El canal tradicional funciona de extremo a extremo</h3><p>Velopack 1.2.0 empaqueta la publicación self-contained win-x64 en AIVitalsApp-win-x64-Setup.exe (113,7 MB) más el paquete completo de actualización (109,5 MB), y verifica que VelopackApp.Run() se ejecuta en el Main propio de la aplicación.</p><ul class="refs"><li><code>scripts/pack-release.ps1</code></li><li><code>https://docs.velopack.io/</code></li></ul></article><article class="evidence-card"><h3>El CHANGELOG ya tiene el formato que necesita el workflow</h3><p>CHANGELOG.md sigue Keep a Changelog con encabezados &#39;## &lt;versión&gt; - &lt;fecha&gt;&#39;, así que una sección por versión basta para generar las notas sin escribirlas dos veces.</p><ul class="refs"><li><code>CHANGELOG.md</code></li></ul></article><article class="evidence-card"><h3>El repositorio es público y con licencia MIT</h3><p>github.com/AlexAdiaconitei/ai-vitals es público, de modo que el cliente puede leer las publicaciones sin token y el updater no necesita ningún secreto.</p><ul class="refs"><li><code>https://github.com/AlexAdiaconitei/ai-vitals</code></li></ul></article><article class="evidence-card"><h3>El bridge de Claude Code guardaba una ruta versionada</h3><p>ClaudeCodeStatusLineInstaller escribe la ruta absoluta del helper en ~/.claude/settings.json. Dentro del árbol que Velopack reemplaza, una actualización podía chocar con el helper en ejecución y una desinstalación dejaba a Claude Code invocando un ejecutable inexistente.</p><ul class="refs"><li><code>src/AIVitals.Adapters.ClaudeCode/ClaudeCodeStatusLineInstaller.cs</code></li></ul></article><article class="evidence-card"><h3>No existía autoarranque ni versión visible</h3><p>El código no escribía ninguna clave Run y ningún proyecto declaraba Version, por lo que todo se compilaba como 1.0.0 y la fase 06 partía de cero en ambos frentes.</p><ul class="refs"><li><code>Directory.Build.props</code></li><li><code>src/AIVitals.Platform.Windows</code></li></ul></article></div></section><section class="section" id="canal"><div class="section-head"><span class="section-label">01 · Canal</span><h2>Un solo canal, publicado desde el repositorio</h2></div><p class="section-intro">El instalador, los paquetes de actualización y las notas viven en la misma publicación de GitHub que consulta la aplicación.</p><div class="content-stack"><div class="cards-grid"><article class="mini-card"><span class="badge">EXE</span><h3>Instalador</h3><p>Velopack genera AIVitalsApp-win-&lt;arquitectura&gt;-Setup.exe. Instala solo para el usuario actual bajo %LocalAppData%\AIVitalsApp, sin UAC.</p><ul class="meta-list"><li>win-x64</li><li>win-arm64</li><li>self-contained</li></ul></article><article class="mini-card"><span class="badge">Feed</span><h3>Paquetes de actualización</h3><p>Cada publicación incluye el nupkg completo, los deltas y releases.&lt;canal&gt;.json, que es lo que el cliente lee para decidir si hay versión nueva.</p><ul class="meta-list"><li>releases.win-x64.json</li><li>releases.win-arm64.json</li></ul></article><article class="mini-card"><span class="badge">Hashes</span><h3>Verificación</h3><p>Tabla SHA256 en el cuerpo de la publicación y asset SHA256SUMS.txt, porque los binarios todavía no van firmados.</p><ul class="meta-list"><li>SHA256SUMS.txt</li></ul></article></div><div class="table-wrap"><table class="order-table"><thead><tr><th>Aspecto</th><th>Decisión</th><th>Consecuencia asumida</th></tr></thead><tbody><tr><td>Canales</td><td>Solo GitHub Releases; MSIX y Store fuera del alcance.</td><td>Sin doble updater ni cuenta de desarrollador, pero sin presencia en la Store.</td></tr><tr><td>Empaquetado</td><td>Velopack 1.2.0, self-contained, sin trimming ni bundle portable.</td><td>Descarga inicial de unos 114 MB por arquitectura; las siguientes son deltas.</td></tr><tr><td>Identidad de instalación</td><td>packId AIVitalsApp para no colisionar con el directorio de datos AIVitals.</td><td>Desinstalar borra %LocalAppData%\AIVitalsApp y conserva el historial en %LocalAppData%\AIVitals.</td></tr><tr><td>Arquitecturas</td><td>x64 y ARM64 en una única publicación, con un canal de Velopack por RID.</td><td>Una instalación ARM64 nunca se actualiza con paquetes x64; el smoke de ARM64 solo puede ser manual.</td></tr><tr><td>Firma</td><td>Sin firmar en 0.1.x, con el paso de firma cableado tras un secret.</td><td>Aviso de SmartScreen documentado en README y en cada publicación.</td></tr></tbody></table></div></div></section><section class="section" id="pipeline"><div class="section-head"><span class="section-label">02 · Pipeline</span><h2>El tag manda y el CHANGELOG es la fuente de las notas</h2></div><p class="section-intro">release.yml es un workflow aparte de ci.yml, para que solo él tenga permiso de escritura sobre las publicaciones.</p><div class="content-stack"><div class="steps-block"><ol class="steps"><li>Escribir la sección de la versión en CHANGELOG.md con el encabezado &#39;## &lt;versión&gt; - &lt;fecha&gt;&#39;.</li><li>Ensayar con un tag de prelanzamiento, por ejemplo v0.1.1-beta.1, o lanzar el workflow a mano sin publicar.</li><li>Publicar con git push del tag vX.Y.Z, que dispara verificación, empaquetado y publicación.</li><li>El workflow extrae la sección del CHANGELOG y aborta antes de compilar si falta o está vacía.</li><li>Se compila cada arquitectura, se descargan las publicaciones anteriores para generar deltas y se empaqueta con Velopack.</li><li>Ambos canales suben a la misma publicación; después se sustituye el cuerpo por instalación, notas, tabla SHA256 y enlace de comparación.</li></ol></div><div class="code-block"><div class="code-label">Publicar una versión</div><pre><code>git tag v0.1.0
+git push origin v0.1.0
+
+# Ensayo local del mismo empaquetado
+dotnet tool install -g vpk --version 1.2.0
+./scripts/extract-changelog-notes.ps1 -Version 0.1.0 -OutputPath artifacts/release-notes.md
+./scripts/pack-release.ps1 -Version 0.1.0 -Runtime win-x64 -ReleaseNotesPath artifacts/release-notes.md</code></pre></div><div class="list-block"><h3>Reglas del workflow</h3><ul class="outcomes"><li>La versión sale del tag y se propaga con -p:Version; Directory.Build.props deja 0.0.0-dev para que una compilación local se distinga de una instalada.</li><li>Un tag con guion, como v0.1.1-beta.1, se publica como prerelease y el updater estable no lo ofrece.</li><li>Las notas se generan solo en inglés, igual que el CHANGELOG y el README.</li><li>El disparo manual permite construir los instaladores sin publicar nada, y deja los artefactos en la ejecución del workflow.</li></ul></div></div></section><section class="section" id="updater"><div class="section-head"><span class="section-label">03 · Actualizaciones</span><h2>Comprobar y descargar solos; instalar solo cuando se pide</h2></div><p class="section-intro">La comprobación es una llamada de red, así que se puede apagar; la instalación siempre exige una acción explícita.</p><div class="content-stack"><div class="flow-block"><div class="flow"><div class="flow-node"><strong>Arranque y cada 24 h</strong><span>Se consulta el canal de la arquitectura, salvo que la comprobación automática esté desactivada.</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-node"><strong>Descarga en segundo plano</strong><span>Velopack baja el delta correspondiente sin interrumpir la sesión.</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-node"><strong>Aviso</strong><span>Sección Acerca de y una entrada de bandeja que solo existe mientras hay una versión esperando.</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-node"><strong>Instalar y reiniciar</strong><span>La aplicación libera monitor, bandeja y base de datos antes de ceder el control al actualizador.</span></div></div></div><div class="list-block"><h3>Comportamiento observable</h3><ul class="outcomes"><li>Un fallo de red en una comprobación automática es silencioso; solo una comprobación manual muestra el error.</li><li>Una copia no instalada por el instalador declara el estado como no soportado y oculta las acciones de actualización.</li><li>La entrada de bandeja de actualización no compite con el &#39;Actualizar&#39; que refresca los datos de proveedor.</li><li>Las preferencias de actualización e inicio con Windows viven en preferences.json con esquema 2; un archivo de esquema 1 se migra conservando sus valores.</li></ul></div></div></section><section class="section" id="integraciones"><div class="section-head"><span class="section-label">04 · Integraciones</span><h2>Lo que la aplicación escribe fuera de su carpeta</h2></div><p class="section-intro">Todo lo que se escribe fuera del directorio de instalación tiene que sobrevivir a una actualización y desaparecer al desinstalar.</p><div class="content-stack"><div class="table-wrap"><table class="order-table"><thead><tr><th>Elemento</th><th>Ubicación</th><th>Ciclo de vida</th></tr></thead><tbody><tr><td>Helper de status line</td><td>%LocalAppData%\AIVitals\bridge</td><td>Se copia fuera del árbol versionado y se refresca por versión; la desinstalación lo borra.</td></tr><tr><td>Autoarranque</td><td>HKCU\...\CurrentVersion\Run\AIVitals</td><td>Opcional y desactivado por defecto; apunta al lanzador estable de la raíz de instalación.</td></tr><tr><td>statusLine de Claude Code</td><td>~/.claude/settings.json</td><td>La desinstalación restaura la configuración previa antes de borrar nada.</td></tr><tr><td>Datos de uso</td><td>%LocalAppData%\AIVitals</td><td>Se conservan al desinstalar; se borran desde Privacidad o eliminando la carpeta.</td></tr></tbody></table></div><div class="callout warning"><b>Por qué el bridge se mudó</b><p>Claude Code ejecuta el helper cada 30 segundos y Windows no puede sobrescribir un ejecutable en uso. Con el helper dentro del directorio que Velopack reemplaza, una actualización podía quedar a medias; fuera de él, un refresco fallido solo significa que el bridge sigue en la versión anterior hasta el siguiente arranque.</p></div></div></section><section class="section" id="gates"><div class="section-head"><span class="section-label">05 · Gates</span><h2>Lo que comprueba el pipeline y lo que firma una persona</h2></div><p class="section-intro">La automatización cubre la compilación y las pruebas; la instalación real sigue siendo una comprobación humana registrada.</p><div class="content-stack"><div class="table-wrap"><table class="order-table"><thead><tr><th>Gate</th><th>Quién</th><th>Evidencia</th></tr></thead><tbody><tr><td>Compilación y pruebas</td><td>release.yml</td><td>restore, build Release, verify-claude-bridge-output.ps1 y dotnet test antes de empaquetar.</td></tr><tr><td>Sección del CHANGELOG</td><td>release.yml</td><td>extract-changelog-notes.ps1 devuelve error y aborta antes de compilar.</td></tr><tr><td>Instalación y desinstalación</td><td>Persona</td><td>docs/release-checklist.md, comprobaciones 1, 3 y 8.</td></tr><tr><td>Actualización y rollback</td><td>Persona</td><td>docs/release-checklist.md, comprobaciones 5, 6 y 7.</td></tr><tr><td>ARM64 real</td><td>Persona</td><td>Los runners de GitHub son x64; la columna ARM64 solo se rellena a mano.</td></tr><tr><td>SBOM y vulnerabilidades</td><td>Fuera del pipeline</td><td>dotnet list package --vulnerable se ejecuta a mano antes de un tag estable.</td></tr></tbody></table></div></div></section><section class="section" id="cambios"><div class="section-head"><span class="section-label">06 · Cambios</span><h2>Diferencias respecto a la ronda 03</h2></div><p class="section-intro">La fase 06 planteada en la ronda anterior prometía más de lo que esta implementación entrega, y conviene que el dossier lo diga.</p><div class="content-stack"><div class="list-block"><h3>Se reduce</h3><ul class="outcomes"><li>Doble canal EXE + MSIX/Store pasa a canal único de GitHub Releases.</li><li>Release notes bilingües pasan a inglés, coherente con CHANGELOG y README.</li><li>SBOM, checksums firmados y escaneo de dependencias salen del pipeline; los checksums se publican, el resto queda manual.</li><li>La verificación en VM limpia deja de ser un gate automático y pasa a lista firmada.</li></ul></div><div class="list-block"><h3>Se añade</h3><ul class="outcomes"><li>Autoarranque opt-in, que la ronda 03 daba por hecho y no existía en el código.</li><li>Sección Acerca de con versión, canal y control de las actualizaciones.</li><li>Reubicación del helper de Claude Code para que la actualización no choque con un proceso en marcha.</li><li>Migración de esquema de preferencias en vez de descartar el archivo anterior.</li></ul></div><div class="callout decision"><b>Sin proyecto AIVitals.Packaging</b><p>La estructura objetivo de la ronda 01 reservaba un proyecto de empaquetado. Velopack se usa por CLI, así que el empaquetado vive en scripts/pack-release.ps1 y en el workflow, sin un csproj que no compilaría nada.</p></div></div></section><section class="section" id="loose-threads"><div class="section-head"><span class="section-label">Hilos sueltos</span><h2>Incertidumbre contabilizada</h2></div><p class="section-intro">Los hilos abiertos requieren disposición; los bloqueados siguen visibles hasta resolver su dependencia.</p><div class="thread-list"><article class="thread-card "><div class="card-head"><span class="folio" aria-hidden="true">06</span><h3>Firma de código Authenticode</h3><div class="card-head-right"><span class="badge material">material</span></div></div><div class="thread-body"><p>Las publicaciones salen sin firmar, así que SmartScreen advierte en la primera ejecución. El paso de firma existe en el workflow y solo se activa si aparece el secret WINDOWS_SIGN_PARAMS.</p><p class="blocked-by">Reactivación · Al contratar certificado o al aprobarse Trusted Signing: añadir el secret, sin cambios de código.</p></div></article><article class="thread-card "><div class="card-head"><span class="folio" aria-hidden="true">07</span><h3>Canal MSIX y Microsoft Store</h3><div class="card-head-right"><span class="badge watch">watch</span></div></div><div class="thread-body"><p>La ronda 03 planteaba dos canales simultáneos. Se reduce a uno para evitar doble updater, identidad de paquete, cuenta de Partner Center y revisión de Store.</p><p class="blocked-by">Reactivación · Cuando el canal de GitHub Releases acumule instalaciones estables y se quiera distribución de Store.</p></div></article><article class="thread-card "><div class="card-head"><span class="folio" aria-hidden="true">08</span><h3>Verificación de instalación en máquina limpia</h3><div class="card-head-right"><span class="badge done">resolved</span></div></div><div class="thread-body"><p>Instalar, actualizar, revertir y desinstalar no lo comprueba el pipeline. Se convierte en una lista firmada por una persona antes de cada tag estable, con ensayo obligatorio mediante prerelease.</p><p class="blocked-by">Documentado en docs/release-checklist.md con ocho comprobaciones por arquitectura y las carencias conocidas.</p></div></article></div></section><section class="section" id="implementation-handoff"><div class="section-head"><span class="section-label">Handoff</span><h2>Handoff de distribución</h2></div><p class="section-intro">El siguiente agente lee el dossier en vez de recibir de nuevo el plan.</p><div class="callout success"><b>Empezar por</b><p>Ensayar con un tag de prelanzamiento y completar docs/release-checklist.md antes del primer tag estable.</p></div></section><aside class="dispatch interactive-only" aria-label="Handoff"><div class="dispatch-grid"><div class="progress"><div class="progress-label">Frontera completa · <span id="progress-text">0/0</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="validation-hint" id="validation-hint"></p></div><button class="btn ghost" id="reset-state" type="button">Restablecer</button><button class="btn primary" id="copy-markdown" type="button" disabled>Copiar handoff</button></div></aside><p class="sr-only" id="live-status" role="status" aria-live="polite"></p></form></main><footer class="colophon"><span>AI Vitals · planning-dossier</span><span>Ronda inmutable · el índice conserva el estado actual</span></footer></div>
+<script id="planning-data" type="application/json">{"schemaVersion":1,"outputDir":"plan","dossier":{"id":"ai-vitals","project":"AI Vitals","title":"Monitor local de uso de IA para Windows","objective":"Crear una aplicación residente de Windows, local-first y sin cuenta, que observe de forma fiable el uso de Codex y Claude Code y lo presente mediante widgets always-on-top, bandeja y dashboard, sin almacenar contenido de trabajo ni inventar métricas.","language":"es","scope":"Windows desktop, adaptadores locales, widgets, bandeja, dashboard, persistencia, distribución","sourceRef":"Grill de producto y referencias Microsoft Store (2026-08-04 a 2026-08-05); grill de distribución (2026-08-06)"},"round":{"number":4,"slug":"distribucion-github-releases","kind":"final","date":"2026-08-06","title":"Distribución por GitHub Releases","status":"ready","summary":"La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.","evidence":[{"title":"El canal tradicional funciona de extremo a extremo","detail":"Velopack 1.2.0 empaqueta la publicación self-contained win-x64 en AIVitalsApp-win-x64-Setup.exe (113,7 MB) más el paquete completo de actualización (109,5 MB), y verifica que VelopackApp.Run() se ejecuta en el Main propio de la aplicación.","refs":["scripts/pack-release.ps1","https://docs.velopack.io/"]},{"title":"El CHANGELOG ya tiene el formato que necesita el workflow","detail":"CHANGELOG.md sigue Keep a Changelog con encabezados '## \u003cversión\u003e - \u003cfecha\u003e', así que una sección por versión basta para generar las notas sin escribirlas dos veces.","refs":["CHANGELOG.md"]},{"title":"El repositorio es público y con licencia MIT","detail":"github.com/AlexAdiaconitei/ai-vitals es público, de modo que el cliente puede leer las publicaciones sin token y el updater no necesita ningún secreto.","refs":["https://github.com/AlexAdiaconitei/ai-vitals"]},{"title":"El bridge de Claude Code guardaba una ruta versionada","detail":"ClaudeCodeStatusLineInstaller escribe la ruta absoluta del helper en ~/.claude/settings.json. Dentro del árbol que Velopack reemplaza, una actualización podía chocar con el helper en ejecución y una desinstalación dejaba a Claude Code invocando un ejecutable inexistente.","refs":["src/AIVitals.Adapters.ClaudeCode/ClaudeCodeStatusLineInstaller.cs"]},{"title":"No existía autoarranque ni versión visible","detail":"El código no escribía ninguna clave Run y ningún proyecto declaraba Version, por lo que todo se compilaba como 1.0.0 y la fase 06 partía de cero en ambos frentes.","refs":["Directory.Build.props","src/AIVitals.Platform.Windows"]}],"decisions":[],"threads":[{"id":"T-06","title":"Firma de código Authenticode","detail":"Las publicaciones salen sin firmar, así que SmartScreen advierte en la primera ejecución. El paso de firma existe en el workflow y solo se activa si aparece el secret WINDOWS_SIGN_PARAMS.","criticality":"material","status":"deferred","reason":"Un certificado OV/EV cuesta entre 200 y 600 USD al año y Azure Trusted Signing exige una validación de identidad que bloquearía la fase durante semanas.","impact":"Cada instalación nueva muestra el aviso de SmartScreen hasta que exista certificado; se compensa publicando SHA256 de todos los artefactos.","reactivation":"Al contratar certificado o al aprobarse Trusted Signing: añadir el secret, sin cambios de código."},{"id":"T-07","title":"Canal MSIX y Microsoft Store","detail":"La ronda 03 planteaba dos canales simultáneos. Se reduce a uno para evitar doble updater, identidad de paquete, cuenta de Partner Center y revisión de Store.","criticality":"watch","status":"deferred","reason":"Duplica superficie de empaquetado y de pruebas antes de tener usuarios reales en el canal tradicional.","impact":"AI Vitals no aparece en la Microsoft Store; la única vía de instalación es el instalador publicado.","reactivation":"Cuando el canal de GitHub Releases acumule instalaciones estables y se quiera distribución de Store."},{"id":"T-08","title":"Verificación de instalación en máquina limpia","detail":"Instalar, actualizar, revertir y desinstalar no lo comprueba el pipeline. Se convierte en una lista firmada por una persona antes de cada tag estable, con ensayo obligatorio mediante prerelease.","criticality":"material","status":"resolved","resolution":"Documentado en docs/release-checklist.md con ocho comprobaciones por arquitectura y las carencias conocidas."}],"sections":[{"id":"canal","label":"01 · Canal","title":"Un solo canal, publicado desde el repositorio","intro":"El instalador, los paquetes de actualización y las notas viven en la misma publicación de GitHub que consulta la aplicación.","blocks":[{"type":"cards","items":[{"title":"Instalador","body":"Velopack genera AIVitalsApp-win-\u003carquitectura\u003e-Setup.exe. Instala solo para el usuario actual bajo %LocalAppData%\\AIVitalsApp, sin UAC.","badge":"EXE","meta":["win-x64","win-arm64","self-contained"]},{"title":"Paquetes de actualización","body":"Cada publicación incluye el nupkg completo, los deltas y releases.\u003ccanal\u003e.json, que es lo que el cliente lee para decidir si hay versión nueva.","badge":"Feed","meta":["releases.win-x64.json","releases.win-arm64.json"]},{"title":"Verificación","body":"Tabla SHA256 en el cuerpo de la publicación y asset SHA256SUMS.txt, porque los binarios todavía no van firmados.","badge":"Hashes","meta":["SHA256SUMS.txt"]}]},{"type":"table","columns":[{"key":"aspecto","label":"Aspecto"},{"key":"decision","label":"Decisión"},{"key":"consecuencia","label":"Consecuencia asumida"}],"rows":[{"aspecto":"Canales","decision":"Solo GitHub Releases; MSIX y Store fuera del alcance.","consecuencia":"Sin doble updater ni cuenta de desarrollador, pero sin presencia en la Store."},{"aspecto":"Empaquetado","decision":"Velopack 1.2.0, self-contained, sin trimming ni bundle portable.","consecuencia":"Descarga inicial de unos 114 MB por arquitectura; las siguientes son deltas."},{"aspecto":"Identidad de instalación","decision":"packId AIVitalsApp para no colisionar con el directorio de datos AIVitals.","consecuencia":"Desinstalar borra %LocalAppData%\\AIVitalsApp y conserva el historial en %LocalAppData%\\AIVitals."},{"aspecto":"Arquitecturas","decision":"x64 y ARM64 en una única publicación, con un canal de Velopack por RID.","consecuencia":"Una instalación ARM64 nunca se actualiza con paquetes x64; el smoke de ARM64 solo puede ser manual."},{"aspecto":"Firma","decision":"Sin firmar en 0.1.x, con el paso de firma cableado tras un secret.","consecuencia":"Aviso de SmartScreen documentado en README y en cada publicación."}]}]},{"id":"pipeline","label":"02 · Pipeline","title":"El tag manda y el CHANGELOG es la fuente de las notas","intro":"release.yml es un workflow aparte de ci.yml, para que solo él tenga permiso de escritura sobre las publicaciones.","blocks":[{"type":"steps","items":["Escribir la sección de la versión en CHANGELOG.md con el encabezado '## \u003cversión\u003e - \u003cfecha\u003e'.","Ensayar con un tag de prelanzamiento, por ejemplo v0.1.1-beta.1, o lanzar el workflow a mano sin publicar.","Publicar con git push del tag vX.Y.Z, que dispara verificación, empaquetado y publicación.","El workflow extrae la sección del CHANGELOG y aborta antes de compilar si falta o está vacía.","Se compila cada arquitectura, se descargan las publicaciones anteriores para generar deltas y se empaqueta con Velopack.","Ambos canales suben a la misma publicación; después se sustituye el cuerpo por instalación, notas, tabla SHA256 y enlace de comparación."]},{"type":"code","label":"Publicar una versión","code":"git tag v0.1.0\ngit push origin v0.1.0\n\n# Ensayo local del mismo empaquetado\ndotnet tool install -g vpk --version 1.2.0\n./scripts/extract-changelog-notes.ps1 -Version 0.1.0 -OutputPath artifacts/release-notes.md\n./scripts/pack-release.ps1 -Version 0.1.0 -Runtime win-x64 -ReleaseNotesPath artifacts/release-notes.md"},{"type":"list","title":"Reglas del workflow","items":["La versión sale del tag y se propaga con -p:Version; Directory.Build.props deja 0.0.0-dev para que una compilación local se distinga de una instalada.","Un tag con guion, como v0.1.1-beta.1, se publica como prerelease y el updater estable no lo ofrece.","Las notas se generan solo en inglés, igual que el CHANGELOG y el README.","El disparo manual permite construir los instaladores sin publicar nada, y deja los artefactos en la ejecución del workflow."]}]},{"id":"updater","label":"03 · Actualizaciones","title":"Comprobar y descargar solos; instalar solo cuando se pide","intro":"La comprobación es una llamada de red, así que se puede apagar; la instalación siempre exige una acción explícita.","blocks":[{"type":"flow","nodes":[{"title":"Arranque y cada 24 h","detail":"Se consulta el canal de la arquitectura, salvo que la comprobación automática esté desactivada."},{"title":"Descarga en segundo plano","detail":"Velopack baja el delta correspondiente sin interrumpir la sesión."},{"title":"Aviso","detail":"Sección Acerca de y una entrada de bandeja que solo existe mientras hay una versión esperando."},{"title":"Instalar y reiniciar","detail":"La aplicación libera monitor, bandeja y base de datos antes de ceder el control al actualizador."}]},{"type":"list","title":"Comportamiento observable","items":["Un fallo de red en una comprobación automática es silencioso; solo una comprobación manual muestra el error.","Una copia no instalada por el instalador declara el estado como no soportado y oculta las acciones de actualización.","La entrada de bandeja de actualización no compite con el 'Actualizar' que refresca los datos de proveedor.","Las preferencias de actualización e inicio con Windows viven en preferences.json con esquema 2; un archivo de esquema 1 se migra conservando sus valores."]}]},{"id":"integraciones","label":"04 · Integraciones","title":"Lo que la aplicación escribe fuera de su carpeta","intro":"Todo lo que se escribe fuera del directorio de instalación tiene que sobrevivir a una actualización y desaparecer al desinstalar.","blocks":[{"type":"table","columns":[{"key":"elemento","label":"Elemento"},{"key":"ubicacion","label":"Ubicación"},{"key":"ciclo","label":"Ciclo de vida"}],"rows":[{"elemento":"Helper de status line","ubicacion":"%LocalAppData%\\AIVitals\\bridge","ciclo":"Se copia fuera del árbol versionado y se refresca por versión; la desinstalación lo borra."},{"elemento":"Autoarranque","ubicacion":"HKCU\\...\\CurrentVersion\\Run\\AIVitals","ciclo":"Opcional y desactivado por defecto; apunta al lanzador estable de la raíz de instalación."},{"elemento":"statusLine de Claude Code","ubicacion":"~/.claude/settings.json","ciclo":"La desinstalación restaura la configuración previa antes de borrar nada."},{"elemento":"Datos de uso","ubicacion":"%LocalAppData%\\AIVitals","ciclo":"Se conservan al desinstalar; se borran desde Privacidad o eliminando la carpeta."}]},{"type":"callout","tone":"warning","title":"Por qué el bridge se mudó","body":"Claude Code ejecuta el helper cada 30 segundos y Windows no puede sobrescribir un ejecutable en uso. Con el helper dentro del directorio que Velopack reemplaza, una actualización podía quedar a medias; fuera de él, un refresco fallido solo significa que el bridge sigue en la versión anterior hasta el siguiente arranque."}]},{"id":"gates","label":"05 · Gates","title":"Lo que comprueba el pipeline y lo que firma una persona","intro":"La automatización cubre la compilación y las pruebas; la instalación real sigue siendo una comprobación humana registrada.","blocks":[{"type":"table","columns":[{"key":"gate","label":"Gate"},{"key":"quien","label":"Quién"},{"key":"evidencia","label":"Evidencia"}],"rows":[{"gate":"Compilación y pruebas","quien":"release.yml","evidencia":"restore, build Release, verify-claude-bridge-output.ps1 y dotnet test antes de empaquetar."},{"gate":"Sección del CHANGELOG","quien":"release.yml","evidencia":"extract-changelog-notes.ps1 devuelve error y aborta antes de compilar."},{"gate":"Instalación y desinstalación","quien":"Persona","evidencia":"docs/release-checklist.md, comprobaciones 1, 3 y 8."},{"gate":"Actualización y rollback","quien":"Persona","evidencia":"docs/release-checklist.md, comprobaciones 5, 6 y 7."},{"gate":"ARM64 real","quien":"Persona","evidencia":"Los runners de GitHub son x64; la columna ARM64 solo se rellena a mano."},{"gate":"SBOM y vulnerabilidades","quien":"Fuera del pipeline","evidencia":"dotnet list package --vulnerable se ejecuta a mano antes de un tag estable."}]}]},{"id":"cambios","label":"06 · Cambios","title":"Diferencias respecto a la ronda 03","intro":"La fase 06 planteada en la ronda anterior prometía más de lo que esta implementación entrega, y conviene que el dossier lo diga.","blocks":[{"type":"list","title":"Se reduce","items":["Doble canal EXE + MSIX/Store pasa a canal único de GitHub Releases.","Release notes bilingües pasan a inglés, coherente con CHANGELOG y README.","SBOM, checksums firmados y escaneo de dependencias salen del pipeline; los checksums se publican, el resto queda manual.","La verificación en VM limpia deja de ser un gate automático y pasa a lista firmada."]},{"type":"list","title":"Se añade","items":["Autoarranque opt-in, que la ronda 03 daba por hecho y no existía en el código.","Sección Acerca de con versión, canal y control de las actualizaciones.","Reubicación del helper de Claude Code para que la actualización no choque con un proceso en marcha.","Migración de esquema de preferencias en vez de descartar el archivo anterior."]},{"type":"callout","tone":"decision","title":"Sin proyecto AIVitals.Packaging","body":"La estructura objetivo de la ronda 01 reservaba un proyecto de empaquetado. Velopack se usa por CLI, así que el empaquetado vive en scripts/pack-release.ps1 y en el workflow, sin un csproj que no compilaría nada."}]}],"finalHandoff":{"title":"Handoff de distribución","instruction":"La fase 06 queda implementada: instalador Velopack, workflow de publicación por tag con notas del CHANGELOG, updater consentido contra GitHub Releases, autoarranque opcional y desinstalación reversible. Lo pendiente no es código, sino ejecutar la lista de comprobación en máquina limpia y decidir sobre la firma.","startWith":"Ensayar con un tag de prelanzamiento y completar docs/release-checklist.md antes del primer tag estable."},"file":"round-04-distribucion-github-releases.html"},"currentState":{"status":"ready","summary":"Plan final aprobado y fase de distribución implementada sobre un único canal. Quedan siete ampliaciones aplazadas con condición de reactivación explícita.","decisions":[{"id":"D-01","title":"Público y verdad del producto","status":"decided","outcome":"Desarrollador intensivo; híbrido por adaptadores; métricas observadas con calidad explícita."},{"id":"D-02","title":"Integraciones iniciales","status":"decided","outcome":"Codex y Claude Code mediante interfaces locales oficiales."},{"id":"D-03","title":"Privacidad y autenticación","status":"decided","outcome":"Local-first, sin cuenta/backend y sin copiar credenciales de proveedor."},{"id":"D-04","title":"Superficies","status":"decided","outcome":"Widget único adaptable, popup rico, menú nativo y dashboard completo."},{"id":"D-05","title":"Modos y capacidad del widget","status":"decided","outcome":"Anillos, barras horizontales y verticales; 1–4 conexiones fijadas."},{"id":"D-06","title":"Interacción y ciclo de vida","status":"decided","outcome":"Residente, click-through bloqueable, hotkey configurable y salida explícita."},{"id":"D-07","title":"Alertas","status":"decided","outcome":"Solo señales visuales con geometría estable; sin notificaciones de Windows."},{"id":"D-08","title":"Predicciones","status":"decided","outcome":"Sin predicciones en el MVP; solo datos observados."},{"id":"D-09","title":"Persistencia","status":"decided","outcome":"SQLite con detalle de 30 días y agregados diarios permanentes."},{"id":"D-10","title":"Exportación","status":"decided","outcome":"CSV y JSON manuales con filtros; nunca subida automática."},{"id":"D-11","title":"Arquitectura de adaptadores","status":"decided","outcome":"Seam IUsageAdapter con capacidades declaradas y suite de contrato común."},{"id":"D-12","title":"Calidad y frescura","status":"decided","outcome":"Calidad explícita por observación; un fallo nunca se convierte en cero."},{"id":"D-13","title":"Ventanas de cuota","status":"decided","outcome":"Banda inmediata y banda total independientes, sin sumas."},{"id":"D-14","title":"Accesibilidad","status":"decided","outcome":"Teclado, lector de pantalla, alto contraste y reducción de movimiento."},{"id":"D-15","title":"Idiomas","status":"decided","outcome":"Español e inglés con catálogo compartido y contrato de claves verificado."},{"id":"D-16","title":"Entrega por fases verticales","status":"decided","outcome":"Siete fases utilizables, cada una con criterio de salida observable."},{"id":"D-17","title":"Diagnóstico","status":"decided","outcome":"Paquete bajo acción explícita, con logs redactados y sin telemetría."},{"id":"D-18","title":"Arquitecturas soportadas","status":"decided","outcome":"win-x64 y win-arm64 en toda la cadena."},{"id":"D-19","title":"Licencia y repositorio","status":"decided","outcome":"MIT en repositorio público con changelog y artefactos publicados."},{"id":"D-20","title":"Canal de distribución","status":"decided","outcome":"Solo GitHub Releases; MSIX y Microsoft Store fuera del alcance."},{"id":"D-21","title":"Tecnología de instalador y updater","status":"decided","outcome":"Velopack 1.2.0, instalación per-user sin UAC y feed en las propias publicaciones."},{"id":"D-22","title":"Firma de los artefactos","status":"decided","outcome":"Sin firma en 0.1.x; paso cableado tras el secret WINDOWS_SIGN_PARAMS y SHA256 publicados."},{"id":"D-23","title":"Disparador de la publicación","status":"decided","outcome":"Push de tag v*, más disparo manual con ensayo sin publicar."},{"id":"D-24","title":"Origen de la versión","status":"decided","outcome":"El tag alimenta -p:Version y --packVersion; Directory.Build.props queda en 0.0.0-dev."},{"id":"D-25","title":"Notas de publicación","status":"decided","outcome":"Script propio que extrae la sección del CHANGELOG; cuerpo con instalación, notas, SHA256 y comparación, solo en inglés."},{"id":"D-26","title":"Arquitecturas por publicación","status":"decided","outcome":"x64 y ARM64 en una misma publicación con un canal de Velopack por RID."},{"id":"D-27","title":"Comportamiento del updater","status":"decided","outcome":"Comprobación y descarga automáticas y desactivables; instalación solo con acción explícita; prereleases ignoradas."},{"id":"D-28","title":"Autoarranque e integraciones locales","status":"decided","outcome":"Run key opcional al lanzador estable, bridge en ruta fija y desinstalación que revierte sin borrar datos."},{"id":"D-29","title":"Gates automáticos de publicación","status":"decided","outcome":"Solo compilación, verificación del bridge y pruebas; instalación y actualización se verifican a mano."},{"id":"D-30","title":"Forma del paquete","status":"decided","outcome":"Self-contained, sin trimming, sin ReadyToRun y sin bundle portable."}],"threads":[{"id":"T-01","title":"Nombre y marca definitivos","criticality":"watch","status":"deferred","outcome":"Reactivar antes de beta pública."},{"id":"T-02","title":"Kimi, GLM, MiniMax y otros proveedores","criticality":"watch","status":"deferred","outcome":"Reactivar tras validar Codex y Claude Code."},{"id":"T-03","title":"Consumo y facturación de APIs","criticality":"watch","status":"deferred","outcome":"Reactivar después de integraciones de suscripción."},{"id":"T-04","title":"Múltiples cuentas por proveedor","criticality":"watch","status":"deferred","outcome":"Modelo preparado; UI posterior."},{"id":"T-05","title":"SDK público de plugins","criticality":"watch","status":"deferred","outcome":"Reactivar tras al menos cuatro adaptadores internos."},{"id":"T-06","title":"Firma de código Authenticode","criticality":"material","status":"deferred","outcome":"Reactivar al obtener certificado; el workflow ya tiene el paso preparado."},{"id":"T-07","title":"Canal MSIX y Microsoft Store","criticality":"watch","status":"deferred","outcome":"Reactivar cuando el canal de GitHub Releases tenga instalaciones estables."},{"id":"T-08","title":"Verificación de instalación en máquina limpia","criticality":"material","status":"resolved","outcome":"Lista de ocho comprobaciones por arquitectura en docs/release-checklist.md."}]},"ui":{"skip":"Saltar al contenido","index":"Índice del dossier","previous":"Ronda anterior","current":"Ronda actual","round":"Ronda de planificación","final":"Plan final","branch":"Rama","scope":"Alcance","source":"Fuente","date":"Fecha","evidence":"Evidencia","evidenceTitle":"Lo que establece el repositorio","evidenceIntro":"Hechos observados que restringen esta ronda de planificación.","frontier":"Frontera de decisiones","frontierTitle":"Decisiones listas para revisión","frontierIntro":"Las recomendaciones se destacan, nunca se preseleccionan. Cada elemento activo necesita una disposición explícita.","threads":"Hilos sueltos","threadsTitle":"Incertidumbre contabilizada","threadsIntro":"Los hilos abiertos requieren disposición; los bloqueados siguen visibles hasta resolver su dependencia.","recommendation":"Recomendada","reversibility":"Reversibilidad","complexity":"Complejidad","uncertainty":"Incertidumbre","surfaces":"Superficies","disposition":"Disposición","chooseDisposition":"Elige una disposición…","decide":"Decidir ahora","investigate":"Investigar después","defer":"Aplazar explícitamente","discard":"Descartar","resolve":"Resolver","notes":"Justificación, restricción o corrección","blockedBy":"Bloqueado por","reactivation":"Reactivación","corrections":"Correcciones transversales","correctionsHelp":"Añade contexto que afecte a más de una tarjeta.","nextIntent":"Siguiente intención","continuePlanning":"Continuar planificación","continueHelp":"Aplicar decisiones y exponer la siguiente frontera.","investigateIntent":"Investigar hilos marcados","investigateHelp":"Investigar antes de presentar más opciones.","consolidate":"Consolidar plan final","consolidateHelp":"Solo si no queda incertidumbre material.","reset":"Restablecer","copyMarkdown":"Copiar Markdown","copyHandoff":"Copiar handoff","copied":"Copiado","progress":"Frontera completa","saved":"Guardado localmente.","restored":"Borrador local restaurado.","saveFailed":"El autoguardado local no está disponible.","resetStatus":"Borrador local eliminado.","incomplete":"Completa","ready":"Listo para copiar.","intentMissing":"siguiente intención","fixFields":"Completa los campos resaltados.","copiedStatus":"Markdown copiado.","copyFailed":"No se pudo acceder al portapapeles.","continueTitle":"Continuar planning dossier","decisionsHeading":"Decisiones","threadsHeading":"Disposición de hilos","correctionsHeading":"Correcciones","none":"Ninguno","handoffTitle":"Handoff de implementación","startWith":"Empezar por","objective":"Objetivo","planningState":"Estado del plan","rounds":"Rondas","decisions":"Decisiones","openThreads":"Hilos abiertos","timeline":"Timeline","timelineTitle":"Registro de planificación","timelineIntro":"Las rondas inmutables muestran cómo cambió el plan; el índice muestra el estado actual.","ledger":"Registro actual","ledgerTitle":"Decisiones e hilos","id":"ID","item":"Elemento","status":"Estado","outcome":"Resultado","noLedger":"Todavía no hay elementos en el registro.","currentSummary":"Estado actual","finalHandoff":"Handoff","finalHandoffIntro":"El siguiente agente lee el dossier en vez de recibir de nuevo el plan.","generated":"Artefacto de planificación generado","immutable":"Ronda inmutable · el índice conserva el estado actual"}}</script>
+<script>
+(function () {
+  'use strict';
+  var dataEl = document.getElementById('planning-data');
+  var data;
+  try { data = JSON.parse(dataEl.textContent); } catch (_) { return; }
+  var form = document.getElementById('planning-form');
+  if (!form) return;
+
+  var ui = data.ui;
+  var storageKey = 'planning-dossier:' + data.dossier.id + ':round:' + data.round.number + ':v1';
+  var copyButton = document.getElementById('copy-markdown');
+  var resetButton = document.getElementById('reset-state');
+  var status = document.getElementById('live-status');
+  var hint = document.getElementById('validation-hint');
+  var progressText = document.getElementById('progress-text');
+  var progressFill = document.getElementById('progress-fill');
+  var saveTimer;
+  var copyTimer;
+
+  function controls() { return Array.prototype.slice.call(form.querySelectorAll('[data-state]')); }
+
+  function snapshot() {
+    var state = {};
+    controls().forEach(function (el) {
+      if (el.type === 'radio') {
+        if (el.checked) state[el.name] = el.value;
+      } else if (el.type === 'checkbox') {
+        if (!Array.isArray(state[el.name])) state[el.name] = [];
+        if (el.checked) state[el.name].push(el.value);
+      } else {
+        state[el.name] = el.value;
+      }
+    });
+    return state;
+  }
+
+  function restore() {
+    var raw;
+    try { raw = localStorage.getItem(storageKey); } catch (_) { return; }
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (_) { return; }
+    controls().forEach(function (el) {
+      var value = state[el.name];
+      if (el.type === 'radio') el.checked = value === el.value;
+      else if (el.type === 'checkbox') el.checked = Array.isArray(value) && value.indexOf(el.value) !== -1;
+      else if (typeof value === 'string') el.value = value;
+    });
+    status.textContent = ui.restored;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(snapshot()));
+      status.textContent = ui.saved;
+    } catch (_) {
+      status.textContent = ui.saveFailed;
+    }
+  }
+
+  function setInvalid(el, invalid) {
+    if (!el) return;
+    if (invalid) el.setAttribute('aria-invalid', 'true');
+    else el.removeAttribute('aria-invalid');
+  }
+
+  function validate(markFields) {
+    var state = snapshot();
+    var complete = 0;
+    var total = 0;
+    var errors = [];
+    var intent = state.intent || (data.round.kind === 'final' ? 'implement' : '');
+
+    data.round.decisions.forEach(function (decision) {
+      total += 1;
+      var dispositionName = 'decision.' + decision.id + '.disposition';
+      var optionName = 'decision.' + decision.id + '.option';
+      var noteName = 'decision.' + decision.id + '.note';
+      var disposition = state[dispositionName] || '';
+      var selected = state[optionName] || (decision.mode === 'multiple' ? [] : '');
+      var note = (state[noteName] || '').trim();
+      var selectedCount = Array.isArray(selected) ? selected.length : (selected ? 1 : 0);
+      var valid = Boolean(disposition);
+      if (disposition === 'decide') valid = selectedCount > 0;
+      if (disposition && disposition !== 'decide') valid = note.length > 0;
+      if (intent === 'consolidate' && (decision.criticality === 'blocker' || decision.criticality === 'material')) {
+        valid = valid && (disposition === 'decide' || disposition === 'discard');
+      }
+      if (valid) complete += 1;
+      else errors.push(decision.id);
+      if (markFields) {
+        setInvalid(form.elements[dispositionName], !disposition);
+        setInvalid(form.elements[noteName], disposition && disposition !== 'decide' && !note);
+      }
+    });
+
+    data.round.threads.filter(function (thread) { return thread.status === 'open'; }).forEach(function (thread) {
+      total += 1;
+      var dispositionName = 'thread.' + thread.id + '.disposition';
+      var noteName = 'thread.' + thread.id + '.note';
+      var disposition = state[dispositionName] || '';
+      var note = (state[noteName] || '').trim();
+      var valid = Boolean(disposition) && note.length > 0;
+      if (intent === 'consolidate' && (thread.criticality === 'blocker' || thread.criticality === 'material')) {
+        valid = valid && (disposition === 'resolve' || disposition === 'discard');
+      }
+      if (valid) complete += 1;
+      else errors.push(thread.id);
+      if (markFields) {
+        setInvalid(form.elements[dispositionName], !disposition);
+        setInvalid(form.elements[noteName], !note);
+      }
+    });
+
+    if (data.round.kind !== 'final' && !intent) errors.push(ui.intentMissing);
+    var percentage = total ? Math.round((complete / total) * 100) : 100;
+    progressText.textContent = complete + '/' + total;
+    progressFill.style.width = percentage + '%';
+    copyButton.disabled = errors.length > 0;
+    hint.textContent = errors.length ? ui.incomplete + ': ' + errors.join(', ') : ui.ready;
+    return { valid: errors.length === 0, state: state, intent: intent };
+  }
+
+  function bulletNote(lines, note) {
+    if (!note) return;
+    note.split(/\r?\n/).forEach(function (line) {
+      if (line.trim()) lines.push('  - ' + line.trim());
+    });
+  }
+
+  function buildMarkdown(result) {
+    var path = data.outputDir.replace(/\\/g, '/');
+    var roundFile = data.round.file;
+    var lines = [];
+    if (data.round.kind === 'final') {
+      lines.push('# ' + ui.handoffTitle);
+      lines.push('');
+      lines.push('- Dossier: `' + data.dossier.id + '`');
+      lines.push('- Index: `' + path + '/index.html`');
+      lines.push('- Final plan: `' + path + '/' + roundFile + '`');
+      lines.push('- Source round: `' + String(data.round.number).padStart(2, '0') + '`');
+      lines.push('');
+      lines.push('## ' + data.round.finalHandoff.title);
+      lines.push('');
+      lines.push(data.round.finalHandoff.instruction);
+      lines.push('');
+      lines.push('- ' + ui.startWith + ': ' + data.round.finalHandoff.startWith);
+      return lines.join('\n');
+    }
+
+    lines.push('# ' + ui.continueTitle);
+    lines.push('');
+    lines.push('- Dossier: `' + data.dossier.id + '`');
+    lines.push('- Index: `' + path + '/index.html`');
+    lines.push('- Source: `' + path + '/' + roundFile + '`');
+    lines.push('- Source round: `' + String(data.round.number).padStart(2, '0') + '`');
+    lines.push('- Intent: `' + result.intent + '`');
+    lines.push('');
+    lines.push('## ' + ui.decisionsHeading);
+    lines.push('');
+    data.round.decisions.forEach(function (decision) {
+      var prefix = 'decision.' + decision.id;
+      var disposition = result.state[prefix + '.disposition'];
+      var selected = result.state[prefix + '.option'] || [];
+      if (!Array.isArray(selected)) selected = selected ? [selected] : [];
+      lines.push('- `' + decision.id + '` — ' + disposition + (selected.length ? ' → `' + selected.join('`, `') + '`' : ''));
+      bulletNote(lines, (result.state[prefix + '.note'] || '').trim());
+    });
+    lines.push('');
+    lines.push('## ' + ui.threadsHeading);
+    lines.push('');
+    var openThreads = data.round.threads.filter(function (thread) { return thread.status === 'open'; });
+    if (!openThreads.length) lines.push('- ' + ui.none);
+    openThreads.forEach(function (thread) {
+      var prefix = 'thread.' + thread.id;
+      lines.push('- `' + thread.id + '` — ' + result.state[prefix + '.disposition']);
+      bulletNote(lines, (result.state[prefix + '.note'] || '').trim());
+    });
+    var globalNotes = (result.state.globalNotes || '').trim();
+    if (globalNotes) {
+      lines.push('');
+      lines.push('## ' + ui.correctionsHeading);
+      lines.push('');
+      globalNotes.split(/\r?\n/).forEach(function (line) { if (line.trim()) lines.push('- ' + line.trim()); });
+    }
+    return lines.join('\n');
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); } finally { document.body.removeChild(area); }
+  }
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    fallbackCopy(text);
+    return Promise.resolve();
+  }
+
+  form.addEventListener('input', function () {
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(save, 180);
+    validate(false);
+  });
+  form.addEventListener('change', function () { save(); validate(false); });
+
+  copyButton.addEventListener('click', function () {
+    var result = validate(true);
+    if (!result.valid) {
+      status.textContent = ui.fixFields;
+      var first = form.querySelector('[aria-invalid="true"]');
+      if (first) first.focus();
+      return;
+    }
+    writeClipboard(buildMarkdown(result)).then(function () {
+      copyButton.textContent = ui.copied;
+      copyButton.dataset.state = 'copied';
+      status.textContent = ui.copiedStatus;
+      window.clearTimeout(copyTimer);
+      copyTimer = window.setTimeout(function () {
+        copyButton.textContent = data.round.kind === 'final' ? ui.copyHandoff : ui.copyMarkdown;
+        delete copyButton.dataset.state;
+      }, 1800);
+    }, function () { status.textContent = ui.copyFailed; });
+  });
+
+  resetButton.addEventListener('click', function () {
+    form.reset();
+    try { localStorage.removeItem(storageKey); } catch (_) {}
+    status.textContent = ui.resetStatus;
+    validate(false);
+  });
+
+  restore();
+  validate(false);
+}());
+</script>
+</body>
+</html>

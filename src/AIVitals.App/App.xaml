@@ -1,0 +1,149 @@
+<Application x:Class="AIVitals.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
+    <Application.Resources>
+        <SolidColorBrush x:Key="CanvasBrush" Color="#07111F" />
+        <SolidColorBrush x:Key="SidebarBrush" Color="#091524" />
+        <SolidColorBrush x:Key="TopBarBrush" Color="#07101B" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#0D1B2B" />
+        <SolidColorBrush x:Key="PanelAltBrush" Color="#0A1726" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#122238" />
+        <SolidColorBrush x:Key="ElevatedBrush" Color="#172A42" />
+        <SolidColorBrush x:Key="SelectionBrush" Color="#163B55" />
+        <SolidColorBrush x:Key="NavSelectedBrush" Color="#122033" />
+        <SolidColorBrush x:Key="WarmSurfaceBrush" Color="#352719" />
+        <SolidColorBrush x:Key="WidgetGlassBrush" Color="#B80A1726" />
+        <SolidColorBrush x:Key="WidgetSurfaceBrush" Color="#681A2B3D" />
+        <SolidColorBrush x:Key="ScrollThumbBrush" Color="#53677C" />
+        <SolidColorBrush x:Key="LineBrush" Color="#263B53" />
+        <SolidColorBrush x:Key="TextBrush" Color="#F5F8FC" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#B7C4D3" />
+        <SolidColorBrush x:Key="AccentTextBrush" Color="#06151B" />
+        <SolidColorBrush x:Key="SignalBrush" Color="#31D6C6" />
+        <SolidColorBrush x:Key="CodexBrush" Color="#3D8BFF" />
+        <SolidColorBrush x:Key="CodexSurfaceBrush" Color="#102A4A" />
+        <SolidColorBrush x:Key="WarmBrush" Color="#FF9B2F" />
+        <SolidColorBrush x:Key="ClaudeBrandBrush" Color="#D97757" />
+        <SolidColorBrush x:Key="ButtonBrush" Color="#14263C" />
+        <SolidColorBrush x:Key="DangerBrush" Color="#FF9B9B" />
+
+        <Style x:Key="FluentIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="PanelCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+
+        <Style x:Key="DashboardCard" TargetType="Border" BasedOn="{StaticResource PanelCard}">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource PanelAltBrush}" />
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Background" Value="{DynamicResource ButtonBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder" Padding="{TemplateBinding Padding}" CornerRadius="6"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource WarmBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="{DynamicResource SignalBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+        </Style>
+        <Style x:Key="WindowButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="54" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ChromeButton" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ChromeButton" Property="Background" Value="{DynamicResource ElevatedBrush}" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ControlTemplate x:Key="ScrollRepeatButtonTemplate" TargetType="RepeatButton">
+            <Border Background="Transparent" />
+        </ControlTemplate>
+        <ControlTemplate x:Key="ScrollThumbTemplate" TargetType="Thumb">
+            <Border Margin="1" CornerRadius="3" Background="{TemplateBinding Background}" />
+        </ControlTemplate>
+        <ControlTemplate x:Key="VerticalScrollBarTemplate" TargetType="ScrollBar">
+            <Grid Width="9" Background="Transparent">
+                <Track x:Name="PART_Track" IsDirectionReversed="True">
+                    <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Template="{StaticResource ScrollRepeatButtonTemplate}" /></Track.DecreaseRepeatButton>
+                    <Track.Thumb><Thumb MinHeight="30" Background="{DynamicResource ScrollThumbBrush}" Template="{StaticResource ScrollThumbTemplate}" /></Track.Thumb>
+                    <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Template="{StaticResource ScrollRepeatButtonTemplate}" /></Track.IncreaseRepeatButton>
+                </Track>
+            </Grid>
+        </ControlTemplate>
+        <ControlTemplate x:Key="HorizontalScrollBarTemplate" TargetType="ScrollBar">
+            <Grid Height="9" Background="Transparent">
+                <Track x:Name="PART_Track">
+                    <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageLeftCommand" Template="{StaticResource ScrollRepeatButtonTemplate}" /></Track.DecreaseRepeatButton>
+                    <Track.Thumb><Thumb MinWidth="30" Background="{DynamicResource ScrollThumbBrush}" Template="{StaticResource ScrollThumbTemplate}" /></Track.Thumb>
+                    <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageRightCommand" Template="{StaticResource ScrollRepeatButtonTemplate}" /></Track.IncreaseRepeatButton>
+                </Track>
+            </Grid>
+        </ControlTemplate>
+        <Style TargetType="ScrollBar">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template" Value="{StaticResource VerticalScrollBarTemplate}" />
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal"><Setter Property="Template" Value="{StaticResource HorizontalScrollBarTemplate}" /></Trigger>
+            </Style.Triggers>
+        </Style>
+    </Application.Resources>
+</Application>

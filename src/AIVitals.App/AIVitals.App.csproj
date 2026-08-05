@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyTitle>AI Vitals</AssemblyTitle>
+    <Product>AI Vitals</Product>
+    <Description>Local-first Windows monitoring for AI coding assistant usage.</Description>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <!-- Velopack has to run before WPF starts, which needs an entry point of our own. -->
+    <StartupObject>AIVitals.App.App</StartupObject>
+    <ClaudeCodeStatusLineProject>$(MSBuildProjectDirectory)\..\AIVitals.ClaudeCode.StatusLine\AIVitals.ClaudeCode.StatusLine.csproj</ClaudeCodeStatusLineProject>
+    <ClaudeCodeStatusLineOutput>$(MSBuildProjectDirectory)\..\AIVitals.ClaudeCode.StatusLine\bin\$(Configuration)\net9.0-windows\</ClaudeCodeStatusLineOutput>
+    <ClaudeCodeStatusLineOutput Condition="'$(RuntimeIdentifier)' != ''">$(ClaudeCodeStatusLineOutput)$(RuntimeIdentifier)\</ClaudeCodeStatusLineOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Providers\*.svg" />
+    <None Remove="Assets\AppIcon.ico" />
+    <Resource Include="Assets\Providers\*.svg" />
+    <Resource Include="Assets\AppIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIVitals.Adapters.ClaudeCode\AIVitals.Adapters.ClaudeCode.csproj" />
+    <ProjectReference Include="..\AIVitals.Adapters.Codex\AIVitals.Adapters.Codex.csproj" />
+    <ProjectReference Include="..\AIVitals.Application\AIVitals.Application.csproj" />
+    <ProjectReference Include="..\AIVitals.Infrastructure\AIVitals.Infrastructure.csproj" />
+    <ProjectReference Include="..\AIVitals.Platform.Windows\AIVitals.Platform.Windows.csproj" />
+    <ProjectReference Include="$(ClaudeCodeStatusLineProject)" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyClaudeCodeStatusLineToBuildOutput" AfterTargets="Build">
+    <ItemGroup>
+      <ClaudeCodeStatusLineBuildFiles Include="$(ClaudeCodeStatusLineOutput)**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ClaudeCodeStatusLineBuildFiles)"
+          DestinationFiles="@(ClaudeCodeStatusLineBuildFiles->'$(TargetDir)statusline\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishClaudeCodeStatusLine" AfterTargets="Publish">
+    <MSBuild Projects="$(ClaudeCodeStatusLineProject)"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishDir=$(PublishDir)statusline\" />
+  </Target>
+
+</Project>

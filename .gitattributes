@@ -1,0 +1,54 @@
+# Store every text file with LF in the repository; check it out with the
+# platform's native endings unless a rule below pins it.
+* text=auto
+
+# Windows-only tooling: CRLF in the working tree on every platform.
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.sln  text eol=crlf
+
+# Shell scripts stay LF even on Windows checkouts.
+*.sh text eol=lf
+
+# Source, project and config files.
+*.cs      text diff=csharp
+*.csproj  text
+*.props   text
+*.targets text
+*.ruleset text
+*.resx    text
+*.xaml    text
+*.xml     text
+*.config  text
+*.json    text
+*.yml     text
+*.yaml    text
+*.md      text diff=markdown
+*.html    text
+*.css     text
+*.js      text
+*.mjs     text
+*.svg     text
+
+# Binary assets: never normalized, never diffed as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.zip   binary
+*.7z    binary
+*.dll   binary
+*.exe   binary
+*.pdb   binary
+*.snk   binary
+*.db    binary
