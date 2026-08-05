@@ -1,0 +1,116 @@
+<Window x:Class="AIVitals.App.TrayMenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AIVitals.App"
+        Title="AI Vitals" Width="344" Height="458"
+        WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" PreviewKeyDown="OnPreviewKeyDown">
+    <Window.Resources>
+        <Style x:Key="MenuButton" TargetType="Button">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="11,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource WidgetSurfaceBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Padding="{TemplateBinding Padding}" CornerRadius="8"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ElevatedBrush}" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="IconAction" TargetType="Button" BasedOn="{StaticResource MenuButton}">
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style x:Key="Segment" TargetType="Button" BasedOn="{StaticResource MenuButton}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="7,0" />
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="9,9,9,13" CornerRadius="16" Background="{DynamicResource WidgetGlassBrush}"
+            BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="22" ShadowDepth="6" Opacity="0.42" /></Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="70" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Border Padding="15,11" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="43" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <local:ActivityRingsIcon Width="34" Height="34" VerticalAlignment="Center"
+                                             OuterBrush="{DynamicResource SignalBrush}" MiddleBrush="{DynamicResource CodexBrush}"
+                                             InnerBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="AI Vitals" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Margin="0,2,0,0" Text="LOCAL · TRAY" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource SignalBrush}" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Width="34" Height="34" Padding="0" Style="{StaticResource MenuButton}" Click="OnOpenDashboard" ToolTip="{DynamicResource TrayOpenDashboard}">
+                        <TextBlock Style="{StaticResource FluentIcon}" FontSize="14" Text="&#xE80F;" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="1" Margin="15,12">
+                <Border x:Name="UpdateBanner" Visibility="Collapsed" Margin="0,0,0,12" Padding="11,9" CornerRadius="10"
+                        Background="{DynamicResource SelectionBrush}" BorderBrush="{DynamicResource SignalBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="UpdateBannerText" TextWrapping="Wrap" FontSize="12" AutomationProperties.LiveSetting="Polite" />
+                        <Button Margin="0,8,0,0" HorizontalAlignment="Left" Style="{StaticResource Segment}"
+                                Content="{DynamicResource UpdateInstallAndRestart}" Click="OnApplyUpdate" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="{DynamicResource TrayWidgetControls}" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock Margin="0,9,0,5" Text="{DynamicResource TrayWidgetActions}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                <UniformGrid Rows="1" Columns="5">
+                    <Button x:Name="ToggleWidgetButton" Margin="0,0,4,0" Style="{StaticResource IconAction}" Click="OnToggleWidget" ToolTip="{DynamicResource TrayToggleWidget}"><local:WidgetGlyph x:Name="WidgetVisibilityGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                    <Button x:Name="LockButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleLock" ToolTip="{DynamicResource TrayLock}"><local:WidgetGlyph x:Name="WidgetLockGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                    <Button x:Name="ClickThroughButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleClickThrough" ToolTip="{DynamicResource TrayClickThrough}"><local:WidgetGlyph x:Name="WidgetClickThroughGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                    <Button Margin="2,0" Style="{StaticResource IconAction}" Click="OnRecover" ToolTip="{DynamicResource TrayRecover}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE72C;" /></Button>
+                    <Button Margin="4,0,0,0" Style="{StaticResource IconAction}" Click="OnMoveHere" ToolTip="{DynamicResource TrayMoveWidgetHere}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE7C2;" /></Button>
+                </UniformGrid>
+
+                <TextBlock Margin="0,12,0,5" Text="{DynamicResource TrayWidgetLayout}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                <UniformGrid Rows="1" Columns="3">
+                    <Button x:Name="RingsButton" Margin="0,0,3,0" Style="{StaticResource Segment}" Click="OnRings"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="Rings" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource Rings}" /></StackPanel></Button>
+                    <Button x:Name="HorizontalButton" Margin="2,0" Style="{StaticResource Segment}" Click="OnHorizontal"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="HorizontalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource HorizontalShort}" /></StackPanel></Button>
+                    <Button x:Name="VerticalButton" Margin="3,0,0,0" Style="{StaticResource Segment}" Click="OnVertical"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="VerticalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource VerticalShort}" /></StackPanel></Button>
+                </UniformGrid>
+
+                <Border Margin="0,14,0,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" />
+                <TextBlock Text="{DynamicResource TrayAppearance}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                <UniformGrid Margin="0,6,0,0" Rows="1" Columns="3">
+                    <Button x:Name="LightButton" Margin="0,0,3,0" Style="{StaticResource Segment}" Content="{DynamicResource LightTheme}" Click="OnLight" />
+                    <Button x:Name="DarkButton" Margin="2,0" Style="{StaticResource Segment}" Content="{DynamicResource DarkTheme}" Click="OnDark" />
+                    <Button x:Name="SystemButton" Margin="3,0,0,0" Style="{StaticResource Segment}" Content="{DynamicResource SystemTheme}" Click="OnSystem" />
+                </UniformGrid>
+            </StackPanel>
+
+            <Border Grid.Row="2" Padding="15,14,15,20" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Button MinHeight="42" Padding="12,9" HorizontalAlignment="Left" Style="{StaticResource MenuButton}" Click="OnSettings">
+                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="13" Text="&#xE713;" /><TextBlock Margin="7,0,0,0" Text="{DynamicResource TraySettings}" /></StackPanel>
+                    </Button>
+                    <Button MinHeight="42" Padding="12,9" HorizontalAlignment="Right" Style="{StaticResource MenuButton}" Click="OnExit">
+                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="13" Text="&#xE7E8;" /><TextBlock Margin="7,0,0,0" Text="{DynamicResource TrayExit}" /></StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

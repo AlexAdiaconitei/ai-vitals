@@ -1,0 +1,783 @@
+<Window x:Class="AIVitals.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AIVitals.App"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="AI Vitals"
+        Icon="pack://application:,,,/AIVitals.App;component/Assets/AppIcon.ico"
+        Width="1440" Height="860" MinWidth="1080" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        Background="{DynamicResource CanvasBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="54" ResizeBorderThickness="6" CornerRadius="8" GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="NavIcon" TargetType="TextBlock" BasedOn="{StaticResource FluentIcon}">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="FontSize" Value="17" />
+        </Style>
+
+        <Style x:Key="ProjectLinkButton" TargetType="Button">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Margin" Value="0,5,0,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="LinkChrome" Padding="{TemplateBinding Padding}" CornerRadius="7"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="LinkChrome" Property="Background" Value="{DynamicResource ElevatedBrush}" />
+                                <Setter TargetName="LinkChrome" Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="LinkChrome" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="DropDownToggle" Focusable="False" ClickMode="Press"
+                                          Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}"
+                                          BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="ToggleBorder" CornerRadius="6" Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                            <Grid Margin="12,0,10,0">
+                                                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"
+                                                                  Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                  TextElement.Foreground="{TemplateBinding Foreground}" />
+                                                <Path HorizontalAlignment="Right" VerticalAlignment="Center" Width="9" Height="5"
+                                                      Fill="{TemplateBinding Foreground}" Data="M 0 0 L 4.5 5 L 9 0 Z" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ToggleBorder" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True" Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Fade">
+                                <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="320" Margin="0,4,0,0" Padding="4"
+                                        Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}"
+                                        BorderThickness="1" CornerRadius="7">
+                                    <ScrollViewer CanContentScroll="True"><ItemsPresenter /></ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="DropDownToggle" Property="BorderBrush" Value="{DynamicResource WarmBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SelectionBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SelectionBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource SignalBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,7,18,7" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        </Style>
+
+        <Style x:Key="WidgetSwitch" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,6,18,6" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="FocusChrome" Padding="2" CornerRadius="14"
+                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="SwitchTrack" Width="38" Height="20" CornerRadius="10"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                    <Ellipse x:Name="SwitchThumb" Width="14" Height="14" Margin="2"
+                                             HorizontalAlignment="Left"
+                                             Fill="{DynamicResource MutedTextBrush}" />
+                                </Border>
+                                <ContentPresenter Grid.Column="1" Margin="8,0,0,0"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="{DynamicResource SignalBrush}" />
+                                <Setter TargetName="SwitchTrack" Property="BorderBrush" Value="{DynamicResource SignalBrush}" />
+                                <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right" />
+                                <Setter TargetName="SwitchThumb" Property="Fill" Value="{DynamicResource AccentTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="FocusChrome" Property="BorderBrush" Value="{DynamicResource WarmBrush}" />
+                                <Setter TargetName="FocusChrome" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="FocusChrome" Property="Padding" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource ElevatedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1"><Setter Property="Background" Value="{DynamicResource PanelBrush}" /></Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource ElevatedBrush}" /></Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="DataGridCell">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="11,8" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Margin" Value="12,2" />
+            <Setter Property="Padding" Value="18,13" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="NavBorder" Padding="{TemplateBinding Padding}" CornerRadius="7"
+                                Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1">
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" /></Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource NavSelectedBrush}" />
+                                <Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource ScrollThumbBrush}" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="QuotaBandTemplate">
+            <Border Margin="0,0,0,10" Padding="14,11" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="7"
+                    AutomationProperties.Name="{Binding AccessibleName}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="8" /><RowDefinition Height="8" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <TextBlock Text="{Binding PeriodText}" FontWeight="SemiBold" />
+                    <TextBlock HorizontalAlignment="Right" Text="{Binding UsageText}" FontFamily="Cascadia Mono, Consolas" FontSize="25" FontWeight="Bold" />
+                    <local:UsageMeter Grid.Row="2" Height="8" Value="{Binding UsageValue}" SignalBrush="{DynamicResource CodexBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                    <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding ResetText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Grid.Row="3" Margin="0,8,0,0" HorizontalAlignment="Right" Text="{Binding FreshnessText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="54" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource TopBarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="20,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <local:ActivityRingsIcon Width="29" Height="29" VerticalAlignment="Center"
+                                         OuterBrush="{DynamicResource SignalBrush}" MiddleBrush="{DynamicResource CodexBrush}"
+                                         InnerBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="AI Vitals" FontSize="17" FontWeight="SemiBold" />
+                    <Border Height="22" Margin="12,0,0,0" Padding="8,0" VerticalAlignment="Center" CornerRadius="8" Background="{DynamicResource SurfaceBrush}">
+                        <TextBlock VerticalAlignment="Center" Text="LOCAL" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource SignalBrush}" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{DynamicResource RecoveryShortcutHelp}">
+                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource RecoveryShortcut}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                    <Border Margin="12,0,0,0" Padding="10,5" CornerRadius="5" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                        <TextBlock Text="Ctrl + Shift + U" FontFamily="Cascadia Mono, Consolas" FontSize="11" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="4" Margin="12,0,-20,0" Orientation="Horizontal">
+                    <Button Style="{StaticResource WindowButton}" Click="OnMinimizeWindow" AutomationProperties.Name="Minimizar"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE921;" /></Button>
+                    <Button Style="{StaticResource WindowButton}" Click="OnMaximizeWindow" AutomationProperties.Name="Maximizar"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE922;" /></Button>
+                    <Button Style="{StaticResource WindowButton}" Click="OnCloseWindow" AutomationProperties.Name="Cerrar"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE8BB;" /></Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TabControl x:Name="DashboardTabs" Grid.Row="1" TabStripPlacement="Left" Background="Transparent" BorderThickness="0" KeyboardNavigation.TabNavigation="Local" SelectionChanged="OnDashboardSectionChanged">
+            <TabControl.ItemsPanel><ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate></TabControl.ItemsPanel>
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="202" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+                            <DockPanel Margin="0,12,0,14">
+                                <Border DockPanel.Dock="Bottom" Margin="18,14,18,0" Padding="12" CornerRadius="7" Background="{DynamicResource WidgetSurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource ProjectLinks}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                                        <Button Style="{StaticResource ProjectLinkButton}" Click="OnOpenGitHub">
+                                            <StackPanel Orientation="Horizontal"><local:SvgLogo Width="17" Height="17" Source="Assets/Providers/github.svg" Tint="{DynamicResource TextBrush}" /><TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="{DynamicResource OpenGitHub}" FontSize="11" /></StackPanel>
+                                        </Button>
+                                        <Button Style="{StaticResource ProjectLinkButton}" Click="OnOpenKoFi">
+                                            <StackPanel Orientation="Horizontal"><local:SvgLogo Width="17" Height="17" Source="Assets/Providers/kofi.svg" /><TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="{DynamicResource SupportKoFi}" FontSize="11" /></StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                                <ItemsPresenter />
+                            </DockPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="{DynamicResource CanvasBrush}">
+                            <ContentPresenter x:Name="PART_SelectedContentHost" Margin="22,18" ContentSource="SelectedContent" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE80F;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource SummaryTab}" /></StackPanel></TabItem.Header>
+                <Grid>
+                <Grid Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="18" /><RowDefinition Height="*" /><RowDefinition Height="16" /><RowDefinition Height="150" /></Grid.RowDefinitions>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource PopupTitle}" FontSize="28" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,4,0,0" Text="{DynamicResource HeaderDescription}" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="16" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource PanelCard}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="14" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="52" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource SelectionBrush}" BorderBrush="{DynamicResource SignalBrush}" BorderThickness="1">
+                                        <TextBlock Text="C" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource SignalBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Codex" FontSize="21" FontWeight="SemiBold" />
+                                        <TextBlock Text="{DynamicResource Quotas}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding CodexHealthText}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource SignalBrush}" />
+                                </Grid>
+                                <ItemsControl Grid.Row="2" ItemsSource="{Binding CodexBands}" ItemTemplate="{StaticResource QuotaBandTemplate}" />
+                                <TextBlock Grid.Row="3" Margin="0,6,0,0" HorizontalAlignment="Right" Text="{Binding CodexObservedText}" Foreground="{DynamicResource MutedTextBrush}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="14" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="52" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource WarmSurfaceBrush}" BorderBrush="{DynamicResource WarmBrush}" BorderThickness="1">
+                                        <TextBlock Text="CC" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource WarmBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Claude Code" FontSize="21" FontWeight="SemiBold" />
+                                        <TextBlock Text="{DynamicResource Quotas}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding ClaudeHealthText}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource WarmBrush}" />
+                                </Grid>
+                                <ItemsControl Grid.Row="2" ItemsSource="{Binding ClaudeBands}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,10" Padding="14,11" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="7" AutomationProperties.Name="{Binding AccessibleName}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="8" /><RowDefinition Height="8" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                                    <TextBlock Text="{Binding PeriodText}" FontWeight="SemiBold" />
+                                                    <TextBlock HorizontalAlignment="Right" Text="{Binding UsageText}" FontFamily="Cascadia Mono, Consolas" FontSize="25" FontWeight="Bold" />
+                                                    <local:UsageMeter Grid.Row="2" Height="8" Value="{Binding UsageValue}" SignalBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                                                    <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding ResetText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                                    <TextBlock Grid.Row="3" Margin="0,8,0,0" HorizontalAlignment="Right" Text="{Binding FreshnessText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Grid.Row="3" Margin="0,6,0,0" HorizontalAlignment="Right" Text="{Binding ClaudeObservedText}" Foreground="{DynamicResource MutedTextBrush}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="16" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource PanelCard}">
+                            <Grid><StackPanel><TextBlock Text="{DynamicResource DataControl}" FontSize="18" FontWeight="SemiBold" /><TextBlock Margin="0,7,0,0" Text="{DynamicResource PrivacyDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel><TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="SQLite · JSON" FontFamily="Cascadia Mono, Consolas" Foreground="{DynamicResource SignalBrush}" /></Grid>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}">
+                            <Grid><StackPanel><TextBlock Text="{DynamicResource WidgetEditor}" FontSize="18" FontWeight="SemiBold" /><TextBlock Margin="0,7,0,0" Text="{DynamicResource WidgetDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel><Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Style="{StaticResource ActionButton}" Content="{DynamicResource MoveToCurrentDisplay}" Click="OnMoveWidgetHere" /></Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="0,0,4,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0" />
+                            <RowDefinition Height="0" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="0" />
+                            <RowDefinition Height="0" />
+                            <RowDefinition Height="0" />
+                            <RowDefinition Height="0" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource SummaryTab}" FontSize="25" FontWeight="SemiBold" />
+                                <TextBlock Margin="0,3,0,0" Text="{DynamicResource DashboardSubtitle}" Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock HorizontalAlignment="Right" Text="{DynamicResource LastUpdateLabel}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding HistoryStatus}" FontSize="10" Foreground="{DynamicResource TextBrush}" />
+                                </StackPanel>
+                                <Button Style="{StaticResource IconButton}" Click="OnRefreshHistory" AutomationProperties.Name="{DynamicResource Refresh}">
+                                    <TextBlock Style="{StaticResource FluentIcon}" Text="&#xE72C;" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="14" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource DashboardCard}" BorderBrush="{DynamicResource CodexBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="12" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="58" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <local:SvgLogo Width="43" Height="43" HorizontalAlignment="Left"
+                                                       Source="Assets/Providers/codex-dark.svg" Tint="{DynamicResource CodexBrush}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Codex" FontSize="20" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding CodexHealthText}" FontSize="11" Foreground="{DynamicResource CodexBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding CodexBands}" ItemTemplate="{StaticResource QuotaBandTemplate}" />
+                                    <Grid Grid.Row="3" Margin="0,2,0,0">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="12" Text="&#xE823;" /><TextBlock Margin="7,0,0,0" Text="{Binding CodexObservedText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" BorderBrush="{DynamicResource WarmBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="12" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="58" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <local:SvgLogo Width="43" Height="43" HorizontalAlignment="Left"
+                                                       Source="Assets/Providers/claude-ai.svg" Tint="{DynamicResource ClaudeBrandBrush}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Claude Code" FontSize="20" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding ClaudeHealthText}" FontSize="11" Foreground="{DynamicResource WarmBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding ClaudeBands}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,0,0,10" Padding="14,11" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="7">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="8" /><RowDefinition Height="8" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                                        <TextBlock Text="{Binding PeriodText}" FontWeight="SemiBold" />
+                                                        <TextBlock HorizontalAlignment="Right" Text="{Binding UsageText}" FontFamily="Cascadia Mono, Consolas" FontSize="25" FontWeight="Bold" Foreground="{DynamicResource WarmBrush}" />
+                                                        <local:UsageMeter Grid.Row="2" Height="8" Value="{Binding UsageValue}" SignalBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                                                        <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding ResetText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                                        <TextBlock Grid.Row="3" Margin="0,8,0,0" HorizontalAlignment="Right" Text="{Binding FreshnessText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Grid Grid.Row="3" Margin="0,2,0,0">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="12" Text="&#xE823;" /><TextBlock Margin="7,0,0,0" Text="{Binding ClaudeObservedText}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="4" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="1.9*" /><ColumnDefinition Width="14" /><ColumnDefinition Width=".9*" /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource DashboardCard}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" Text="&#xE9D2;" Foreground="{DynamicResource TextBrush}" /><TextBlock Margin="9,0,0,0" Text="{DynamicResource UsageHistoryTitle}" FontSize="15" FontWeight="SemiBold" /></StackPanel>
+                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <Rectangle Width="8" Height="8" RadiusX="2" RadiusY="2" Fill="{DynamicResource CodexBrush}" /><TextBlock Margin="5,0,12,0" Text="Codex" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                            <Rectangle Width="8" Height="8" RadiusX="2" RadiusY="2" Fill="{DynamicResource WarmBrush}" /><TextBlock Margin="5,0,0,0" Text="Claude" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <local:UsageActivityChart Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding Activity}" CodexBrush="{DynamicResource CodexBrush}" ClaudeBrush="{DynamicResource WarmBrush}" GridBrush="{DynamicResource LineBrush}" LabelBrush="{DynamicResource MutedTextBrush}" EmptyText="{DynamicResource HistoryEmptyShort}" />
+                                    <TextBlock Grid.Row="2" HorizontalAlignment="Right" Text="{DynamicResource QuotaChartCaption}" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="12" /><RowDefinition Height="Auto" /><RowDefinition Height="10" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" Text="&#xECA5;" Foreground="{DynamicResource TextBrush}" /><TextBlock Margin="9,0,0,0" Text="{DynamicResource WidgetPreviewTitle}" FontSize="15" FontWeight="SemiBold" /></StackPanel>
+                                    <Border Grid.Row="2" Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                        <Grid><TextBlock Text="Codex" FontSize="11" /><TextBlock HorizontalAlignment="Right" Text="{Binding CodexUsageText}" FontFamily="Cascadia Mono, Consolas" FontWeight="Bold" Foreground="{DynamicResource CodexBrush}" /><local:UsageMeter Margin="0,22,0,0" Height="6" Value="{Binding CodexUsageValue}" SignalBrush="{DynamicResource CodexBrush}" TrackBrush="{DynamicResource LineBrush}" /></Grid>
+                                    </Border>
+                                    <Border Grid.Row="4" Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                        <Grid><TextBlock Text="Claude Code" FontSize="11" /><TextBlock HorizontalAlignment="Right" Text="{Binding ClaudeUsageText}" FontFamily="Cascadia Mono, Consolas" FontWeight="Bold" Foreground="{DynamicResource WarmBrush}" /><local:UsageMeter Margin="0,22,0,0" Height="6" Value="{Binding ClaudeUsageValue}" SignalBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" /></Grid>
+                                    </Border>
+                                    <Button Grid.Row="6" Margin="0,10,0,0" Style="{StaticResource ActionButton}" Click="OnOpenWidgetEditor">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="13" Text="&#xE710;" /><TextBlock Margin="7,0,0,0" Text="{DynamicResource ConfigureWidget}" /></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="6" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="1.25*" /><ColumnDefinition Width="14" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource DashboardCard}" Padding="0">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="48" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <StackPanel Margin="16,0" Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Style="{StaticResource FluentIcon}" Text="&#xE823;" Foreground="{DynamicResource TextBrush}" /><TextBlock Margin="9,0,0,0" Text="{DynamicResource RecentObservations}" FontSize="15" FontWeight="SemiBold" /></StackPanel>
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding History}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="0" Background="Transparent" RowBackground="Transparent">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="{DynamicResource HistoryProvider}" Binding="{Binding Provider}" Width="120" />
+                                <DataGridTextColumn Header="{DynamicResource HistorySummary}" Binding="{Binding Summary}" Width="*" />
+                                            <DataGridTextColumn Header="{DynamicResource HistoryTime}" Binding="{Binding Observed}" Width="170" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="16" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" Text="&#xE968;" Foreground="{DynamicResource TextBrush}" /><TextBlock Margin="9,0,0,0" Text="{DynamicResource AdapterStatusTitle}" FontSize="15" FontWeight="SemiBold" /></StackPanel>
+                                    <StackPanel Grid.Row="2">
+                                        <Border Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}"><Grid><StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource CodexBrush}" /><TextBlock Margin="10,0,0,0" Text="Codex local adapter" /></StackPanel><TextBlock HorizontalAlignment="Right" Text="{Binding CodexHealthText}" FontSize="9" Foreground="{DynamicResource CodexBrush}" /></Grid></Border>
+                                        <Border Margin="0,9,0,0" Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}"><Grid><StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource WarmBrush}" /><TextBlock Margin="10,0,0,0" Text="Claude Code" /></StackPanel><TextBlock HorizontalAlignment="Right" Text="{Binding ClaudeHealthText}" FontSize="9" Foreground="{DynamicResource WarmBrush}" /></Grid></Border>
+                                        <Border Margin="0,9,0,0" Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}"><Grid><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource FluentIcon}" FontSize="13" Text="&#xE74E;" Foreground="{DynamicResource SignalBrush}" /><TextBlock Margin="10,0,0,0" Text="{DynamicResource LocalStorageLabel}" /></StackPanel><TextBlock HorizontalAlignment="Right" Text="SQLite" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource SignalBrush}" /></Grid></Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE9D2;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource HistoryTab}" /></StackPanel></TabItem.Header>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="0,0,4,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="108" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="300" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="230" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="360" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource HistoryPageTitle}" FontSize="25" FontWeight="SemiBold" />
+                                <TextBlock Margin="0,3,0,0" Text="{DynamicResource HistoryPageSubtitle}" Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <ComboBox x:Name="ProviderFilter" Width="150" SelectedIndex="0" AutomationProperties.Name="{DynamicResource ProviderFilterAccessibleName}">
+                                    <ComboBoxItem Content="{DynamicResource AllProviders}" Tag="" /><ComboBoxItem Content="Codex" Tag="codex" /><ComboBoxItem Content="Claude Code" Tag="claude-code" />
+                                </ComboBox>
+                                <ComboBox x:Name="RangeFilter" Width="165" Margin="8,0,0,0" SelectedIndex="2" AutomationProperties.Name="{DynamicResource RangeFilterAccessibleName}">
+                                    <ComboBoxItem Content="{DynamicResource Last24Hours}" Tag="1" /><ComboBoxItem Content="{DynamicResource Last7Days}" Tag="7" /><ComboBoxItem Content="{DynamicResource Last30Days}" Tag="30" /><ComboBoxItem Content="{DynamicResource AllTime}" Tag="0" />
+                                </ComboBox>
+                                <Button Margin="8,0,0,0" Style="{StaticResource PrimaryButton}" Content="{DynamicResource Refresh}" Click="OnRefreshHistory" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource DashboardCard}">
+                                <StackPanel><TextBlock Text="{DynamicResource HistoryProvidersInView}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock Margin="0,5,0,0" Text="{Binding HistoryProviderCount}" FontFamily="Cascadia Mono, Consolas" FontSize="25" FontWeight="Bold" /><TextBlock Margin="0,3,0,0" Text="{Binding HistorySnapshotCount}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}">
+                                <StackPanel><TextBlock Text="{DynamicResource HistoryAverageConsumption}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock Margin="0,5,0,0" Text="{Binding HistoryAverage}" FontFamily="Cascadia Mono, Consolas" FontSize="25" FontWeight="Bold" /><TextBlock Margin="0,3,0,0" Text="{DynamicResource HistorySelectedRange}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                            </Border>
+                            <Border Grid.Column="4" Style="{StaticResource DashboardCard}">
+                                <StackPanel><TextBlock Text="{DynamicResource HistoryPeakProvider}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock Margin="0,7,0,0" Text="{Binding HistoryPeakProvider}" FontSize="17" FontWeight="SemiBold" /><TextBlock Margin="0,5,0,0" Text="{Binding HistoryPeakValue}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                            </Border>
+                            <Border Grid.Column="6" Style="{StaticResource DashboardCard}">
+                                <StackPanel><TextBlock Text="{DynamicResource HistoryCurrentPressure}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock Margin="0,5,0,0" Text="{Binding HistoryCurrentProvider}" FontSize="17" FontWeight="SemiBold" /><TextBlock Margin="0,3,0,0" Text="{Binding HistoryCurrentValue}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock Margin="0,2,0,0" Text="{Binding HistoryVolatility}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="4" Style="{StaticResource DashboardCard}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal"><Rectangle Width="4" Height="17" RadiusX="2" RadiusY="2" Fill="{DynamicResource SignalBrush}" /><TextBlock Margin="9,0,0,0" Text="{Binding HistoryTrendTitle}" FontSize="14" FontWeight="SemiBold" /></StackPanel>
+                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal"><Rectangle Width="8" Height="8" RadiusX="2" RadiusY="2" Fill="{DynamicResource CodexBrush}" /><TextBlock Margin="5,0,12,0" Text="Codex" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><Rectangle Width="8" Height="8" RadiusX="2" RadiusY="2" Fill="{DynamicResource WarmBrush}" /><TextBlock Margin="5,0,0,0" Text="Claude Code" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel>
+                                </Grid>
+                                <local:UsageActivityChart Grid.Row="1" Margin="0,12,0,0" ItemsSource="{Binding Activity}" CodexBrush="{DynamicResource CodexBrush}" ClaudeBrush="{DynamicResource WarmBrush}" GridBrush="{DynamicResource LineBrush}" LabelBrush="{DynamicResource MutedTextBrush}" EmptyText="{DynamicResource HistoryEmptyShort}" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="6">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="16" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource DashboardCard}">
+                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions><StackPanel><TextBlock Text="{DynamicResource HistoryComparisonTitle}" FontSize="14" FontWeight="SemiBold" /><TextBlock Margin="0,3,0,0" Text="{DynamicResource HistoryComparisonSubtitle}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel><local:ProviderComparisonChart Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding ProviderMetrics}" CodexBrush="{DynamicResource CodexBrush}" ClaudeBrush="{DynamicResource WarmBrush}" LabelBrush="{DynamicResource MutedTextBrush}" /></Grid>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}">
+                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions><StackPanel><TextBlock Text="{DynamicResource HistoryShareTitle}" FontSize="14" FontWeight="SemiBold" /><TextBlock Margin="0,3,0,0" Text="{DynamicResource HistoryShareSubtitle}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /></StackPanel><local:UsageShareChart Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding ProviderMetrics}" CodexBrush="{DynamicResource CodexBrush}" ClaudeBrush="{DynamicResource WarmBrush}" LabelBrush="{DynamicResource MutedTextBrush}" /></Grid>
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="8" Style="{StaticResource DashboardCard}" Padding="0">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="48" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <Grid Margin="16,0"><TextBlock VerticalAlignment="Center" Text="{DynamicResource HistoryObservationsTitle}" FontSize="14" FontWeight="SemiBold" /><StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center"><Button Style="{StaticResource ActionButton}" Content="{DynamicResource ExportCsv}" Click="OnExportCsv" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource ExportJson}" Click="OnExportJson" /></StackPanel></Grid>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding History}" AutoGenerateColumns="False" IsReadOnly="True" AlternationCount="2" CanUserAddRows="False" GridLinesVisibility="None" HeadersVisibility="Column" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}" BorderThickness="0" RowBackground="{DynamicResource SurfaceBrush}" AutomationProperties.Name="{DynamicResource HistoryGridAccessibleName}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{DynamicResource HistoryTime}" Binding="{Binding Observed}" Width="190" />
+                                        <DataGridTextColumn Header="{DynamicResource HistoryProvider}" Binding="{Binding Provider}" Width="130" />
+                                        <DataGridTextColumn Header="{DynamicResource HistorySummary}" Binding="{Binding Summary}" Width="260" />
+                                        <DataGridTextColumn Header="{DynamicResource HistoryContext}" Binding="{Binding Context}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                        <Grid Grid.Row="9" Margin="0,12,0,0"><TextBlock Text="{Binding HistoryStatus}" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" /><Button HorizontalAlignment="Right" Style="{StaticResource ActionButton}" Content="{DynamicResource DeleteFilter}" Click="OnDeleteFiltered" /></Grid>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE968;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource ConnectionsTab}" /></StackPanel></TabItem.Header>
+                <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+                    <TextBlock Text="{DynamicResource LocalConnections}" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock Margin="0,5,0,20" Text="{DynamicResource ConnectionsDescription}" Foreground="{DynamicResource MutedTextBrush}" />
+                    <Border Style="{StaticResource PanelCard}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="64" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <local:SvgLogo Width="40" Height="40" Source="Assets/Providers/codex-dark.svg" Tint="{DynamicResource CodexBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Codex" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Margin="0,4,0,0" Text="{DynamicResource ProviderUsageDescription}" Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBlock Margin="0,4,0,0" Text="{Binding CodexHealthText}" FontSize="10" Foreground="{DynamicResource CodexBrush}" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{DynamicResource AutomaticDetection}" Foreground="{DynamicResource SignalBrush}" />
+                        </Grid>
+                    </Border>
+                    <Border Margin="0,14,0,0" Style="{StaticResource PanelCard}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="64" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <local:SvgLogo Width="40" Height="40" Source="Assets/Providers/claude-ai.svg" Tint="{DynamicResource ClaudeBrandBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Claude Code" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Margin="0,4,0,0" Text="{DynamicResource ProviderUsageDescription}" Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBlock Margin="0,4,0,0" Text="{Binding ClaudeHealthText}" FontSize="10" Foreground="{DynamicResource WarmBrush}" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{DynamicResource AutomaticDetection}" Foreground="{DynamicResource SignalBrush}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xECA5;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource WidgetTab}" /></StackPanel></TabItem.Header>
+                <Grid MaxWidth="1060" HorizontalAlignment="Left">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="18" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource WidgetEditor}" FontSize="28" FontWeight="SemiBold" />
+                        <TextBlock Margin="0,5,0,0" Text="{DynamicResource WidgetDescription}" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="520" /><ColumnDefinition Width="16" /><ColumnDefinition Width="480" /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource PanelCard}">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource VisualMode}" FontWeight="SemiBold" />
+                            <ComboBox x:Name="WidgetMode" Width="260" Margin="0,8,0,14" HorizontalAlignment="Left" SelectionChanged="OnWidgetModeChanged"><ComboBoxItem Content="{DynamicResource Rings}" Tag="Rings" /><ComboBoxItem Content="{DynamicResource HorizontalBars}" Tag="HorizontalBars" /><ComboBoxItem Content="{DynamicResource VerticalBars}" Tag="VerticalBars" /></ComboBox>
+                            <WrapPanel><CheckBox x:Name="WidgetVisible" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource ShowWidget}" Click="OnWidgetPreviewInputChanged" /><CheckBox x:Name="WidgetLocked" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource LockPosition}" Click="OnWidgetPreviewInputChanged" /><CheckBox x:Name="WidgetClickThrough" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource ClickThrough}" Click="OnWidgetPreviewInputChanged" /></WrapPanel>
+                            <TextBlock Margin="0,12,0,4" Text="{DynamicResource PinnedConnections}" FontWeight="SemiBold" />
+                            <TextBlock Text="{DynamicResource ProviderOrderHelp}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                            <Grid x:Name="ProviderOrderGrid" Margin="0,7,0,0">
+                                <Grid.RowDefinitions><RowDefinition Height="42" /><RowDefinition Height="42" /></Grid.RowDefinitions>
+                                <Border x:Name="CodexProviderRow" Grid.Row="0" Margin="0,0,0,4" Padding="10,0" CornerRadius="7" Background="{DynamicResource WidgetSurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><CheckBox x:Name="PinCodex" Margin="0" VerticalAlignment="Center" Style="{StaticResource WidgetSwitch}" Content="Codex" Click="OnWidgetPreviewInputChanged" /><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Width="30" Height="28" Margin="0,0,4,0" Padding="0" Style="{StaticResource ActionButton}" Tag="codex" Click="OnMoveProviderUp"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE74A;" /></Button><Button Width="30" Height="28" Margin="0" Padding="0" Style="{StaticResource ActionButton}" Tag="codex" Click="OnMoveProviderDown"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE74B;" /></Button></StackPanel></Grid>
+                                </Border>
+                                <Border x:Name="ClaudeProviderRow" Grid.Row="1" Margin="0,0,0,4" Padding="10,0" CornerRadius="7" Background="{DynamicResource WidgetSurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><CheckBox x:Name="PinClaude" Margin="0" VerticalAlignment="Center" Style="{StaticResource WidgetSwitch}" Content="Claude Code" Click="OnWidgetPreviewInputChanged" /><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Width="30" Height="28" Margin="0,0,4,0" Padding="0" Style="{StaticResource ActionButton}" Tag="claude-code" Click="OnMoveProviderUp"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE74A;" /></Button><Button Width="30" Height="28" Margin="0" Padding="0" Style="{StaticResource ActionButton}" Tag="claude-code" Click="OnMoveProviderDown"><TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE74B;" /></Button></StackPanel></Grid>
+                                </Border>
+                            </Grid>
+                            <WrapPanel Margin="0,18,0,0"><Button Style="{StaticResource PrimaryButton}" Content="{DynamicResource SaveWidget}" Click="OnSaveWidget" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource MoveToCurrentDisplay}" Click="OnMoveWidgetHere" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource RecoverPosition}" Click="OnRecoverWidget" /></WrapPanel>
+                        </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="14">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="10" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <TextBlock Text="{DynamicResource WidgetLivePreview}" FontWeight="SemiBold" />
+                                <Border Grid.Row="2" CornerRadius="14" Background="{DynamicResource CanvasBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Padding="8" ClipToBounds="True">
+                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                        <local:WidgetView x:Name="WidgetPreview" />
+                                    </Viewbox>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xEA18;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource PrivacyTab}" /></StackPanel></TabItem.Header>
+                <StackPanel MaxWidth="850" HorizontalAlignment="Left"><TextBlock Text="{DynamicResource DataControl}" FontSize="28" FontWeight="SemiBold" /><TextBlock Margin="0,5,0,20" Text="{DynamicResource PrivacyDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" /><Border Style="{StaticResource PanelCard}" BorderBrush="{DynamicResource DangerBrush}"><StackPanel><TextBlock Text="{DynamicResource LocalDeletion}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource DangerBrush}" /><TextBlock Margin="0,8,0,15" Text="{DynamicResource DeleteDescription}" TextWrapping="Wrap" /><Button HorizontalAlignment="Left" Style="{StaticResource ActionButton}" Content="{DynamicResource DeleteAll}" Click="OnDeleteAll" /></StackPanel></Border></StackPanel>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE790;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource AppearanceTab}" /></StackPanel></TabItem.Header>
+                <StackPanel MaxWidth="850" HorizontalAlignment="Left"><TextBlock Text="{DynamicResource AppearanceTitle}" FontSize="28" FontWeight="SemiBold" /><TextBlock Margin="0,5,0,20" Text="{DynamicResource AppearanceDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" /><Border Style="{StaticResource PanelCard}"><StackPanel><TextBlock Text="{DynamicResource Language}" FontWeight="SemiBold" /><ComboBox x:Name="LanguageSelector" Width="260" Margin="0,8,0,16" HorizontalAlignment="Left"><ComboBoxItem Content="{DynamicResource Spanish}" Tag="es" /><ComboBoxItem Content="{DynamicResource English}" Tag="en" /></ComboBox><TextBlock Text="{DynamicResource Theme}" FontWeight="SemiBold" /><ComboBox x:Name="ThemeSelector" Width="260" Margin="0,8,0,16" HorizontalAlignment="Left"><ComboBoxItem Content="{DynamicResource SystemTheme}" Tag="System" /><ComboBoxItem Content="{DynamicResource DarkTheme}" Tag="Dark" /><ComboBoxItem Content="{DynamicResource LightTheme}" Tag="Light" /></ComboBox><TextBlock Text="{DynamicResource HighContrastStatus}" Foreground="{DynamicResource MutedTextBrush}" /><Button Margin="0,18,0,0" HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}" Content="{DynamicResource SaveAppearance}" Click="OnSaveAppearance" /></StackPanel></Border></StackPanel>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE946;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource AboutTab}" /></StackPanel></TabItem.Header>
+                <StackPanel MaxWidth="850" HorizontalAlignment="Left">
+                    <TextBlock Text="{DynamicResource AboutTitle}" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock Margin="0,5,0,20" Text="{DynamicResource AboutDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                    <Border Style="{StaticResource PanelCard}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource InstalledVersion}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock x:Name="InstalledVersionValue" Margin="0,4,0,0" FontSize="18" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{DynamicResource UpdateChannel}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock x:Name="UpdateChannelValue" Margin="0,4,0,0" FontSize="18" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Grid>
+                            <Border x:Name="UpdateReadyCard" Visibility="Collapsed" Margin="0,18,0,0" Padding="12,10" CornerRadius="10"
+                                    Background="{DynamicResource SelectionBrush}" BorderBrush="{DynamicResource SignalBrush}" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="UpdateReadyText" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <Button Margin="14,0,0,0" Style="{StaticResource PrimaryButton}" Content="{DynamicResource UpdateInstallAndRestart}" Click="OnInstallUpdate" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="UpdateStatusText" Margin="0,16,0,0" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                            <TextBlock x:Name="UpdateLastCheckedText" Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                            <CheckBox x:Name="AutomaticUpdateCheck" Margin="0,18,0,0" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource AutomaticUpdateCheck}" />
+                            <CheckBox x:Name="StartWithWindows" Margin="0,6,0,0" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource StartWithWindows}" />
+                            <WrapPanel Margin="0,18,0,0">
+                                <Button Style="{StaticResource PrimaryButton}" Content="{DynamicResource SaveUpdatePreferences}" Click="OnSaveUpdatePreferences" />
+                                <Button x:Name="CheckForUpdatesButton" Style="{StaticResource ActionButton}" Content="{DynamicResource CheckForUpdates}" Click="OnCheckForUpdates" />
+                                <Button Style="{StaticResource ActionButton}" Content="{DynamicResource OpenReleases}" Click="OnOpenReleases" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="2" Background="{DynamicResource TopBarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="18,0"><TextBlock VerticalAlignment="Center" Text="{DynamicResource LocalFirstFooter}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" /><TextBlock x:Name="ActionStatus" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" AutomationProperties.LiveSetting="Polite" /></Grid>
+        </Border>
+    </Grid>
+</Window>

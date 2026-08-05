@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Plan final aprobado y fase de distribución implementada sobre un único canal. Quedan siete ampliaciones aplazadas con condición de reactivación explícita.">
+<title>Monitor local de uso de IA para Windows · planning dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#f6f2ea; --paper-2:#efe9dd; --card:#fffdf8;
+  --ink:#1b1812; --ink-soft:#4f483c; --ink-faint:#847a68;
+  --line:#d8d0bf; --line-strong:#b9ae97;
+  --accent:#0d5c46; --accent-soft:#e3ede7;
+  --critical:#a82e1f; --critical-bg:#f6e3df;
+  --medium:#9a6510; --medium-bg:#f5ead3;
+  --minor:#3d5a80; --minor-bg:#e2e9f1;
+  --display:'Fraunces',serif; --sans:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  min-width:320px; font-family:var(--sans); line-height:1.62; color:var(--ink);
+  background-color:var(--paper);
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgb(27 24 18 / .012) 3px,rgb(27 24 18 / .012) 4px),radial-gradient(circle at 85% -5%,rgb(13 92 70 / .08),transparent 42%);
+}
+button,input,select,textarea { font:inherit; }
+button { color:inherit; }
+a { color:inherit; }
+::selection { color:var(--paper); background:var(--accent); }
+:focus-visible { outline:3px solid var(--critical); outline-offset:3px; }
+.skip-link { position:fixed; top:12px; left:12px; z-index:50; padding:8px 12px; font:12px var(--mono); color:var(--paper); background:var(--ink); transform:translateY(-180%); }
+.skip-link:focus { transform:none; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.sheet { width:min(calc(100% - 56px),1060px); margin:0 auto; padding-bottom:96px; }
+.topnav { display:flex; justify-content:space-between; gap:18px; padding:18px 0 14px; border-bottom:1px solid var(--line-strong); font:600 10.5px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); }
+.topnav-group { display:flex; flex-wrap:wrap; gap:18px; }
+.topnav a { text-decoration-thickness:1px; text-underline-offset:4px; }
+.topnav a:hover { color:var(--accent); }
+.masthead { position:relative; padding:42px 0 48px; border-bottom:3px solid var(--ink); }
+.kicker { display:flex; align-items:center; gap:12px; font:600 12px var(--mono); letter-spacing:.22em; color:var(--accent); text-transform:uppercase; }
+.kicker::before { width:36px; height:2px; content:''; background:var(--accent); }
+h1 { max-width:15ch; margin-top:20px; font:900 clamp(48px,8vw,86px)/.94 var(--display); letter-spacing:-.025em; }
+h1 em { color:var(--accent); font-weight:600; }
+.stamp { position:absolute; top:126px; right:4px; padding:7px 13px; font:600 11px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); border:2px solid var(--accent); border-radius:4px; transform:rotate(3.5deg); }
+.lede { max-width:690px; margin-top:24px; font:400 clamp(19px,2.2vw,25px)/1.45 var(--display); color:var(--ink-soft); }
+.masthead-meta { display:flex; flex-wrap:wrap; margin-top:34px; border-top:1px solid var(--line-strong); }
+.masthead-meta div { padding:12px 26px 4px 0; margin-right:26px; border-right:1px solid var(--line); }
+.masthead-meta div:last-child { border-right:0; }
+.masthead-meta dt { font:400 10.5px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+.masthead-meta dd { margin-top:2px; font-size:14.5px; font-weight:600; }
+.summary { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr); gap:42px; align-items:start; padding:42px 0 8px; }
+.summary-copy { color:var(--ink-soft); }
+.summary-copy strong { color:var(--ink); }
+.tally { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.tally .cell { position:relative; overflow:hidden; padding:14px 14px 11px; background:var(--paper-2); border:1.5px solid var(--ink); border-radius:10px; }
+.tally .cell::after { position:absolute; inset:0 0 auto; height:5px; content:''; background:var(--accent); }
+.tally .cell.blocker::after { background:var(--critical); }
+.tally .cell.material::after { background:var(--medium); }
+.tally .cell.watch::after { background:var(--minor); }
+.tally .num { font:900 42px/1 var(--display); }
+.tally .lbl { margin-top:4px; font:400 10px var(--mono); letter-spacing:.12em; color:var(--ink-faint); text-transform:uppercase; }
+.section { padding-top:76px; }
+.section-head { display:grid; grid-template-columns:150px 1fr; gap:28px; align-items:baseline; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+.section-label { font:600 11px var(--mono); letter-spacing:.15em; color:var(--accent); text-transform:uppercase; }
+.section h2 { font:800 clamp(30px,4vw,42px)/1.05 var(--display); letter-spacing:-.015em; }
+.section-intro { max-width:760px; margin-top:16px; color:var(--ink-soft); }
+.eyebrow { display:flex; align-items:center; gap:9px; margin-bottom:12px; font:600 10.5px var(--mono); letter-spacing:.16em; color:var(--accent); text-transform:uppercase; }
+.eyebrow::after { height:1px; content:''; background:var(--line); flex:1; }
+.badge { display:inline-flex; align-items:center; padding:4px 10px; font:600 10px var(--mono); letter-spacing:.1em; text-transform:uppercase; border-radius:999px; white-space:nowrap; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); }
+.badge.blocker { color:var(--critical); background:var(--critical-bg); border-color:var(--critical); }
+.badge.material { color:var(--medium); background:var(--medium-bg); border-color:var(--medium); }
+.badge.watch { color:var(--minor); background:var(--minor-bg); border-color:var(--minor); }
+.badge.done { color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }
+.evidence-grid,.cards-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:28px; }
+.evidence-card,.mini-card { padding:22px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; box-shadow:4px 4px 0 rgb(27 24 18 / .09); }
+.evidence-card h3,.mini-card h3 { font:800 21px/1.15 var(--display); }
+.evidence-card p,.mini-card p { margin-top:9px; color:var(--ink-soft); font-size:14px; }
+.refs,.meta-list { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; list-style:none; }
+.refs code,.meta-list li { padding:3px 7px; font:500 10.5px var(--mono); color:var(--ink-faint); background:var(--paper-2); border:1px solid var(--line); border-radius:4px; word-break:break-all; }
+.decision-list,.thread-list { display:grid; gap:26px; margin-top:30px; }
+.decision-card,.thread-card { overflow:hidden; background:var(--card); border:1.5px solid var(--ink); border-radius:14px; box-shadow:6px 6px 0 rgb(27 24 18 / .1); }
+.card-head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:16px; align-items:center; padding:18px 22px; background:var(--paper-2); border-bottom:1px solid var(--line); }
+.folio { font:900 32px/1 var(--display); color:transparent; -webkit-text-stroke:1.2px var(--ink); }
+.card-head h3 { font:800 22px/1.1 var(--display); }
+.card-head-right { display:flex; align-items:center; gap:8px; }
+.card-copy { padding:22px; border-bottom:1px solid var(--line); }
+.card-copy .question { font:600 17px/1.45 var(--sans); color:var(--ink); }
+.card-copy .rationale { margin-top:7px; color:var(--ink-soft); font-size:14px; }
+.option-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:22px; }
+.option { position:relative; display:block; min-width:0; padding:17px; cursor:pointer; background:var(--paper); border:1.5px solid var(--line-strong); border-radius:10px; }
+.option:has(input:checked) { background:var(--accent-soft); border-color:var(--accent); box-shadow:3px 3px 0 rgb(13 92 70 / .15); }
+.option-top { display:flex; align-items:flex-start; gap:10px; }
+.option input { flex:0 0 auto; margin-top:4px; accent-color:var(--accent); }
+.option-title { font-weight:600; }
+.recommended { margin-left:auto; padding:2px 6px; font:600 9px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid var(--accent); border-radius:4px; }
+.option-summary { margin-top:8px; font-size:13.5px; color:var(--ink-soft); }
+.option-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:13px; }
+.option-meta div { padding-top:7px; border-top:1px dotted var(--line-strong); }
+.option-meta dt { font:500 9px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
+.option-meta dd { margin-top:2px; font:500 11px var(--mono); }
+.tradeoffs { margin-top:12px; list-style:none; }
+.tradeoffs li { position:relative; padding:5px 0 5px 16px; font-size:12.5px; color:var(--ink-soft); border-top:1px dotted var(--line); }
+.tradeoffs li::before { position:absolute; left:1px; color:var(--accent); content:'→'; }
+.response { display:grid; grid-template-columns:minmax(190px,.55fr) minmax(0,1.45fr); gap:18px; padding:20px 22px; background:linear-gradient(180deg,transparent,rgb(13 92 70 / .035)); border-top:1px dashed var(--line-strong); }
+.field label,.field .field-label { display:block; margin-bottom:6px; font:600 10px var(--mono); letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint); }
+select,textarea { width:100%; color:var(--ink); background:var(--card); border:1.5px solid var(--line-strong); border-radius:6px; }
+select { min-height:42px; padding:8px 34px 8px 10px; }
+textarea { min-height:86px; padding:10px 12px; resize:vertical; line-height:1.45; }
+select[aria-invalid='true'],textarea[aria-invalid='true'] { border-color:var(--critical); background:var(--critical-bg); }
+.thread-card.blocked { box-shadow:none; border-color:var(--line-strong); }
+.thread-card .thread-body { padding:20px 22px; }
+.thread-card p { color:var(--ink-soft); }
+.blocked-by { margin-top:12px; font:500 11px var(--mono); color:var(--minor); }
+.content-stack { display:grid; gap:22px; margin-top:28px; }
+.content-stack > * { min-width:0; max-width:100%; }
+.visual-block { min-width:0; margin:0; padding:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; box-shadow:6px 6px 0 var(--ink); }
+.visual-block img { display:block; width:100%; height:auto; border-radius:8px; border:1px solid var(--rule); background:#0b1020; }
+.visual-block figcaption { margin-top:12px; color:var(--ink-soft); font:500 12px/1.5 var(--sans); }
+.prose p + p { margin-top:12px; }
+.prose p { color:var(--ink-soft); }
+:not(pre) > code { overflow-wrap:anywhere; word-break:break-word; }
+.list-block,.steps-block,.code-block,.flow-block,.table-wrap,.callout { padding:22px; background:var(--card); border:1.5px solid var(--ink); border-radius:12px; }
+.table-wrap { overflow-x:auto; }
+.list-block h3 { font:800 20px var(--display); }
+.outcomes { margin-top:12px; list-style:none; }
+.outcomes li { position:relative; padding:8px 0 8px 22px; font-size:13.5px; color:var(--ink-soft); border-top:1px dotted var(--line-strong); }
+.outcomes li::before { position:absolute; left:2px; color:var(--accent); content:'→'; }
+ol.steps { list-style:none; counter-reset:step; }
+ol.steps li { counter-increment:step; position:relative; padding:0 0 15px 34px; font-size:14px; color:var(--ink-soft); }
+ol.steps li::before { content:counter(step); position:absolute; left:0; top:1px; display:grid; place-items:center; width:22px; height:22px; font:600 11px var(--mono); color:var(--ink); background:var(--paper); border:1.5px solid var(--ink); border-radius:50%; }
+ol.steps li:not(:last-child)::after { content:''; position:absolute; left:10.5px; top:25px; bottom:1px; width:1.5px; background:var(--line-strong); }
+.code-block .code-label { margin-bottom:8px; font:600 10px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
+pre { overflow:auto; padding:16px; color:var(--paper); background:var(--ink); border-radius:8px; }
+pre code { font:12px/1.55 var(--mono); white-space:pre; }
+.order-table { width:100%; border-collapse:collapse; font-size:14px; }
+.order-table th { padding:10px 14px; text-align:left; font:500 10.5px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); border-bottom:2px solid var(--ink); }
+.order-table td { padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+.order-table tr:hover td { background:rgb(13 92 70 / .04); }
+.flow { display:flex; align-items:stretch; gap:8px; overflow-x:auto; }
+.flow-node { min-width:180px; padding:14px; background:var(--paper); border:1.5px solid var(--ink); border-radius:9px; }
+.flow-node strong { display:block; }
+.flow-node span { display:block; margin-top:4px; font-size:12.5px; color:var(--ink-soft); }
+.flow-arrow { display:grid; place-items:center; flex:0 0 24px; color:var(--accent); font-size:22px; }
+.callout { border-left:4px solid var(--medium); border-radius:0 10px 10px 0; background:var(--medium-bg); }
+.callout.warning { border-color:var(--critical); background:var(--critical-bg); }
+.callout.success { border-color:var(--accent); background:var(--accent-soft); }
+.callout b { display:block; margin-bottom:4px; font:600 11px var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+.timeline { position:relative; display:grid; gap:0; margin-top:30px; }
+.timeline::before { position:absolute; top:15px; bottom:15px; left:23px; width:2px; content:''; background:var(--line-strong); }
+.timeline-entry { position:relative; display:grid; grid-template-columns:48px minmax(0,1fr); gap:18px; padding-bottom:24px; }
+.timeline-dot { z-index:1; display:grid; place-items:center; width:48px; height:48px; font:600 11px var(--mono); color:var(--accent); background:var(--paper); border:2px solid var(--accent); border-radius:50%; }
+.timeline-entry.current .timeline-dot { color:var(--paper); background:var(--accent); }
+.timeline-body { padding:16px 18px; background:var(--card); border:1.5px solid var(--ink); border-radius:10px; box-shadow:4px 4px 0 rgb(27 24 18 / .08); }
+.timeline-body h3 { font:800 20px var(--display); }
+.timeline-body h3 a { text-underline-offset:4px; }
+.timeline-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; font:500 10px var(--mono); color:var(--ink-faint); text-transform:uppercase; }
+.ledger { margin-top:28px; border-top:2px solid var(--ink); }
+.ledger-row { display:grid; grid-template-columns:74px 1.2fr .7fr 1.4fr; gap:14px; padding:11px 4px; border-bottom:1px dotted var(--line-strong); align-items:baseline; }
+.ledger-id { font:500 11px var(--mono); color:var(--ink-faint); }
+.dispatch { position:sticky; bottom:14px; z-index:20; margin-top:58px; padding:16px; color:var(--paper); background:var(--ink); border:1px solid var(--ink); border-radius:10px; box-shadow:7px 7px 0 rgb(27 24 18 / .18); }
+.dispatch-grid { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:12px; align-items:center; }
+.progress-label { font:500 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.progress-label span { color:#b8d5ca; }
+.progress-track { height:4px; margin-top:7px; background:rgb(246 242 234 / .2); }
+.progress-fill { width:0; height:100%; background:#72b69f; transition:width .16s ease; }
+.btn { min-height:42px; padding:8px 13px; font:600 10.5px var(--mono); letter-spacing:.07em; text-transform:uppercase; cursor:pointer; border:1.5px solid var(--paper); border-radius:6px; }
+.btn.primary { color:var(--ink); background:var(--paper); }
+.btn.primary:hover,.btn.primary[data-state='copied'] { color:var(--paper); background:var(--accent); border-color:var(--accent); }
+.btn.ghost { color:var(--paper); background:transparent; }
+.btn:disabled { cursor:not-allowed; opacity:.45; }
+.validation-hint { margin-top:7px; font-size:12px; color:#dccfba; }
+.intent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
+.intent { display:flex; gap:8px; align-items:flex-start; padding:12px; cursor:pointer; background:var(--paper-2); border:1.5px solid var(--line-strong); border-radius:8px; }
+.intent:has(input:checked) { background:var(--accent-soft); border-color:var(--accent); }
+.intent input { margin-top:4px; accent-color:var(--accent); }
+.intent b { display:block; font-size:13px; }
+.intent small { display:block; margin-top:2px; color:var(--ink-soft); }
+.colophon { display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-top:90px; padding-top:22px; font:400 10.5px var(--mono); letter-spacing:.1em; color:var(--ink-faint); text-transform:uppercase; border-top:3px solid var(--ink); }
+@media (prefers-reduced-motion:no-preference) {
+  .masthead,.summary,.section,.colophon { animation:rise .58s cubic-bezier(.2,.7,.2,1) both; }
+  .summary { animation-delay:.08s; } .section { animation-delay:.14s; } .colophon { animation-delay:.2s; }
+  .btn { transition:color .16s ease,background-color .16s ease,border-color .16s ease,transform .16s ease; }
+  .btn:active { transform:translateY(1px); }
+  @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+}
+@media (max-width:760px) {
+  .sheet { width:min(calc(100% - 32px),1060px); }
+  h1 { font-size:clamp(45px,14vw,68px); }
+  .stamp { position:static; display:inline-block; margin-top:22px; }
+  .summary,.section-head,.option-grid,.evidence-grid,.cards-grid,.response { grid-template-columns:1fr; }
+  .section { padding-top:62px; }
+  .ledger-row { grid-template-columns:64px 1fr; }
+  .ledger-row > :nth-child(n+3) { grid-column:2; }
+  .dispatch-grid { grid-template-columns:1fr auto; }
+  .dispatch-grid .progress { grid-column:1 / -1; }
+}
+@media (max-width:460px) {
+  .topnav { flex-direction:column; }
+  .card-head { grid-template-columns:auto 1fr; }
+  .card-head-right { grid-column:2; }
+  .option-grid,.card-copy,.response,.thread-card .thread-body { padding-left:17px; padding-right:17px; }
+  .intent-grid { grid-template-columns:1fr; }
+  .dispatch-grid { grid-template-columns:1fr; }
+  .btn { width:100%; }
+  .colophon { flex-direction:column; }
+}
+@media print {
+  body { background:white; }
+  .topnav,.dispatch,.interactive-only { display:none !important; }
+  .decision-card,.thread-card,.evidence-card,.mini-card,.timeline-body { box-shadow:none; break-inside:avoid; }
+  .stamp { transform:none; }
+  .section { break-before:auto; }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+<div class="sheet"><nav class="topnav" aria-label="Timeline"><div class="topnav-group"><a href="round-04-distribucion-github-releases.html">Ronda actual →</a></div><span>plan/index.html</span></nav><main id="main"><header class="masthead"><p class="kicker">AI Vitals · Índice del dossier</p><h1>Monitor local de uso de IA para <em>Windows</em></h1><span class="stamp">ready · Ronda actual</span><p class="lede">Plan final aprobado y fase de distribución implementada sobre un único canal. Quedan siete ampliaciones aplazadas con condición de reactivación explícita.</p><dl class="masthead-meta"><div><dt>Fecha</dt><dd>2026-08-06</dd></div><div><dt>Alcance</dt><dd>Windows desktop, adaptadores locales, widgets, bandeja, dashboard, persistencia, distribución</dd></div><div><dt>Fuente</dt><dd><code>Grill de producto y referencias Microsoft Store (2026-08-04 a 2026-08-05); grill de distribución (2026-08-06)</code></dd></div></dl></header><section class="summary"><p class="summary-copy"><strong>Objetivo.</strong> Crear una aplicación residente de Windows, local-first y sin cuenta, que observe de forma fiable el uso de Codex y Claude Code y lo presente mediante widgets always-on-top, bandeja y dashboard, sin almacenar contenido de trabajo ni inventar métricas.</p><div class="tally"><div class="cell blocker"><div class="num">0</div><div class="lbl">Blocker</div></div><div class="cell material"><div class="num">0</div><div class="lbl">Material</div></div><div class="cell watch"><div class="num">0</div><div class="lbl">Watch</div></div></div></section><section class="section" id="timeline"><div class="section-head"><span class="section-label">Timeline</span><h2>Registro de planificación</h2></div><p class="section-intro">Las rondas inmutables muestran cómo cambió el plan; el índice muestra el estado actual.</p><div class="timeline"><article class="timeline-entry "><span class="timeline-dot">01</span><div class="timeline-body"><h3><a href="round-01-plan-final.html">Plan final por entregas verticales</a></h3><p>El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.</p><div class="timeline-meta"><span>2026-08-05</span><span>final</span><span>0 Decisiones</span><span>5 Hilos sueltos</span></div></div></article><article class="timeline-entry "><span class="timeline-dot">02</span><div class="timeline-body"><h3><a href="round-02-plan-final-verificado.html">Plan final verificado</a></h3><p>El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.</p><div class="timeline-meta"><span>2026-08-05</span><span>final</span><span>0 Decisiones</span><span>5 Hilos sueltos</span></div></div></article><article class="timeline-entry "><span class="timeline-dot">03</span><div class="timeline-body"><h3><a href="round-03-plan-final-validado.html">Plan final validado</a></h3><p>El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.</p><div class="timeline-meta"><span>2026-08-05</span><span>final</span><span>0 Decisiones</span><span>5 Hilos sueltos</span></div></div></article><article class="timeline-entry current"><span class="timeline-dot">04</span><div class="timeline-body"><h3><a href="round-04-distribucion-github-releases.html">Distribución por GitHub Releases</a></h3><p>La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.</p><div class="timeline-meta"><span>2026-08-06</span><span>final</span><span>0 Decisiones</span><span>3 Hilos sueltos</span></div></div></article></div></section><section class="section" id="ledger"><div class="section-head"><span class="section-label">Registro actual</span><h2>Decisiones e hilos</h2></div><div class="ledger"><div class="ledger-row"><b>ID</b><b>Elemento</b><b>Estado</b><b>Resultado</b></div><div class="ledger-row"><span class="ledger-id">D-01</span><strong>Público y verdad del producto</strong><span>decided</span><span>Desarrollador intensivo; híbrido por adaptadores; métricas observadas con calidad explícita.</span></div><div class="ledger-row"><span class="ledger-id">D-02</span><strong>Integraciones iniciales</strong><span>decided</span><span>Codex y Claude Code mediante interfaces locales oficiales.</span></div><div class="ledger-row"><span class="ledger-id">D-03</span><strong>Privacidad y autenticación</strong><span>decided</span><span>Local-first, sin cuenta/backend y sin copiar credenciales de proveedor.</span></div><div class="ledger-row"><span class="ledger-id">D-04</span><strong>Superficies</strong><span>decided</span><span>Widget único adaptable, popup rico, menú nativo y dashboard completo.</span></div><div class="ledger-row"><span class="ledger-id">D-05</span><strong>Modos y capacidad del widget</strong><span>decided</span><span>Anillos, barras horizontales y verticales; 1–4 conexiones fijadas.</span></div><div class="ledger-row"><span class="ledger-id">D-06</span><strong>Interacción y ciclo de vida</strong><span>decided</span><span>Residente, click-through bloqueable, hotkey configurable y salida explícita.</span></div><div class="ledger-row"><span class="ledger-id">D-07</span><strong>Alertas</strong><span>decided</span><span>Solo señales visuales con geometría estable; sin notificaciones de Windows.</span></div><div class="ledger-row"><span class="ledger-id">D-08</span><strong>Predicciones</strong><span>decided</span><span>Sin predicciones en el MVP; solo datos observados.</span></div><div class="ledger-row"><span class="ledger-id">D-09</span><strong>Persistencia</strong><span>decided</span><span>SQLite con detalle de 30 días y agregados diarios permanentes.</span></div><div class="ledger-row"><span class="ledger-id">D-10</span><strong>Exportación</strong><span>decided</span><span>CSV y JSON manuales con filtros; nunca subida automática.</span></div><div class="ledger-row"><span class="ledger-id">D-11</span><strong>Arquitectura de adaptadores</strong><span>decided</span><span>Seam IUsageAdapter con capacidades declaradas y suite de contrato común.</span></div><div class="ledger-row"><span class="ledger-id">D-12</span><strong>Calidad y frescura</strong><span>decided</span><span>Calidad explícita por observación; un fallo nunca se convierte en cero.</span></div><div class="ledger-row"><span class="ledger-id">D-13</span><strong>Ventanas de cuota</strong><span>decided</span><span>Banda inmediata y banda total independientes, sin sumas.</span></div><div class="ledger-row"><span class="ledger-id">D-14</span><strong>Accesibilidad</strong><span>decided</span><span>Teclado, lector de pantalla, alto contraste y reducción de movimiento.</span></div><div class="ledger-row"><span class="ledger-id">D-15</span><strong>Idiomas</strong><span>decided</span><span>Español e inglés con catálogo compartido y contrato de claves verificado.</span></div><div class="ledger-row"><span class="ledger-id">D-16</span><strong>Entrega por fases verticales</strong><span>decided</span><span>Siete fases utilizables, cada una con criterio de salida observable.</span></div><div class="ledger-row"><span class="ledger-id">D-17</span><strong>Diagnóstico</strong><span>decided</span><span>Paquete bajo acción explícita, con logs redactados y sin telemetría.</span></div><div class="ledger-row"><span class="ledger-id">D-18</span><strong>Arquitecturas soportadas</strong><span>decided</span><span>win-x64 y win-arm64 en toda la cadena.</span></div><div class="ledger-row"><span class="ledger-id">D-19</span><strong>Licencia y repositorio</strong><span>decided</span><span>MIT en repositorio público con changelog y artefactos publicados.</span></div><div class="ledger-row"><span class="ledger-id">D-20</span><strong>Canal de distribución</strong><span>decided</span><span>Solo GitHub Releases; MSIX y Microsoft Store fuera del alcance.</span></div><div class="ledger-row"><span class="ledger-id">D-21</span><strong>Tecnología de instalador y updater</strong><span>decided</span><span>Velopack 1.2.0, instalación per-user sin UAC y feed en las propias publicaciones.</span></div><div class="ledger-row"><span class="ledger-id">D-22</span><strong>Firma de los artefactos</strong><span>decided</span><span>Sin firma en 0.1.x; paso cableado tras el secret WINDOWS_SIGN_PARAMS y SHA256 publicados.</span></div><div class="ledger-row"><span class="ledger-id">D-23</span><strong>Disparador de la publicación</strong><span>decided</span><span>Push de tag v*, más disparo manual con ensayo sin publicar.</span></div><div class="ledger-row"><span class="ledger-id">D-24</span><strong>Origen de la versión</strong><span>decided</span><span>El tag alimenta -p:Version y --packVersion; Directory.Build.props queda en 0.0.0-dev.</span></div><div class="ledger-row"><span class="ledger-id">D-25</span><strong>Notas de publicación</strong><span>decided</span><span>Script propio que extrae la sección del CHANGELOG; cuerpo con instalación, notas, SHA256 y comparación, solo en inglés.</span></div><div class="ledger-row"><span class="ledger-id">D-26</span><strong>Arquitecturas por publicación</strong><span>decided</span><span>x64 y ARM64 en una misma publicación con un canal de Velopack por RID.</span></div><div class="ledger-row"><span class="ledger-id">D-27</span><strong>Comportamiento del updater</strong><span>decided</span><span>Comprobación y descarga automáticas y desactivables; instalación solo con acción explícita; prereleases ignoradas.</span></div><div class="ledger-row"><span class="ledger-id">D-28</span><strong>Autoarranque e integraciones locales</strong><span>decided</span><span>Run key opcional al lanzador estable, bridge en ruta fija y desinstalación que revierte sin borrar datos.</span></div><div class="ledger-row"><span class="ledger-id">D-29</span><strong>Gates automáticos de publicación</strong><span>decided</span><span>Solo compilación, verificación del bridge y pruebas; instalación y actualización se verifican a mano.</span></div><div class="ledger-row"><span class="ledger-id">D-30</span><strong>Forma del paquete</strong><span>decided</span><span>Self-contained, sin trimming, sin ReadyToRun y sin bundle portable.</span></div><div class="ledger-row"><span class="ledger-id">T-01</span><strong>Nombre y marca definitivos</strong><span>deferred</span><span>Reactivar antes de beta pública.</span></div><div class="ledger-row"><span class="ledger-id">T-02</span><strong>Kimi, GLM, MiniMax y otros proveedores</strong><span>deferred</span><span>Reactivar tras validar Codex y Claude Code.</span></div><div class="ledger-row"><span class="ledger-id">T-03</span><strong>Consumo y facturación de APIs</strong><span>deferred</span><span>Reactivar después de integraciones de suscripción.</span></div><div class="ledger-row"><span class="ledger-id">T-04</span><strong>Múltiples cuentas por proveedor</strong><span>deferred</span><span>Modelo preparado; UI posterior.</span></div><div class="ledger-row"><span class="ledger-id">T-05</span><strong>SDK público de plugins</strong><span>deferred</span><span>Reactivar tras al menos cuatro adaptadores internos.</span></div><div class="ledger-row"><span class="ledger-id">T-06</span><strong>Firma de código Authenticode</strong><span>deferred</span><span>Reactivar al obtener certificado; el workflow ya tiene el paso preparado.</span></div><div class="ledger-row"><span class="ledger-id">T-07</span><strong>Canal MSIX y Microsoft Store</strong><span>deferred</span><span>Reactivar cuando el canal de GitHub Releases tenga instalaciones estables.</span></div><div class="ledger-row"><span class="ledger-id">T-08</span><strong>Verificación de instalación en máquina limpia</strong><span>resolved</span><span>Lista de ocho comprobaciones por arquitectura en docs/release-checklist.md.</span></div></div></section></main><footer class="colophon"><span>AI Vitals · planning-dossier</span><span>Artefacto de planificación generado</span></footer></div>
+<script id="planning-data" type="application/json">{"schemaVersion":1,"outputDir":"plan","dossier":{"id":"ai-vitals","project":"AI Vitals","title":"Monitor local de uso de IA para Windows","objective":"Crear una aplicación residente de Windows, local-first y sin cuenta, que observe de forma fiable el uso de Codex y Claude Code y lo presente mediante widgets always-on-top, bandeja y dashboard, sin almacenar contenido de trabajo ni inventar métricas.","language":"es","scope":"Windows desktop, adaptadores locales, widgets, bandeja, dashboard, persistencia, distribución","sourceRef":"Grill de producto y referencias Microsoft Store (2026-08-04 a 2026-08-05); grill de distribución (2026-08-06)"},"round":{"number":4,"file":"round-04-distribucion-github-releases.html","title":"Distribución por GitHub Releases","date":"2026-08-06","kind":"index","status":"ready","summary":"La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.","decisionCount":0,"threadCount":3,"decisions":[],"threads":[]},"manifest":{"schemaVersion":1,"outputDir":"plan","dossier":{"id":"ai-vitals","project":"AI Vitals","title":"Monitor local de uso de IA para Windows","objective":"Crear una aplicación residente de Windows, local-first y sin cuenta, que observe de forma fiable el uso de Codex y Claude Code y lo presente mediante widgets always-on-top, bandeja y dashboard, sin almacenar contenido de trabajo ni inventar métricas.","language":"es","scope":"Windows desktop, adaptadores locales, widgets, bandeja, dashboard, persistencia, distribución","sourceRef":"Grill de producto y referencias Microsoft Store (2026-08-04 a 2026-08-05); grill de distribución (2026-08-06)"},"rounds":[{"number":1,"file":"round-01-plan-final.html","title":"Plan final por entregas verticales","date":"2026-08-05","kind":"final","status":"ready","summary":"El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.","decisionCount":0,"threadCount":5},{"number":2,"file":"round-02-plan-final-verificado.html","title":"Plan final verificado","date":"2026-08-05","kind":"final","status":"ready","summary":"El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.","decisionCount":0,"threadCount":5},{"number":3,"file":"round-03-plan-final-validado.html","title":"Plan final validado","date":"2026-08-05","kind":"final","status":"ready","summary":"El alcance está decidido: Codex y Claude Code primero, datos locales verificables, tres modos de widget, popup de bandeja, dashboard completo y distribución x64/ARM64.","decisionCount":0,"threadCount":5},{"number":4,"file":"round-04-distribucion-github-releases.html","title":"Distribución por GitHub Releases","date":"2026-08-06","kind":"final","status":"ready","summary":"La fase 06 se cierra con un solo canal: instalador Velopack publicado en GitHub Releases, notas tomadas del CHANGELOG por el propio workflow y updater consentido que consulta esas mismas publicaciones. MSIX y Microsoft Store salen del alcance.","decisionCount":0,"threadCount":3}],"current":{"status":"ready","summary":"Plan final aprobado y fase de distribución implementada sobre un único canal. Quedan siete ampliaciones aplazadas con condición de reactivación explícita.","decisions":[{"id":"D-01","title":"Público y verdad del producto","status":"decided","outcome":"Desarrollador intensivo; híbrido por adaptadores; métricas observadas con calidad explícita."},{"id":"D-02","title":"Integraciones iniciales","status":"decided","outcome":"Codex y Claude Code mediante interfaces locales oficiales."},{"id":"D-03","title":"Privacidad y autenticación","status":"decided","outcome":"Local-first, sin cuenta/backend y sin copiar credenciales de proveedor."},{"id":"D-04","title":"Superficies","status":"decided","outcome":"Widget único adaptable, popup rico, menú nativo y dashboard completo."},{"id":"D-05","title":"Modos y capacidad del widget","status":"decided","outcome":"Anillos, barras horizontales y verticales; 1–4 conexiones fijadas."},{"id":"D-06","title":"Interacción y ciclo de vida","status":"decided","outcome":"Residente, click-through bloqueable, hotkey configurable y salida explícita."},{"id":"D-07","title":"Alertas","status":"decided","outcome":"Solo señales visuales con geometría estable; sin notificaciones de Windows."},{"id":"D-08","title":"Predicciones","status":"decided","outcome":"Sin predicciones en el MVP; solo datos observados."},{"id":"D-09","title":"Persistencia","status":"decided","outcome":"SQLite con detalle de 30 días y agregados diarios permanentes."},{"id":"D-10","title":"Exportación","status":"decided","outcome":"CSV y JSON manuales con filtros; nunca subida automática."},{"id":"D-11","title":"Arquitectura de adaptadores","status":"decided","outcome":"Seam IUsageAdapter con capacidades declaradas y suite de contrato común."},{"id":"D-12","title":"Calidad y frescura","status":"decided","outcome":"Calidad explícita por observación; un fallo nunca se convierte en cero."},{"id":"D-13","title":"Ventanas de cuota","status":"decided","outcome":"Banda inmediata y banda total independientes, sin sumas."},{"id":"D-14","title":"Accesibilidad","status":"decided","outcome":"Teclado, lector de pantalla, alto contraste y reducción de movimiento."},{"id":"D-15","title":"Idiomas","status":"decided","outcome":"Español e inglés con catálogo compartido y contrato de claves verificado."},{"id":"D-16","title":"Entrega por fases verticales","status":"decided","outcome":"Siete fases utilizables, cada una con criterio de salida observable."},{"id":"D-17","title":"Diagnóstico","status":"decided","outcome":"Paquete bajo acción explícita, con logs redactados y sin telemetría."},{"id":"D-18","title":"Arquitecturas soportadas","status":"decided","outcome":"win-x64 y win-arm64 en toda la cadena."},{"id":"D-19","title":"Licencia y repositorio","status":"decided","outcome":"MIT en repositorio público con changelog y artefactos publicados."},{"id":"D-20","title":"Canal de distribución","status":"decided","outcome":"Solo GitHub Releases; MSIX y Microsoft Store fuera del alcance."},{"id":"D-21","title":"Tecnología de instalador y updater","status":"decided","outcome":"Velopack 1.2.0, instalación per-user sin UAC y feed en las propias publicaciones."},{"id":"D-22","title":"Firma de los artefactos","status":"decided","outcome":"Sin firma en 0.1.x; paso cableado tras el secret WINDOWS_SIGN_PARAMS y SHA256 publicados."},{"id":"D-23","title":"Disparador de la publicación","status":"decided","outcome":"Push de tag v*, más disparo manual con ensayo sin publicar."},{"id":"D-24","title":"Origen de la versión","status":"decided","outcome":"El tag alimenta -p:Version y --packVersion; Directory.Build.props queda en 0.0.0-dev."},{"id":"D-25","title":"Notas de publicación","status":"decided","outcome":"Script propio que extrae la sección del CHANGELOG; cuerpo con instalación, notas, SHA256 y comparación, solo en inglés."},{"id":"D-26","title":"Arquitecturas por publicación","status":"decided","outcome":"x64 y ARM64 en una misma publicación con un canal de Velopack por RID."},{"id":"D-27","title":"Comportamiento del updater","status":"decided","outcome":"Comprobación y descarga automáticas y desactivables; instalación solo con acción explícita; prereleases ignoradas."},{"id":"D-28","title":"Autoarranque e integraciones locales","status":"decided","outcome":"Run key opcional al lanzador estable, bridge en ruta fija y desinstalación que revierte sin borrar datos."},{"id":"D-29","title":"Gates automáticos de publicación","status":"decided","outcome":"Solo compilación, verificación del bridge y pruebas; instalación y actualización se verifican a mano."},{"id":"D-30","title":"Forma del paquete","status":"decided","outcome":"Self-contained, sin trimming, sin ReadyToRun y sin bundle portable."}],"threads":[{"id":"T-01","title":"Nombre y marca definitivos","criticality":"watch","status":"deferred","outcome":"Reactivar antes de beta pública."},{"id":"T-02","title":"Kimi, GLM, MiniMax y otros proveedores","criticality":"watch","status":"deferred","outcome":"Reactivar tras validar Codex y Claude Code."},{"id":"T-03","title":"Consumo y facturación de APIs","criticality":"watch","status":"deferred","outcome":"Reactivar después de integraciones de suscripción."},{"id":"T-04","title":"Múltiples cuentas por proveedor","criticality":"watch","status":"deferred","outcome":"Modelo preparado; UI posterior."},{"id":"T-05","title":"SDK público de plugins","criticality":"watch","status":"deferred","outcome":"Reactivar tras al menos cuatro adaptadores internos."},{"id":"T-06","title":"Firma de código Authenticode","criticality":"material","status":"deferred","outcome":"Reactivar al obtener certificado; el workflow ya tiene el paso preparado."},{"id":"T-07","title":"Canal MSIX y Microsoft Store","criticality":"watch","status":"deferred","outcome":"Reactivar cuando el canal de GitHub Releases tenga instalaciones estables."},{"id":"T-08","title":"Verificación de instalación en máquina limpia","criticality":"material","status":"resolved","outcome":"Lista de ocho comprobaciones por arquitectura en docs/release-checklist.md."}]}},"ui":{"skip":"Saltar al contenido","index":"Índice del dossier","previous":"Ronda anterior","current":"Ronda actual","round":"Ronda de planificación","final":"Plan final","branch":"Rama","scope":"Alcance","source":"Fuente","date":"Fecha","evidence":"Evidencia","evidenceTitle":"Lo que establece el repositorio","evidenceIntro":"Hechos observados que restringen esta ronda de planificación.","frontier":"Frontera de decisiones","frontierTitle":"Decisiones listas para revisión","frontierIntro":"Las recomendaciones se destacan, nunca se preseleccionan. Cada elemento activo necesita una disposición explícita.","threads":"Hilos sueltos","threadsTitle":"Incertidumbre contabilizada","threadsIntro":"Los hilos abiertos requieren disposición; los bloqueados siguen visibles hasta resolver su dependencia.","recommendation":"Recomendada","reversibility":"Reversibilidad","complexity":"Complejidad","uncertainty":"Incertidumbre","surfaces":"Superficies","disposition":"Disposición","chooseDisposition":"Elige una disposición…","decide":"Decidir ahora","investigate":"Investigar después","defer":"Aplazar explícitamente","discard":"Descartar","resolve":"Resolver","notes":"Justificación, restricción o corrección","blockedBy":"Bloqueado por","reactivation":"Reactivación","corrections":"Correcciones transversales","correctionsHelp":"Añade contexto que afecte a más de una tarjeta.","nextIntent":"Siguiente intención","continuePlanning":"Continuar planificación","continueHelp":"Aplicar decisiones y exponer la siguiente frontera.","investigateIntent":"Investigar hilos marcados","investigateHelp":"Investigar antes de presentar más opciones.","consolidate":"Consolidar plan final","consolidateHelp":"Solo si no queda incertidumbre material.","reset":"Restablecer","copyMarkdown":"Copiar Markdown","copyHandoff":"Copiar handoff","copied":"Copiado","progress":"Frontera completa","saved":"Guardado localmente.","restored":"Borrador local restaurado.","saveFailed":"El autoguardado local no está disponible.","resetStatus":"Borrador local eliminado.","incomplete":"Completa","ready":"Listo para copiar.","intentMissing":"siguiente intención","fixFields":"Completa los campos resaltados.","copiedStatus":"Markdown copiado.","copyFailed":"No se pudo acceder al portapapeles.","continueTitle":"Continuar planning dossier","decisionsHeading":"Decisiones","threadsHeading":"Disposición de hilos","correctionsHeading":"Correcciones","none":"Ninguno","handoffTitle":"Handoff de implementación","startWith":"Empezar por","objective":"Objetivo","planningState":"Estado del plan","rounds":"Rondas","decisions":"Decisiones","openThreads":"Hilos abiertos","timeline":"Timeline","timelineTitle":"Registro de planificación","timelineIntro":"Las rondas inmutables muestran cómo cambió el plan; el índice muestra el estado actual.","ledger":"Registro actual","ledgerTitle":"Decisiones e hilos","id":"ID","item":"Elemento","status":"Estado","outcome":"Resultado","noLedger":"Todavía no hay elementos en el registro.","currentSummary":"Estado actual","finalHandoff":"Handoff","finalHandoffIntro":"El siguiente agente lee el dossier en vez de recibir de nuevo el plan.","generated":"Artefacto de planificación generado","immutable":"Ronda inmutable · el índice conserva el estado actual"}}</script>
+<script>
+(function () {
+  'use strict';
+  var dataEl = document.getElementById('planning-data');
+  var data;
+  try { data = JSON.parse(dataEl.textContent); } catch (_) { return; }
+  var form = document.getElementById('planning-form');
+  if (!form) return;
+
+  var ui = data.ui;
+  var storageKey = 'planning-dossier:' + data.dossier.id + ':round:' + data.round.number + ':v1';
+  var copyButton = document.getElementById('copy-markdown');
+  var resetButton = document.getElementById('reset-state');
+  var status = document.getElementById('live-status');
+  var hint = document.getElementById('validation-hint');
+  var progressText = document.getElementById('progress-text');
+  var progressFill = document.getElementById('progress-fill');
+  var saveTimer;
+  var copyTimer;
+
+  function controls() { return Array.prototype.slice.call(form.querySelectorAll('[data-state]')); }
+
+  function snapshot() {
+    var state = {};
+    controls().forEach(function (el) {
+      if (el.type === 'radio') {
+        if (el.checked) state[el.name] = el.value;
+      } else if (el.type === 'checkbox') {
+        if (!Array.isArray(state[el.name])) state[el.name] = [];
+        if (el.checked) state[el.name].push(el.value);
+      } else {
+        state[el.name] = el.value;
+      }
+    });
+    return state;
+  }
+
+  function restore() {
+    var raw;
+    try { raw = localStorage.getItem(storageKey); } catch (_) { return; }
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (_) { return; }
+    controls().forEach(function (el) {
+      var value = state[el.name];
+      if (el.type === 'radio') el.checked = value === el.value;
+      else if (el.type === 'checkbox') el.checked = Array.isArray(value) && value.indexOf(el.value) !== -1;
+      else if (typeof value === 'string') el.value = value;
+    });
+    status.textContent = ui.restored;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(snapshot()));
+      status.textContent = ui.saved;
+    } catch (_) {
+      status.textContent = ui.saveFailed;
+    }
+  }
+
+  function setInvalid(el, invalid) {
+    if (!el) return;
+    if (invalid) el.setAttribute('aria-invalid', 'true');
+    else el.removeAttribute('aria-invalid');
+  }
+
+  function validate(markFields) {
+    var state = snapshot();
+    var complete = 0;
+    var total = 0;
+    var errors = [];
+    var intent = state.intent || (data.round.kind === 'final' ? 'implement' : '');
+
+    data.round.decisions.forEach(function (decision) {
+      total += 1;
+      var dispositionName = 'decision.' + decision.id + '.disposition';
+      var optionName = 'decision.' + decision.id + '.option';
+      var noteName = 'decision.' + decision.id + '.note';
+      var disposition = state[dispositionName] || '';
+      var selected = state[optionName] || (decision.mode === 'multiple' ? [] : '');
+      var note = (state[noteName] || '').trim();
+      var selectedCount = Array.isArray(selected) ? selected.length : (selected ? 1 : 0);
+      var valid = Boolean(disposition);
+      if (disposition === 'decide') valid = selectedCount > 0;
+      if (disposition && disposition !== 'decide') valid = note.length > 0;
+      if (intent === 'consolidate' && (decision.criticality === 'blocker' || decision.criticality === 'material')) {
+        valid = valid && (disposition === 'decide' || disposition === 'discard');
+      }
+      if (valid) complete += 1;
+      else errors.push(decision.id);
+      if (markFields) {
+        setInvalid(form.elements[dispositionName], !disposition);
+        setInvalid(form.elements[noteName], disposition && disposition !== 'decide' && !note);
+      }
+    });
+
+    data.round.threads.filter(function (thread) { return thread.status === 'open'; }).forEach(function (thread) {
+      total += 1;
+      var dispositionName = 'thread.' + thread.id + '.disposition';
+      var noteName = 'thread.' + thread.id + '.note';
+      var disposition = state[dispositionName] || '';
+      var note = (state[noteName] || '').trim();
+      var valid = Boolean(disposition) && note.length > 0;
+      if (intent === 'consolidate' && (thread.criticality === 'blocker' || thread.criticality === 'material')) {
+        valid = valid && (disposition === 'resolve' || disposition === 'discard');
+      }
+      if (valid) complete += 1;
+      else errors.push(thread.id);
+      if (markFields) {
+        setInvalid(form.elements[dispositionName], !disposition);
+        setInvalid(form.elements[noteName], !note);
+      }
+    });
+
+    if (data.round.kind !== 'final' && !intent) errors.push(ui.intentMissing);
+    var percentage = total ? Math.round((complete / total) * 100) : 100;
+    progressText.textContent = complete + '/' + total;
+    progressFill.style.width = percentage + '%';
+    copyButton.disabled = errors.length > 0;
+    hint.textContent = errors.length ? ui.incomplete + ': ' + errors.join(', ') : ui.ready;
+    return { valid: errors.length === 0, state: state, intent: intent };
+  }
+
+  function bulletNote(lines, note) {
+    if (!note) return;
+    note.split(/\r?\n/).forEach(function (line) {
+      if (line.trim()) lines.push('  - ' + line.trim());
+    });
+  }
+
+  function buildMarkdown(result) {
+    var path = data.outputDir.replace(/\\/g, '/');
+    var roundFile = data.round.file;
+    var lines = [];
+    if (data.round.kind === 'final') {
+      lines.push('# ' + ui.handoffTitle);
+      lines.push('');
+      lines.push('- Dossier: `' + data.dossier.id + '`');
+      lines.push('- Index: `' + path + '/index.html`');
+      lines.push('- Final plan: `' + path + '/' + roundFile + '`');
+      lines.push('- Source round: `' + String(data.round.number).padStart(2, '0') + '`');
+      lines.push('');
+      lines.push('## ' + data.round.finalHandoff.title);
+      lines.push('');
+      lines.push(data.round.finalHandoff.instruction);
+      lines.push('');
+      lines.push('- ' + ui.startWith + ': ' + data.round.finalHandoff.startWith);
+      return lines.join('\n');
+    }
+
+    lines.push('# ' + ui.continueTitle);
+    lines.push('');
+    lines.push('- Dossier: `' + data.dossier.id + '`');
+    lines.push('- Index: `' + path + '/index.html`');
+    lines.push('- Source: `' + path + '/' + roundFile + '`');
+    lines.push('- Source round: `' + String(data.round.number).padStart(2, '0') + '`');
+    lines.push('- Intent: `' + result.intent + '`');
+    lines.push('');
+    lines.push('## ' + ui.decisionsHeading);
+    lines.push('');
+    data.round.decisions.forEach(function (decision) {
+      var prefix = 'decision.' + decision.id;
+      var disposition = result.state[prefix + '.disposition'];
+      var selected = result.state[prefix + '.option'] || [];
+      if (!Array.isArray(selected)) selected = selected ? [selected] : [];
+      lines.push('- `' + decision.id + '` — ' + disposition + (selected.length ? ' → `' + selected.join('`, `') + '`' : ''));
+      bulletNote(lines, (result.state[prefix + '.note'] || '').trim());
+    });
+    lines.push('');
+    lines.push('## ' + ui.threadsHeading);
+    lines.push('');
+    var openThreads = data.round.threads.filter(function (thread) { return thread.status === 'open'; });
+    if (!openThreads.length) lines.push('- ' + ui.none);
+    openThreads.forEach(function (thread) {
+      var prefix = 'thread.' + thread.id;
+      lines.push('- `' + thread.id + '` — ' + result.state[prefix + '.disposition']);
+      bulletNote(lines, (result.state[prefix + '.note'] || '').trim());
+    });
+    var globalNotes = (result.state.globalNotes || '').trim();
+    if (globalNotes) {
+      lines.push('');
+      lines.push('## ' + ui.correctionsHeading);
+      lines.push('');
+      globalNotes.split(/\r?\n/).forEach(function (line) { if (line.trim()) lines.push('- ' + line.trim()); });
+    }
+    return lines.join('\n');
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); } finally { document.body.removeChild(area); }
+  }
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    fallbackCopy(text);
+    return Promise.resolve();
+  }
+
+  form.addEventListener('input', function () {
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(save, 180);
+    validate(false);
+  });
+  form.addEventListener('change', function () { save(); validate(false); });
+
+  copyButton.addEventListener('click', function () {
+    var result = validate(true);
+    if (!result.valid) {
+      status.textContent = ui.fixFields;
+      var first = form.querySelector('[aria-invalid="true"]');
+      if (first) first.focus();
+      return;
+    }
+    writeClipboard(buildMarkdown(result)).then(function () {
+      copyButton.textContent = ui.copied;
+      copyButton.dataset.state = 'copied';
+      status.textContent = ui.copiedStatus;
+      window.clearTimeout(copyTimer);
+      copyTimer = window.setTimeout(function () {
+        copyButton.textContent = data.round.kind === 'final' ? ui.copyHandoff : ui.copyMarkdown;
+        delete copyButton.dataset.state;
+      }, 1800);
+    }, function () { status.textContent = ui.copyFailed; });
+  });
+
+  resetButton.addEventListener('click', function () {
+    form.reset();
+    try { localStorage.removeItem(storageKey); } catch (_) {}
+    status.textContent = ui.resetStatus;
+    validate(false);
+  });
+
+  restore();
+  validate(false);
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "session_id": "raw-session-id-must-never-be-stored",
+  "transcript_path": "C:/private/transcripts/session.jsonl",
+  "cwd": "C:/private/customer-project",
+  "session_name": "secret launch",
+  "version": "2.1.222",
+  "model": {
+    "id": "claude-opus-4-1",
+    "display_name": "Opus"
+  },
+  "cost": {
+    "total_cost_usd": 1.2345,
+    "total_duration_ms": 45678
+  },
+  "context_window": {
+    "total_input_tokens": 12500,
+    "total_output_tokens": 3400,
+    "used_percentage": 27.5,
+    "current_usage": {
+      "input_tokens": 900,
+      "output_tokens": 150
+    }
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 36,
+      "resets_at": 1785931200
+    },
+    "seven_day": {
+      "used_percentage": 62,
+      "resets_at": 1786406400
+    }
+  },
+  "workspace": {
+    "project_dir": "C:/private/customer-project"
+  }
+}

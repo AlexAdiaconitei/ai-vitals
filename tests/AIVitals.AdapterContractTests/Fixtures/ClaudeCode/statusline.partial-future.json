@@ -1,0 +1,22 @@
+{
+  "session_id": "partial-session",
+  "model": {
+    "id": "claude-sonnet-4-5"
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 19,
+      "resets_at": 1785931200,
+      "future_field": true
+    },
+    "seven_day": {
+      "used_percentage": 140
+    },
+    "future_window": {
+      "used_percentage": 88
+    }
+  },
+  "future_top_level": {
+    "anything": "ignored"
+  }
+}

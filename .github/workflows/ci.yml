@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore AIVitals.sln
+      - run: dotnet build AIVitals.sln --configuration Release --no-restore
+      - shell: pwsh
+        run: ./scripts/verify-claude-bridge-output.ps1 -Configuration Release
+      - run: dotnet test AIVitals.sln --configuration Release --no-build
+
+  publish:
+    needs: verify
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        rid: [win-x64, win-arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: >-
+          dotnet publish src/AIVitals.App/AIVitals.App.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          --output artifacts/${{ matrix.rid }}
+      - name: Smoke test resident startup
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: ./scripts/smoke-resident.ps1 -ExecutablePath artifacts/win-x64/AIVitals.App.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AIVitals-${{ matrix.rid }}
+          path: artifacts/${{ matrix.rid }}

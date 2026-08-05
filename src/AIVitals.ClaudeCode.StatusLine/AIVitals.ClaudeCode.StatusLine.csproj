@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyTitle>AI Vitals Claude Code Status Line</AssemblyTitle>
+    <Product>AI Vitals</Product>
+    <Description>Local Claude Code status-line bridge for AI Vitals.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIVitals.Adapters.ClaudeCode\AIVitals.Adapters.ClaudeCode.csproj" />
+  </ItemGroup>
+
+</Project>

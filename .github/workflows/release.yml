@@ -1,0 +1,195 @@
+name: Release
+
+# Tagging is the only trigger that publishes. The manual dispatch exists to rehearse the whole
+# pipeline - including the CHANGELOG gate - without creating a release.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, for example 0.1.0'
+        required: true
+      publish:
+        description: 'Publish a release instead of only building the installers'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  VELOPACK_CLI_VERSION: '1.2.0'
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore AIVitals.sln
+      - run: dotnet build AIVitals.sln --configuration Release --no-restore
+      - shell: pwsh
+        run: ./scripts/verify-claude-bridge-output.ps1 -Configuration Release
+      - run: dotnet test AIVitals.sln --configuration Release --no-build
+
+  release:
+    needs: verify
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Resolve version
+        id: release
+        shell: pwsh
+        run: |
+          $reference = '${{ github.ref }}'
+          $tag = if ($reference.StartsWith('refs/tags/')) {
+            $reference.Substring('refs/tags/'.Length)
+          } else {
+            'v' + '${{ inputs.version }}'.TrimStart('v', 'V')
+          }
+          $version = $tag.TrimStart('v', 'V')
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Tag '$tag' is not a semantic version such as v0.1.0 or v0.1.0-beta.1."
+          }
+          # A hyphen means a semver pre-release, which stable installs must never be offered.
+          $prerelease = $version.Contains('-')
+          $publish = ('${{ github.event_name }}' -eq 'push') -or ('${{ inputs.publish }}' -eq 'true')
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "publish=$($publish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      # Runs before anything is built: a missing CHANGELOG section stops the release here.
+      - name: Extract release notes from CHANGELOG
+        shell: pwsh
+        run: |
+          ./scripts/extract-changelog-notes.ps1 `
+            -Version '${{ steps.release.outputs.version }}' `
+            -OutputPath 'artifacts/release-notes.md' | Out-Null
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk --version ${{ env.VELOPACK_CLI_VERSION }}
+
+      - name: Download previous packages for delta updates
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          foreach ($channel in @('win-x64', 'win-arm64')) {
+            # The first release of a channel has nothing to download, which is not a failure.
+            vpk download github --repoUrl ${{ github.server_url }}/${{ github.repository }} `
+              --token $env:GH_TOKEN --channel $channel --outputDir artifacts/releases
+            $global:LASTEXITCODE = 0
+          }
+
+      - name: Build installers
+        shell: pwsh
+        env:
+          # Signing stays inert until a certificate secret exists; adding one needs no code change.
+          SIGN_PARAMS: ${{ secrets.WINDOWS_SIGN_PARAMS }}
+        run: |
+          foreach ($runtime in @('win-x64', 'win-arm64')) {
+            ./scripts/pack-release.ps1 `
+              -Version '${{ steps.release.outputs.version }}' `
+              -Runtime $runtime `
+              -ReleaseNotesPath 'artifacts/release-notes.md' `
+              -OutputDirectory 'artifacts/releases' `
+              -SignParameters $env:SIGN_PARAMS
+          }
+
+      - name: Compose release body
+        shell: pwsh
+        run: |
+          $releases = Join-Path (Get-Location) 'artifacts/releases'
+          $installers = Get-ChildItem -Path $releases -Filter '*Setup.exe' | Sort-Object Name
+          $assets = Get-ChildItem -Path $releases -File |
+            Where-Object { $_.Extension -in '.exe', '.nupkg' } | Sort-Object Name
+
+          $lines = @('## Install', '')
+          foreach ($installer in $installers) {
+            $architecture = if ($installer.Name -match 'arm64') { 'Windows on ARM (ARM64)' } else { 'Windows x64' }
+            $size = [math]::Round($installer.Length / 1MB, 1)
+            $lines += "- **$architecture** - download ``$($installer.Name)`` ($size MB) and run it."
+          }
+          $lines += @(
+            ''
+            'AI Vitals installs for the current user only, so no administrator prompt appears. Releases are'
+            'not code signed yet: Windows SmartScreen shows a warning, where **More info -> Run anyway**'
+            'starts the installer. Verify the download against the checksums below first.'
+            ''
+            '## What''s new'
+            ''
+            (Get-Content -LiteralPath 'artifacts/release-notes.md' -Raw -Encoding UTF8).Trim()
+            ''
+            '## Verify your download'
+            ''
+            '| File | SHA256 |'
+            '| --- | --- |'
+          )
+          foreach ($asset in $assets) {
+            $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            $lines += "| ``$($asset.Name)`` | ``$hash`` |"
+          }
+
+          $previousTag = git tag --list 'v*' --sort=-v:refname |
+            Where-Object { $_ -ne '${{ steps.release.outputs.tag }}' } |
+            Select-Object -First 1
+          if ($previousTag) {
+            $compare = '${{ github.server_url }}/${{ github.repository }}/compare/' +
+              $previousTag + '...${{ steps.release.outputs.tag }}'
+            $lines += @('', "Full changelog: $compare")
+          }
+
+          Set-Content -LiteralPath 'artifacts/release-body.md' -Value ($lines -join "`n") -Encoding UTF8
+
+          $checksums = foreach ($asset in $assets) {
+            $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($asset.Name)"
+          }
+          Set-Content -LiteralPath (Join-Path $releases 'SHA256SUMS.txt') -Value $checksums -Encoding ascii
+
+      - name: Upload packages to the release
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Both channels land in the same release, so the second upload merges into the first.
+          foreach ($channel in @('win-x64', 'win-arm64')) {
+            vpk upload github --repoUrl ${{ github.server_url }}/${{ github.repository }} `
+              --token $env:GH_TOKEN --channel $channel --outputDir artifacts/releases `
+              --tag '${{ steps.release.outputs.tag }}' `
+              --releaseName 'AI Vitals ${{ steps.release.outputs.version }}' `
+              --publish true --merge true --pre ${{ steps.release.outputs.prerelease }}
+            if ($LASTEXITCODE -ne 0) { throw "Uploading channel $channel failed." }
+          }
+
+      - name: Publish release notes and checksums
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload '${{ steps.release.outputs.tag }}' artifacts/releases/SHA256SUMS.txt --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Uploading the checksum file failed.' }
+          gh release edit '${{ steps.release.outputs.tag }}' --notes-file artifacts/release-body.md
+          if ($LASTEXITCODE -ne 0) { throw 'Updating the release notes failed.' }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AIVitals-installers-${{ steps.release.outputs.version }}
+          path: |
+            artifacts/releases/*
+            artifacts/release-body.md

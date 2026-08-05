@@ -1,0 +1,187 @@
+<Window x:Class="AIVitals.App.OnboardingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AIVitals.App"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="{DynamicResource OnboardingTitle}"
+        Icon="pack://application:,,,/AIVitals.App;component/Assets/AppIcon.ico"
+        Width="680" Height="576" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        Background="{DynamicResource CanvasBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="54" ResizeBorderThickness="0" CornerRadius="8" GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <!-- One shape for every provider row: fixed height + fixed status column keeps
+             logo, name and badge aligned regardless of how long the provider name is. -->
+        <Style x:Key="ProviderRow" TargetType="Border" BasedOn="{StaticResource PanelCard}">
+            <Setter Property="Height" Value="78" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="StatusBadge" TargetType="Border">
+            <Setter Property="MinWidth" Value="150" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <!-- Language is switchable here because the appearance settings are only
+             reachable once onboarding is done. -->
+        <Style x:Key="LanguageChoice" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="2,0,0,0" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" Padding="10,3" CornerRadius="6"
+                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{DynamicResource SelectionBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource WarmBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="StatusBadgeText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="54" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource TopBarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="20,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <local:ActivityRingsIcon Width="29" Height="29" VerticalAlignment="Center"
+                                         OuterBrush="{DynamicResource SignalBrush}" MiddleBrush="{DynamicResource CodexBrush}"
+                                         InnerBrush="{DynamicResource WarmBrush}" TrackBrush="{DynamicResource LineBrush}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="AI Vitals" FontSize="17" FontWeight="SemiBold" />
+                    <Border Height="22" Margin="12,0,0,0" Padding="8,0" VerticalAlignment="Center" CornerRadius="8" Background="{DynamicResource SurfaceBrush}">
+                        <TextBlock VerticalAlignment="Center" Text="LOCAL" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource SignalBrush}" />
+                    </Border>
+                </StackPanel>
+                <Border Grid.Column="3" Height="30" Padding="3" CornerRadius="8" VerticalAlignment="Center"
+                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        ToolTip="{DynamicResource Language}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource FluentIcon}" Margin="6,0,3,0" FontSize="12" Text="&#xE774;" />
+                        <RadioButton x:Name="SpanishOption" Style="{StaticResource LanguageChoice}" Tag="es" Content="Español"
+                                     Checked="OnLanguageChanged" AutomationProperties.Name="Español" />
+                        <RadioButton x:Name="EnglishOption" Style="{StaticResource LanguageChoice}" Tag="en" Content="English"
+                                     Checked="OnLanguageChanged" AutomationProperties.Name="English" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Grid.Column="4" Margin="12,0,-20,0" Orientation="Horizontal">
+                    <Button Style="{StaticResource WindowButton}" Click="OnFinish" AutomationProperties.Name="{DynamicResource ConfigureLater}">
+                        <TextBlock Style="{StaticResource FluentIcon}" FontSize="11" Text="&#xE8BB;" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="32,26,32,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="22" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="{DynamicResource OnboardingKicker}" FontFamily="Cascadia Mono, Consolas" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource SignalBrush}" />
+                <TextBlock Margin="0,7,0,0" Text="{DynamicResource OnboardingHeadline}" FontSize="28" FontWeight="SemiBold" />
+                <TextBlock Margin="0,7,0,0" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}"
+                           Text="{DynamicResource OnboardingDescription}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="2">
+                <TextBlock Margin="0,0,0,9" Text="{DynamicResource OnboardingConnections}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+
+                <Border Style="{StaticResource ProviderRow}" BorderBrush="{DynamicResource CodexBrush}">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /><ColumnDefinition Width="190" /></Grid.ColumnDefinitions>
+                        <local:SvgLogo Width="36" Height="36" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       Source="Assets/Providers/codex-dark.svg" Tint="{DynamicResource CodexBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Codex" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,3,0,0" Text="{DynamicResource ProviderUsageDescription}" FontSize="11" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <Border Style="{StaticResource StatusBadge}">
+                                <TextBlock Style="{StaticResource StatusBadgeText}" Text="{Binding CodexHealthText}" Foreground="{DynamicResource CodexBrush}" />
+                            </Border>
+                            <TextBlock Margin="0,5,0,0" HorizontalAlignment="Right" Text="{DynamicResource AutomaticDetection}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Margin="0,10,0,0" Style="{StaticResource ProviderRow}" BorderBrush="{DynamicResource WarmBrush}">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /><ColumnDefinition Width="190" /></Grid.ColumnDefinitions>
+                        <local:SvgLogo Width="36" Height="36" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       Source="Assets/Providers/claude-ai.svg" Tint="{DynamicResource ClaudeBrandBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Claude Code" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,3,0,0" Text="{DynamicResource ProviderUsageDescription}" FontSize="11" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <Border Style="{StaticResource StatusBadge}">
+                                <TextBlock Style="{StaticResource StatusBadgeText}" Text="{Binding ClaudeHealthText}" Foreground="{DynamicResource WarmBrush}" />
+                            </Border>
+                            <TextBlock Margin="0,5,0,0" HorizontalAlignment="Right" Text="{DynamicResource AutomaticDetection}" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Row="4" Style="{StaticResource DashboardCard}" Padding="16">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource FluentIcon}" FontSize="14" VerticalAlignment="Top" Text="&#xE946;" Foreground="{DynamicResource SignalBrush}" />
+                    <TextBlock Grid.Column="1" Margin="11,0,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"
+                               Text="{DynamicResource OnboardingControl}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Background="{DynamicResource TopBarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="20,12">
+                <TextBlock VerticalAlignment="Center" Text="{DynamicResource LocalFirstFooter}" FontFamily="Cascadia Mono, Consolas" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" />
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource ActionButton}" Content="{DynamicResource ConfigureLater}" Click="OnFinish" />
+                    <Button Margin="0" Padding="20,9" Style="{StaticResource PrimaryButton}" Content="{DynamicResource Start}" IsDefault="True" Click="OnFinish" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
