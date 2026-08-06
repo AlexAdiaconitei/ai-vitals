@@ -24,13 +24,17 @@
       'hero.cta.code': 'Get the code on GitHub',
       'hero.cta.kofi': 'Support on Ko-fi',
       'hero.foot': 'No installer released yet — clone the repo and run it with .NET 9.',
-      'hero.rings.alt': 'Activity rings: Codex week at 71 percent, Claude Code week at 81 percent.',
-      'hero.rings.state': 'LIVE SAMPLE',
-      'hero.legend.codex': 'Codex · week',
-      'hero.legend.claude': 'Claude Code · week',
-      'hero.legend.app': 'Reading freshness',
-      'hero.legend.fresh': 'ACTIVE',
-      'hero.caption': 'Sample values from a real capture. Missing data stays missing — never a synthetic 0%.',
+      'hero.panel.label': 'Sample reading: Codex and Claude Code quota windows',
+      'hero.panel.stamp': 'CAPTURE · 5 AUG 18:54',
+      'hero.panel.available': 'AVAILABLE',
+      'hero.win.week': 'Week',
+      'hero.win.5h': '5 hours',
+      'hero.win.resets': 'RESETS IN',
+      'hero.win.clock': 'CLOCK',
+      'hero.a11y.codexWeek': 'Codex, week window, 71 percent used',
+      'hero.a11y.claude5h': 'Claude Code, 5-hour window, 4 percent used',
+      'hero.a11y.claudeWeek': 'Claude Code, week window, 81 percent used',
+      'hero.caption': 'Percentages from one capture on 5 Aug. The clocks run live, and the hairline marks how much of each window has already passed.',
 
       'layouts.eyebrow': 'WIDGET',
       'layouts.title': 'Three layouts. Pick the one your desk has room for.',
@@ -110,7 +114,7 @@
       'about.fact2': 'Java, Spring Boot, JavaScript, Python',
       'about.fact3': 'Remote',
 
-      'foot.left': 'AI Vitals · MIT License · Built with AI assistance through Codex.',
+      'foot.left': 'AI Vitals · MIT License · Built with AI assistance through Codex and Claude Code.',
       'lightbox.close': 'Close'
     },
 
@@ -133,13 +137,17 @@
       'hero.cta.code': 'Ver el código en GitHub',
       'hero.cta.kofi': 'Apoyar en Ko-fi',
       'hero.foot': 'Todavía no hay instalador — clona el repositorio y ejecútalo con .NET 9.',
-      'hero.rings.alt': 'Anillos de actividad: Codex al 71 por ciento en la semana y Claude Code al 81 por ciento.',
-      'hero.rings.state': 'DATOS REALES',
-      'hero.legend.codex': 'Codex · semana',
-      'hero.legend.claude': 'Claude Code · semana',
-      'hero.legend.app': 'Frescura del dato',
-      'hero.legend.fresh': 'ACTIVO',
-      'hero.caption': 'Valores tomados de una captura real. Si falta un dato se dice, nunca se convierte en un 0% inventado.',
+      'hero.panel.label': 'Lectura de ejemplo: ventanas de cuota de Codex y Claude Code',
+      'hero.panel.stamp': 'CAPTURA · 5 AGO 18:54',
+      'hero.panel.available': 'DISPONIBLE',
+      'hero.win.week': 'Semana',
+      'hero.win.5h': '5 horas',
+      'hero.win.resets': 'SE REINICIA EN',
+      'hero.win.clock': 'RELOJ',
+      'hero.a11y.codexWeek': 'Codex, ventana semanal, 71 por ciento consumido',
+      'hero.a11y.claude5h': 'Claude Code, ventana de 5 horas, 4 por ciento consumido',
+      'hero.a11y.claudeWeek': 'Claude Code, ventana semanal, 81 por ciento consumido',
+      'hero.caption': 'Porcentajes de una captura del 5 de agosto. Los relojes corren en vivo y la línea marca cuánto tiempo ha pasado de cada ventana.',
 
       'layouts.eyebrow': 'WIDGET',
       'layouts.title': 'Tres formatos. Elige el que te quepa en pantalla.',
@@ -219,7 +227,7 @@
       'about.fact2': 'Java, Spring Boot, JavaScript, Python',
       'about.fact3': 'Remoto',
 
-      'foot.left': 'AI Vitals · Licencia MIT · Desarrollado con asistencia de IA a través de Codex.',
+      'foot.left': 'AI Vitals · Licencia MIT · Desarrollado con asistencia de IA a través de Codex y Claude Code.',
       'lightbox.close': 'Cerrar'
     }
   };
@@ -264,24 +272,67 @@
     });
   });
 
-  /* ── hero rings ─────────────────────────────────────────────────── */
-  function arc(id, radius, percent) {
-    var el = document.getElementById(id);
-    if (!el) { return; }
-    var c = 2 * Math.PI * radius;
-    el.style.strokeDasharray = (c * percent) + ' ' + (c * 4);
-  }
-
-  function drawRings() {
-    arc('ringApp', 104, 0.84);
-    arc('ringCodex', 70, 0.71);
-    arc('ringClaude', 36, 0.81);
-  }
-
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) { drawRings(); } else { setTimeout(drawRings, 220); }
 
-  /* count the legend figures up once, in step with the arcs */
+  /* ── hero panel ─────────────────────────────────────────────────────
+     Percentages are frozen sample values from the capture of 5 Aug. The
+     clocks are not: each window has a real reset schedule, so the panel
+     counts down to the next reset and marks how far the clock has moved
+     inside the window. Nothing here is dressed up as something it isn't. */
+  var HOUR = 3600000;
+  var WINDOWS = {
+    'codex-week':  { reset: new Date(2025, 7, 9, 18, 54, 0), span: 7 * 24 * HOUR },
+    'claude-5h':   { reset: new Date(2025, 7, 5, 23, 19, 0), span: 5 * HOUR },
+    'claude-week': { reset: new Date(2025, 7, 6, 11, 59, 0), span: 7 * 24 * HOUR }
+  };
+
+  function nextReset(win, now) {
+    var base = win.reset.getTime();
+    var steps = Math.ceil((now - base) / win.span);
+    if (steps < 1) { steps = 1; }
+    return base + steps * win.span;
+  }
+
+  function clockText(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600); s -= h * 3600;
+    var m = Math.floor(s / 60); s -= m * 60;
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return (d ? d + 'd ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
+  }
+
+  var panelTargets = $$('[data-window]');
+
+  function tickPanel() {
+    var now = Date.now();
+    var cache = {};
+    panelTargets.forEach(function (el) {
+      var key = el.getAttribute('data-window');
+      var win = WINDOWS[key];
+      if (!win) { return; }
+      if (!cache[key]) {
+        var left = nextReset(win, now) - now;
+        cache[key] = { left: left, elapsed: Math.min(100, Math.max(0, (1 - left / win.span) * 100)) };
+      }
+      if (el.classList.contains('meter__now')) { el.style.left = cache[key].elapsed.toFixed(1) + '%'; }
+      else if (el.tagName === 'TIME') { el.textContent = clockText(cache[key].left); }
+      else { el.textContent = Math.round(cache[key].elapsed) + '%'; }
+    });
+  }
+
+  if (panelTargets.length) {
+    tickPanel();
+    setInterval(tickPanel, 1000);
+  }
+
+  /* fill the meters once, from 0, so the panel reads as a live instrument */
+  function fillMeters() {
+    $$('[data-fill]').forEach(function (el) { el.style.width = el.getAttribute('data-fill') + '%'; });
+  }
+  if (reduced) { fillMeters(); } else { setTimeout(fillMeters, 220); }
+
+  /* count the figures up once, in step with the meters */
   $$('[data-count]').forEach(function (el) {
     var target = parseInt(el.getAttribute('data-count'), 10);
     if (reduced) { el.textContent = target + '%'; return; }

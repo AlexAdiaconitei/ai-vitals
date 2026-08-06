@@ -16,10 +16,6 @@ The site is then served at `https://alexadiaconitei.github.io/ai-vitals/`.
 | `assets/js/site.js` | English/Spanish dictionary, widget and screen switchers, ring meter, lightbox, copy buttons |
 | `assets/img/` | Real application captures copied from `docs/images/`, app icon and brand SVGs |
 
-## Pending
-
-Add your portrait as `assets/img/alex.webp` (square, 360 × 360 px or larger). Until that file exists the About card falls back to the `AA` monogram automatically.
-
 ## Language
 
 English is the default. The EN/ES switch in the header rewrites every string from `I18N` in `assets/js/site.js` and stores the choice in `localStorage` under `aivitals.lang`. To edit copy, change both dictionaries in that file — the HTML text is only the English fallback for a no-JavaScript load.
