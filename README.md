@@ -10,7 +10,7 @@
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)
 ![Language](https://img.shields.io/badge/C%23-WPF-239120?style=flat-square&logo=csharp&logoColor=white)
 ![Privacy](https://img.shields.io/badge/privacy-local--first-31D6C6?style=flat-square)
-![Built with Codex](https://img.shields.io/badge/built%20with-Codex%20%C2%B7%20GPT--5.6--Sol-000000?style=flat-square&logo=openai&logoColor=white)
+![Built with Codex and Claude Code](https://img.shields.io/badge/built%20with-Codex%20%C2%B7%20GPT--5.6--Sol%20%26%20Claude%20Code%20%C2%B7%20Opus%205-000000?style=flat-square&logo=openai&logoColor=white)
 
 [Overview](#overview) · [Screenshots](#screenshots) · [Features](#features) · [Getting started](#getting-started) · [Privacy](#privacy) · [Documentation](#documentation)
 
@@ -217,7 +217,7 @@ The domain model, local persistence, live Codex and Claude Code adapters, widget
 
 ## AI-assisted development
 
-The AI Vitals codebase was created with AI assistance through **Codex, powered by GPT-5.6-Sol**. Product direction, architecture, implementation, tests, documentation, and visual refinement were developed through an iterative, human-directed workflow.
+The AI Vitals codebase was created with AI assistance through **Codex, powered by GPT-5.6-Sol** and **Claude Code, powered by Opus 5**. Product direction, architecture, implementation, tests, documentation, and visual refinement were developed through an iterative, human-directed workflow.
 
 ## Documentation
 
