@@ -1,0 +1,30 @@
+# Store every text file with LF in the repository.
+* text=auto
+
+# Files served verbatim by GitHub Pages: keep LF in the working tree too,
+# so what is edited locally is byte-identical to what is published.
+*.html   text eol=lf
+*.css    text eol=lf
+*.js     text eol=lf
+*.mjs    text eol=lf
+*.json   text eol=lf
+*.svg    text eol=lf
+*.xml    text eol=lf
+*.txt    text eol=lf
+*.md     text eol=lf
+.nojekyll text eol=lf
+
+# Binary assets: never normalized, never diffed as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.avif binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.zip   binary

@@ -1,0 +1,56 @@
+# The landing page is served as-is: no build step, no dependencies.
+# Anything below is local tooling output and must never reach the branch.
+
+# .NET output left behind by the application branch. Checking out gh-pages in
+# a working tree that has built `main` leaves bin/, obj/ and artifacts/ on
+# disk, because Git never removes untracked files. Ignoring the output is
+# enough: src/ and tests/ then hold nothing Git reports.
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+preferences.json
+preferences.json.bak
+preferences.json.tmp
+
+# Static-site generators / bundlers
+node_modules/
+dist/
+build/
+out/
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.cache/
+.parcel-cache/
+.sass-cache/
+*.css.map
+*.js.map
+*.min.css
+*.min.js
+
+# Local preview servers and tooling
+.env
+.env.local
+*.log
+npm-debug.log*
+yarn-error.log*
+.tmp/
+tmp/
+
+# Editors
+.vscode/
+.vs/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
