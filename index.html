@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Vitals — local-first quota monitor for Codex and Claude Code</title>
+<meta name="description" content="AI Vitals is a Windows tray app that reads Codex and Claude Code usage from your own machine and shows it in an always-on-top widget, a quick popup, and a full dashboard. No account, no backend, no telemetry." />
+<meta name="theme-color" content="#07111F" />
+<link rel="icon" href="assets/img/app-icon.png" type="image/png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://alexadiaconitei.github.io/ai-vitals/" />
+<meta property="og:title" content="AI Vitals — local-first quota monitor for Codex and Claude Code" />
+<meta property="og:description" content="Windows tray app for AI coding assistant quotas. Widget, quick popup, dashboard. Local-first, no telemetry." />
+<meta property="og:image" content="https://alexadiaconitei.github.io/ai-vitals/assets/img/dashboard.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/site.css" />
+</head>
+<body>
+
+<a class="skip" href="#overview" data-i18n="skip">Skip to content</a>
+
+<!-- ── app chrome: top bar ───────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar__brand">
+    <img class="topbar__icon" src="assets/img/app-icon.svg" alt="" width="26" height="26" />
+    <span class="topbar__name">AI Vitals</span>
+    <span class="chip chip--teal">LOCAL</span>
+    <span class="chip chip--line mono">v0.1.0</span>
+  </div>
+  <div class="topbar__actions">
+    <div class="langswitch" role="group" aria-label="Language / Idioma">
+      <button type="button" class="langswitch__btn is-on" data-lang-set="en" aria-pressed="true">EN</button>
+      <button type="button" class="langswitch__btn" data-lang-set="es" aria-pressed="false">ES</button>
+    </div>
+    <a class="iconlink" href="https://github.com/AlexAdiaconitei/ai-vitals" data-i18n-label="nav.github" aria-label="AI Vitals on GitHub">
+      <svg viewBox="0 0 1024 1024" aria-hidden="true" width="17" height="17"><path fill="currentColor" fill-rule="evenodd" d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 738.56 1024 512 1024 229.12 794.88 0 512 0"/></svg>
+    </a>
+    <a class="iconlink iconlink--kofi" href="https://ko-fi.com/K3Q5236GOO" data-i18n-label="nav.kofi" aria-label="Support on Ko-fi">
+      <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17"><path fill="currentColor" d="M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.532 0-2.545 1.428-3.766 4-4 1.376-.13 2.234-.182 5.402-.182zm5.117 2.287v4.911h1.195c1.351 0 2.415-1.09 2.415-2.442 0-1.35-1.064-2.469-2.415-2.469zM5.663 6.976c-1.013 0-1.87.831-1.87 1.87 0 3.298 4.598 5.998 4.806 6.128a.66.66 0 0 0 .676 0c.208-.13 4.805-2.83 4.805-6.129 0-1.038-.857-1.869-1.87-1.869-1.194 0-1.87.987-2.311 1.61l-.961-.001c-.442-.623-1.09-1.61-2.286-1.61z"/></svg>
+    </a>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ── app chrome: sidebar nav ─────────────────────────────────────── -->
+  <nav class="rail" aria-label="Sections">
+    <ul class="rail__list">
+      <li><a class="rail__item" href="#overview" data-i18n="nav.overview">Overview</a></li>
+      <li><a class="rail__item" href="#layouts" data-i18n="nav.layouts">Widget layouts</a></li>
+      <li><a class="rail__item" href="#screens" data-i18n="nav.screens">Screens</a></li>
+      <li><a class="rail__item" href="#features" data-i18n="nav.features">Features</a></li>
+      <li><a class="rail__item" href="#privacy" data-i18n="nav.privacy">Privacy</a></li>
+      <li><a class="rail__item" href="#install" data-i18n="nav.install">Run it</a></li>
+      <li><a class="rail__item" href="#about" data-i18n="nav.about">About me</a></li>
+    </ul>
+    <div class="rail__foot">
+      <p class="mono rail__note" data-i18n="rail.note">Reads local provider data only.</p>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ── hero ─────────────────────────────────────────────────────── -->
+    <section class="hero" id="overview">
+      <div class="hero__copy">
+        <p class="eyebrow mono" data-i18n="hero.eyebrow">WINDOWS TRAY · LOCAL-FIRST</p>
+        <h1 class="hero__title" data-i18n="hero.title">Your AI quotas, always in sight.</h1>
+        <p class="hero__sub" data-i18n="hero.sub">AI Vitals reads Codex and Claude Code usage from your own machine and shows it in an always-on-top widget, a tray popup, and a full dashboard. No account, no backend, no telemetry.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="https://github.com/AlexAdiaconitei/ai-vitals">
+            <svg viewBox="0 0 1024 1024" aria-hidden="true" width="17" height="17"><path fill="currentColor" fill-rule="evenodd" d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 738.56 1024 512 1024 229.12 794.88 0 512 0"/></svg>
+            <span data-i18n="hero.cta.code">Get the code on GitHub</span>
+          </a>
+          <a class="btn btn--kofi" href="https://ko-fi.com/K3Q5236GOO">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17"><path fill="currentColor" d="M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.532 0-2.545 1.428-3.766 4-4 1.376-.13 2.234-.182 5.402-.182zm5.117 2.287v4.911h1.195c1.351 0 2.415-1.09 2.415-2.442 0-1.35-1.064-2.469-2.415-2.469zM5.663 6.976c-1.013 0-1.87.831-1.87 1.87 0 3.298 4.598 5.998 4.806 6.128a.66.66 0 0 0 .676 0c.208-.13 4.805-2.83 4.805-6.129 0-1.038-.857-1.869-1.87-1.869-1.194 0-1.87.987-2.311 1.61l-.961-.001c-.442-.623-1.09-1.61-2.286-1.61z"/></svg>
+            <span data-i18n="hero.cta.kofi">Support on Ko-fi</span>
+          </a>
+        </div>
+        <p class="hero__foot mono" data-i18n="hero.foot">No installer released yet — clone the repo and run it with .NET 9.</p>
+      </div>
+
+      <!-- signature: a live widget, not a picture of one -->
+      <div class="hero__widget">
+        <div class="glass glass--hero" role="img" data-i18n-label="hero.rings.alt"
+             aria-label="Activity rings: Codex week at 71 percent, Claude Code week at 81 percent.">
+          <div class="glass__head">
+            <img src="assets/img/app-icon.svg" alt="" width="16" height="16" />
+            <span class="glass__name">AI Vitals</span>
+            <span class="glass__state mono" data-i18n="hero.rings.state">LIVE SAMPLE</span>
+          </div>
+          <div class="rings">
+            <svg class="rings__svg" viewBox="0 0 256 256" aria-hidden="true">
+              <circle class="rings__track" cx="128" cy="128" r="104" stroke-width="25" />
+              <circle class="rings__arc" id="ringApp" cx="128" cy="128" r="104" stroke="#31D6C6" stroke-width="25" stroke-linecap="round" transform="rotate(-90 128 128)" />
+              <circle class="rings__track" cx="128" cy="128" r="70" stroke-width="25" />
+              <circle class="rings__arc" id="ringCodex" cx="128" cy="128" r="70" stroke="#3D8BFF" stroke-width="25" stroke-linecap="round" transform="rotate(-90 128 128)" />
+              <circle class="rings__track" cx="128" cy="128" r="36" stroke-width="25" />
+              <circle class="rings__arc" id="ringClaude" cx="128" cy="128" r="36" stroke="#FF9B2F" stroke-width="25" stroke-linecap="round" transform="rotate(-90 128 128)" />
+            </svg>
+          </div>
+          <dl class="legend">
+            <div class="legend__row">
+              <dt><span class="dot dot--blue"></span><span data-i18n="hero.legend.codex">Codex · week</span></dt>
+              <dd class="mono" data-count="71">71%</dd>
+            </div>
+            <div class="legend__row">
+              <dt><span class="dot dot--orange"></span><span data-i18n="hero.legend.claude">Claude Code · week</span></dt>
+              <dd class="mono" data-count="81">81%</dd>
+            </div>
+            <div class="legend__row">
+              <dt><span class="dot dot--teal"></span><span data-i18n="hero.legend.app">Reading freshness</span></dt>
+              <dd class="mono" data-i18n="hero.legend.fresh">ACTIVE</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="hero__caption mono" data-i18n="hero.caption">Sample values from a real capture. Missing data stays missing — never a synthetic 0%.</p>
+      </div>
+    </section>
+
+    <!-- ── layouts ──────────────────────────────────────────────────── -->
+    <section class="section" id="layouts">
+      <header class="section__head">
+        <p class="eyebrow mono" data-i18n="layouts.eyebrow">WIDGET</p>
+        <h2 class="section__title" data-i18n="layouts.title">Three layouts. Pick the one your desk has room for.</h2>
+        <p class="section__lede" data-i18n="layouts.lede">The widget stays on top, can be locked in place or made click-through, and returns with Ctrl+Shift+U if it ends up on a monitor you unplugged. Switch layout here to see each capture at its real size.</p>
+      </header>
+
+      <div class="switcher" role="tablist" data-i18n-label="layouts.tablist" aria-label="Widget layout">
+        <button class="seg" role="tab" id="tab-rings" aria-controls="panel-rings" aria-selected="true" data-layout="rings">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+          <span data-i18n="layouts.tab.rings">Rings</span>
+        </button>
+        <button class="seg" role="tab" id="tab-horizontal" aria-controls="panel-horizontal" aria-selected="false" tabindex="-1" data-layout="horizontal">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h16M4 13h11M4 18h7"/></svg>
+          <span data-i18n="layouts.tab.horizontal">Horizontal</span>
+        </button>
+        <button class="seg" role="tab" id="tab-vertical" aria-controls="panel-vertical" aria-selected="false" tabindex="-1" data-layout="vertical">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 20V6M12 20v-9M17 20V9"/></svg>
+          <span data-i18n="layouts.tab.vertical">Vertical</span>
+        </button>
+      </div>
+
+      <div class="stage">
+        <div class="stage__bar">
+          <span class="mono stage__dims" id="stageDims">274 × 178 px</span>
+          <label class="toggle">
+            <input type="checkbox" id="ctxToggle" />
+            <span class="toggle__track" aria-hidden="true"><span class="toggle__knob"></span></span>
+            <span class="toggle__label" data-i18n="layouts.toggle">Show it on a desktop</span>
+          </label>
+        </div>
+
+        <div class="stage__view" id="stageView">
+          <figure class="shot shot--widget" role="tabpanel" id="panel-rings" aria-labelledby="tab-rings">
+            <img src="assets/img/widget-rings.png" width="274" height="178" data-i18n-alt="layouts.alt.rings" alt="Activity-ring widget showing Codex at 71 percent and Claude at 4 and 81 percent" />
+          </figure>
+          <figure class="shot shot--widget is-hidden" role="tabpanel" id="panel-horizontal" aria-labelledby="tab-horizontal" hidden>
+            <img src="assets/img/widget-horizontal.png" width="420" height="117" data-i18n-alt="layouts.alt.horizontal" alt="Horizontal-bar widget with one bar per quota window" />
+          </figure>
+          <figure class="shot shot--widget is-hidden" role="tabpanel" id="panel-vertical" aria-labelledby="tab-vertical" hidden>
+            <img src="assets/img/widget-vertical.png" width="144" height="420" data-i18n-alt="layouts.alt.vertical" alt="Vertical-bar widget, a narrow column of quota bars" />
+          </figure>
+          <figure class="shot shot--ctx is-hidden" id="panel-ctx" hidden>
+            <img id="ctxImage" src="assets/img/widget-rings-cartoon.png" width="1672" height="941" data-i18n-alt="layouts.alt.ctx" alt="The widget floating over an illustrated code editor, showing its real footprint" />
+          </figure>
+        </div>
+
+        <p class="stage__note mono" id="stageNote" data-i18n="layouts.note.rings">Rings: one arc per quota window, longest outside, shortest inside.</p>
+      </div>
+    </section>
+
+    <!-- ── screens ──────────────────────────────────────────────────── -->
+    <section class="section" id="screens">
+      <header class="section__head">
+        <p class="eyebrow mono" data-i18n="screens.eyebrow">TRAY AND DASHBOARD</p>
+        <h2 class="section__title" data-i18n="screens.title">One icon in the notification area does the whole job.</h2>
+        <p class="section__lede" data-i18n="screens.lede">Left click for status you can read in a second. Right click for widget, layout and appearance controls. Double click the widget for the full dashboard with history and export.</p>
+      </header>
+
+      <div class="switcher switcher--wide" role="tablist" data-i18n-label="screens.tablist" aria-label="Screen">
+        <button class="seg" role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="true" data-screen="dashboard"><span data-i18n="screens.tab.dashboard">Dashboard</span></button>
+        <button class="seg" role="tab" id="tab-quick" aria-controls="panel-quick" aria-selected="false" tabindex="-1" data-screen="quick"><span data-i18n="screens.tab.quick">Quick status</span></button>
+        <button class="seg" role="tab" id="tab-tray" aria-controls="panel-tray" aria-selected="false" tabindex="-1" data-screen="tray"><span data-i18n="screens.tab.tray">Tray controls</span></button>
+      </div>
+
+      <div class="screens">
+        <figure class="shot shot--screen" role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard">
+          <button class="zoom" type="button" data-zoom="assets/img/dashboard.png" data-i18n-label="screens.zoom">
+            <img src="assets/img/dashboard.png" width="1440" height="860" data-i18n-alt="screens.alt.dashboard" alt="AI Vitals dashboard with Codex and Claude Code quota cards" />
+          </button>
+          <figcaption data-i18n="screens.cap.dashboard">Summary, history with provider and date filters, connections, widget preview, privacy and appearance — in the app's own dark theme.</figcaption>
+        </figure>
+        <figure class="shot shot--screen is-hidden" role="tabpanel" id="panel-quick" aria-labelledby="tab-quick" hidden>
+          <button class="zoom" type="button" data-zoom="assets/img/tray-quick-status.png" data-i18n-label="screens.zoom">
+            <img src="assets/img/tray-quick-status.png" width="440" height="610" data-i18n-alt="screens.alt.quick" alt="Quick status popup listing live quota windows" />
+          </button>
+          <figcaption data-i18n="screens.cap.quick">Left click: live quota windows and widget shortcuts, without opening the dashboard.</figcaption>
+        </figure>
+        <figure class="shot shot--screen is-hidden" role="tabpanel" id="panel-tray" aria-labelledby="tab-tray" hidden>
+          <button class="zoom" type="button" data-zoom="assets/img/tray-menu.png" data-i18n-label="screens.zoom">
+            <img src="assets/img/tray-menu.png" width="344" height="458" data-i18n-alt="screens.alt.tray" alt="Tray popover with widget actions, layout and appearance controls" />
+          </button>
+          <figcaption data-i18n="screens.cap.tray">Right click: show or hide, lock, click-through, recover, move to another display, layout and theme.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ── features ─────────────────────────────────────────────────── -->
+    <section class="section" id="features">
+      <header class="section__head">
+        <p class="eyebrow mono" data-i18n="features.eyebrow">WHAT IT DOES</p>
+        <h2 class="section__title" data-i18n="features.title">Built like an instrument, not a dashboard product.</h2>
+      </header>
+      <ul class="cards">
+        <li class="card">
+          <span class="card__mark dot dot--blue"></span>
+          <h3 data-i18n="features.f1.t">Real provider data</h3>
+          <p data-i18n="features.f1.d">Codex through its local app server, Claude Code through its local OAuth usage endpoint. Only what each provider publishes.</p>
+        </li>
+        <li class="card">
+          <span class="card__mark dot dot--teal"></span>
+          <h3 data-i18n="features.f2.t">Honest freshness</h3>
+          <p data-i18n="features.f2.d">Active, delayed, stale and expired readings are labelled as such. An absent value shows as waiting, never as 0%.</p>
+        </li>
+        <li class="card">
+          <span class="card__mark dot dot--orange"></span>
+          <h3 data-i18n="features.f3.t">History and export</h3>
+          <p data-i18n="features.f3.d">Local SQLite history with provider and date filters. Export exactly what is on screen to CSV or JSON.</p>
+        </li>
+        <li class="card">
+          <span class="card__mark dot dot--teal"></span>
+          <h3 data-i18n="features.f4.t">Stays out of the way</h3>
+          <p data-i18n="features.f4.d">Lock the widget, make it click-through, snap it to any monitor, or bring it back with Ctrl+Shift+U.</p>
+        </li>
+        <li class="card">
+          <span class="card__mark dot dot--blue"></span>
+          <h3 data-i18n="features.f5.t">English and Spanish</h3>
+          <p data-i18n="features.f5.d">Both interfaces ship in the app, with light, dark and system themes and Windows high contrast.</p>
+        </li>
+        <li class="card">
+          <span class="card__mark dot dot--orange"></span>
+          <h3 data-i18n="features.f6.t">Readable units</h3>
+          <p data-i18n="features.f6.d">45.7 s, 3 min 05 s, 1,180 tokens, 1.6628 USD. Numbers are formatted for people, not for logs.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── privacy ──────────────────────────────────────────────────── -->
+    <section class="section" id="privacy">
+      <header class="section__head">
+        <p class="eyebrow mono" data-i18n="privacy.eyebrow">PRIVACY</p>
+        <h2 class="section__title" data-i18n="privacy.title">The interesting part is what never gets written down.</h2>
+      </header>
+      <div class="privacy">
+        <div class="privacy__col privacy__col--no">
+          <h3 class="mono privacy__h" data-i18n="privacy.no.t">NEVER STORED</h3>
+          <ul class="ledger">
+            <li data-i18n="privacy.no.1">Prompts and responses</li>
+            <li data-i18n="privacy.no.2">Transcripts and conversation content</li>
+            <li data-i18n="privacy.no.3">Project paths and session titles</li>
+            <li data-i18n="privacy.no.4">Provider credentials</li>
+            <li data-i18n="privacy.no.5">Raw session identifiers</li>
+            <li data-i18n="privacy.no.6">Analytics of any kind</li>
+          </ul>
+        </div>
+        <div class="privacy__col privacy__col--yes">
+          <h3 class="mono privacy__h" data-i18n="privacy.yes.t">KEPT ON YOUR MACHINE</h3>
+          <ul class="ledger ledger--yes">
+            <li data-i18n="privacy.yes.1">Quota windows and usage counters</li>
+            <li data-i18n="privacy.yes.2">Preferences, theme, language and widget position</li>
+            <li data-i18n="privacy.yes.3">Session identifiers, pseudonymized locally with HMAC</li>
+          </ul>
+          <p class="privacy__path mono">%LOCALAPPDATA%\AIVitals</p>
+          <p class="privacy__note" data-i18n="privacy.note">No account, no backend, no update ping. Raw provider payloads are discarded once the allowlisted fields are read.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── install ──────────────────────────────────────────────────── -->
+    <section class="section" id="install">
+      <header class="section__head">
+        <p class="eyebrow mono" data-i18n="install.eyebrow">RUN IT</p>
+        <h2 class="section__title" data-i18n="install.title">Two commands from clone to tray.</h2>
+        <p class="section__lede" data-i18n="install.lede">Windows 10 22H2 or Windows 11, .NET SDK 9, and Codex or Claude Code signed in locally for live data. There is no packaged installer yet.</p>
+      </header>
+      <ol class="steps">
+        <li class="step">
+          <p class="step__label mono" data-i18n="install.s1">Clone</p>
+          <div class="code">
+            <code>git clone https://github.com/AlexAdiaconitei/ai-vitals.git</code>
+            <button class="copy" type="button" data-copy="git clone https://github.com/AlexAdiaconitei/ai-vitals.git" data-i18n-label="install.copy" aria-label="Copy command"><span class="mono" data-i18n="install.copy.short">COPY</span></button>
+          </div>
+        </li>
+        <li class="step">
+          <p class="step__label mono" data-i18n="install.s2">Run</p>
+          <div class="code">
+            <code>dotnet run --project src/AIVitals.App/AIVitals.App.csproj</code>
+            <button class="copy" type="button" data-copy="dotnet run --project src/AIVitals.App/AIVitals.App.csproj" data-i18n-label="install.copy" aria-label="Copy command"><span class="mono" data-i18n="install.copy.short">COPY</span></button>
+          </div>
+        </li>
+      </ol>
+      <p class="install__after" data-i18n="install.after">AI Vitals starts in the notification area. Left-click the tray icon for status, right-click for the widget and appearance controls.</p>
+    </section>
+
+    <!-- ── about ────────────────────────────────────────────────────── -->
+    <section class="section section--about" id="about">
+      <div class="about">
+        <div class="about__portrait">
+          <img class="about__photo" src="assets/img/alex.webp" width="180" height="180" alt="Alex Adiaconitei" id="aboutPhoto" />
+          <span class="about__initials mono" id="aboutInitials" aria-hidden="true">AA</span>
+        </div>
+        <div class="about__body">
+          <p class="eyebrow mono" data-i18n="about.eyebrow">WHO BUILT THIS</p>
+          <h2 class="about__name">Alex Adiaconitei</h2>
+          <p class="about__bio" data-i18n="about.bio">Software engineer specialized in backend development with Java and Spring Boot, comfortable working with JavaScript and Python. I enjoy building personal projects to keep learning, with a growing interest in infrastructure.</p>
+          <ul class="facts">
+            <li class="fact mono" data-i18n="about.fact1">Backend Software Engineer</li>
+            <li class="fact mono" data-i18n="about.fact2">Java, Spring Boot, JavaScript, Python</li>
+            <li class="fact mono" data-i18n="about.fact3">Remote</li>
+          </ul>
+          <div class="about__links">
+            <a class="btn btn--ghost" href="https://github.com/AlexAdiaconitei">
+              <svg viewBox="0 0 1024 1024" aria-hidden="true" width="16" height="16"><path fill="currentColor" fill-rule="evenodd" d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 738.56 1024 512 1024 229.12 794.88 0 512 0"/></svg>
+              GitHub
+            </a>
+            <a class="btn btn--ghost" href="https://www.linkedin.com/in/alexadiaconitei/">
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13M7.12 20.45H3.55V9h3.57zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0"/></svg>
+              LinkedIn
+            </a>
+            <a class="btn btn--kofi" href="https://ko-fi.com/K3Q5236GOO">
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.532 0-2.545 1.428-3.766 4-4 1.376-.13 2.234-.182 5.402-.182zm5.117 2.287v4.911h1.195c1.351 0 2.415-1.09 2.415-2.442 0-1.35-1.064-2.469-2.415-2.469zM5.663 6.976c-1.013 0-1.87.831-1.87 1.87 0 3.298 4.598 5.998 4.806 6.128a.66.66 0 0 0 .676 0c.208-.13 4.805-2.83 4.805-6.129 0-1.038-.857-1.869-1.87-1.869-1.194 0-1.87.987-2.311 1.61l-.961-.001c-.442-.623-1.09-1.61-2.286-1.61z"/></svg>
+              Ko-fi
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p data-i18n="foot.left">AI Vitals · MIT License · Built with AI assistance through Codex.</p>
+      <p class="mono foot__right">LOCAL-FIRST · NO TELEMETRY</p>
+    </footer>
+  </main>
+</div>
+
+<dialog class="lightbox" id="lightbox">
+  <button class="lightbox__close" type="button" data-i18n-label="lightbox.close" aria-label="Close">✕</button>
+  <img id="lightboxImage" src="" alt="" />
+</dialog>
+
+<script src="assets/js/site.js"></script>
+</body>
+</html>
