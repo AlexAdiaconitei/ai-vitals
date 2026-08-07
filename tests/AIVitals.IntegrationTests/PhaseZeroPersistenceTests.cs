@@ -221,6 +221,29 @@ public sealed class PhaseZeroPersistenceTests : IDisposable
         Assert.DoesNotContain(remaining, item => item.Value == 10m);
     }
 
+    [Fact]
+    public async Task Monitor_keeps_the_reason_an_adapter_gave_for_its_health()
+    {
+        Directory.CreateDirectory(_root);
+        var paths = new AppDataPaths(_root);
+        var repository = new SqliteObservationRepository(paths.DatabasePath);
+
+        await using var monitor = new UsageMonitorService(
+            [new UnhealthyAdapter("claude-code", "claude-code.credentials-expired")],
+            repository,
+            new JsonPreferencesStore(paths.PreferencesPath));
+        var reported = new TaskCompletionSource();
+        monitor.StateChanged += (_, state) =>
+        {
+            if (state.AdapterHealthDetail.ContainsKey("claude-code")) reported.TrySetResult();
+        };
+        await monitor.StartAsync();
+        await reported.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal(AdapterHealth.Degraded, monitor.State.AdapterHealth["claude-code"]);
+        Assert.Equal("claude-code.credentials-expired", monitor.State.AdapterHealthDetail["claude-code"]);
+    }
+
     private static UsageObservation CreateObservation(string provider, decimal value, DateTimeOffset observedAt) =>
         new(
             Guid.NewGuid(),
@@ -252,6 +275,22 @@ public sealed class PhaseZeroPersistenceTests : IDisposable
             DataQuality.Exact,
             new QuotaWindow(observedAt.Subtract(duration / 2), observedAt.Add(duration / 2)),
             anonymousSessionId: anonymousSessionId);
+
+    private sealed class UnhealthyAdapter(string providerId, string detail) : IUsageAdapter
+    {
+        public AdapterDescriptor Descriptor { get; } = new(
+            providerId,
+            providerId,
+            new HashSet<UsageCapability> { UsageCapability.QuotaWindow },
+            new FreshnessPolicy(TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5)));
+
+        public async IAsyncEnumerable<AdapterEvent> WatchAsync(
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            yield return new AdapterHealthChanged(providerId, AdapterHealth.Degraded, DateTimeOffset.UtcNow, detail);
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+        }
+    }
 
     private sealed class SilentAdapter(string providerId) : IUsageAdapter
     {

@@ -490,10 +490,13 @@ public partial class App : System.Windows.Application
     {
         QuotaPeriod.FiveHours => "5H",
         QuotaPeriod.Daily => "D",
-        QuotaPeriod.Weekly when band.Observation.Source.Contains("oauth-apps", StringComparison.OrdinalIgnoreCase) => "W·A",
-        QuotaPeriod.Weekly when band.Observation.Source.Contains("sonnet", StringComparison.OrdinalIgnoreCase) => "W·S",
-        QuotaPeriod.Weekly when band.Observation.Source.Contains("opus", StringComparison.OrdinalIgnoreCase) => "W·O",
-        QuotaPeriod.Weekly => "W",
+        QuotaPeriod.Weekly => QuotaSourceMetadata.Variant(band.Observation.Source) switch
+        {
+            "apps" => "W·A",
+            "sonnet" => "W·S",
+            "opus" => "W·O",
+            _ => "W"
+        },
         QuotaPeriod.Monthly => "M",
         _ => "Q"
     };

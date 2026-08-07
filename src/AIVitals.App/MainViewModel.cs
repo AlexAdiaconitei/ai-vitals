@@ -6,6 +6,9 @@ using System.Windows.Threading;
 using AIVitals.Adapters.Abstractions;
 using AIVitals.Application;
 using AIVitals.Domain;
+// AIVitals.Application shadows the WPF namespace of the same name, so the few WPF types this
+// view model needs are imported by alias rather than by opening System.Windows.
+using Visibility = System.Windows.Visibility;
 
 namespace AIVitals.App;
 
@@ -57,10 +60,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private double _codexUsageValue;
     private string _codexObservedText = string.Empty;
     private string _codexHealthText = string.Empty;
+    private string _codexHealthReason = string.Empty;
     private string _claudeUsageText = "—";
     private double _claudeUsageValue;
     private string _claudeObservedText = string.Empty;
     private string _claudeHealthText = string.Empty;
+    private string _claudeHealthReason = string.Empty;
     private string _historyStatus = string.Empty;
     private string _historyProviderCount = "0";
     private string _historySnapshotCount = string.Empty;
@@ -97,10 +102,32 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public double CodexUsageValue { get => _codexUsageValue; private set => Set(ref _codexUsageValue, value); }
     public string CodexObservedText { get => _codexObservedText; private set => Set(ref _codexObservedText, value); }
     public string CodexHealthText { get => _codexHealthText; private set => Set(ref _codexHealthText, value); }
+    public string CodexHealthReason
+    {
+        get => _codexHealthReason;
+        private set
+        {
+            Set(ref _codexHealthReason, value);
+            OnPropertyChanged(nameof(CodexHealthReasonVisibility));
+        }
+    }
+    public Visibility CodexHealthReasonVisibility =>
+        string.IsNullOrEmpty(_codexHealthReason) ? Visibility.Collapsed : Visibility.Visible;
     public string ClaudeUsageText { get => _claudeUsageText; private set => Set(ref _claudeUsageText, value); }
     public double ClaudeUsageValue { get => _claudeUsageValue; private set => Set(ref _claudeUsageValue, value); }
     public string ClaudeObservedText { get => _claudeObservedText; private set => Set(ref _claudeObservedText, value); }
     public string ClaudeHealthText { get => _claudeHealthText; private set => Set(ref _claudeHealthText, value); }
+    public string ClaudeHealthReason
+    {
+        get => _claudeHealthReason;
+        private set
+        {
+            Set(ref _claudeHealthReason, value);
+            OnPropertyChanged(nameof(ClaudeHealthReasonVisibility));
+        }
+    }
+    public Visibility ClaudeHealthReasonVisibility =>
+        string.IsNullOrEmpty(_claudeHealthReason) ? Visibility.Collapsed : Visibility.Visible;
     public string HistoryStatus { get => _historyStatus; private set => Set(ref _historyStatus, value); }
     public string HistoryProviderCount { get => _historyProviderCount; private set => Set(ref _historyProviderCount, value); }
     public string HistorySnapshotCount { get => _historySnapshotCount; private set => Set(ref _historySnapshotCount, value); }
@@ -218,6 +245,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             T(language, "WaitingReading"),
             language);
         CodexHealthText = FormatHealth(state.AdapterHealth, "codex", codexPrimary, T(language, "StatusStarting"), language);
+        CodexHealthReason = HealthReason(state, "codex", language);
 
         state.LatestByProvider.TryGetValue("claude-code", out var claude);
         var claudePrimary = SelectPrimary(claudeBands);
@@ -230,6 +258,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             T(language, "WaitingReading"),
             language);
         ClaudeHealthText = FormatHealth(state.AdapterHealth, "claude-code", claudePrimary, T(language, "StatusNoActivity"), language);
+        ClaudeHealthReason = HealthReason(state, "claude-code", language);
         if (string.IsNullOrEmpty(HistoryStatus)) HistoryStatus = T(language, "HistoryPrompt");
         OnPropertyChanged(nameof(WidgetPreferences));
     }
@@ -372,11 +401,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private static string PeriodText(QuotaBandSnapshot band, string language)
     {
         var period = PeriodText(band.Period, band.Duration, language);
-        var source = band.Observation.Source;
-        if (source.Contains("oauth-apps", StringComparison.OrdinalIgnoreCase)) return $"{period} · Apps";
-        if (source.Contains("sonnet", StringComparison.OrdinalIgnoreCase)) return $"{period} · Sonnet";
-        if (source.Contains("opus", StringComparison.OrdinalIgnoreCase)) return $"{period} · Opus";
-        return period;
+        return QuotaSourceMetadata.Variant(band.Observation.Source) switch
+        {
+            "apps" => $"{period} · Apps",
+            "sonnet" => $"{period} · Sonnet",
+            "opus" => $"{period} · Opus",
+            _ => period
+        };
     }
 
     private static string ResetText(QuotaBandSnapshot band, DateTimeOffset now, string language)
@@ -421,6 +452,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _ => "○ " + T(language, "StatusWaiting")
             }
             : "● " + fallback;
+
+    /// <summary>
+    /// Why an adapter reports the health it reports. A reading that stopped moving looks exactly
+    /// like one that has nothing new to say, so the reason is what tells the two apart.
+    /// </summary>
+    private static string HealthReason(UsageMonitorState state, string adapterId, string language) =>
+        state.AdapterHealthDetail.TryGetValue(adapterId, out var code)
+            ? UiLanguageCatalog.HealthDetail(language, code) ?? string.Empty
+            : string.Empty;
 
     private static string T(string language, string key) => UiLanguageCatalog.Get(language, key);
 

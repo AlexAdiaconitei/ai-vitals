@@ -204,7 +204,9 @@ public static class ClaudeCodeObservationMapper
         string? anonymousSessionId,
         QuotaWindow? window = null)
     {
-        var resetMinute = window?.ResetsAtUtc is { } reset ? reset.ToUnixTimeSeconds() / 60 : 0;
+        // Anthropic publishes the same reset instant as either :59 or :00 of the same minute, so
+        // truncating would give one reading two identities and store it twice.
+        var resetMinute = window?.ResetsAtUtc is { } reset ? (reset.ToUnixTimeSeconds() + 30) / 60 : 0;
         var identity = string.Join('|', source, value, resetMinute, anonymousSessionId);
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(identity));
 
