@@ -5,6 +5,7 @@ using System.Text;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Nodes;
 using AIVitals.Adapters.Abstractions;
 using AIVitals.Adapters.ClaudeCode;
 using AIVitals.Domain;
@@ -245,6 +246,171 @@ public sealed class ClaudeCodeUsageAdapterTests
     }
 
     [Fact]
+    public async Task Expired_credentials_are_reported_without_asking_the_account_endpoint()
+    {
+        var testRoot = Path.Combine(Path.GetTempPath(), $"ai-vitals-claude-expired-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            var now = new DateTimeOffset(2026, 8, 6, 8, 0, 0, TimeSpan.Zero);
+            var credentialsPath = Path.Combine(testRoot, ".credentials.json");
+            await WriteCredentialsAsync(credentialsPath, "test-oauth-token", now.AddMinutes(-5));
+            var handler = new OAuthUsageHandler("{}");
+            var adapter = new ClaudeCodeUsageAdapter(
+                timeProvider: new ManualTimeProvider(now),
+                sessionPseudonymKey: new byte[32],
+                pipeName: $"ai-vitals-expired-{Guid.NewGuid():N}",
+                httpClient: new HttpClient(handler),
+                credentialsPath: credentialsPath,
+                oauthPollInterval: TimeSpan.FromHours(1));
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var events = new ConcurrentQueue<AdapterEvent>();
+            var watch = Task.Run(async () =>
+            {
+                await foreach (var adapterEvent in adapter.WatchAsync(cancellation.Token))
+                    events.Enqueue(adapterEvent);
+            }, CancellationToken.None);
+
+            await WaitUntilAsync(
+                () => events.Any(item => item is AdapterHealthChanged
+                {
+                    Health: AdapterHealth.Degraded,
+                    Detail: ClaudeCodeHealthDetail.CredentialsExpired
+                }),
+                cancellation.Token);
+            Assert.Equal(0, handler.Calls);
+
+            await cancellation.CancelAsync();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => watch);
+        }
+        finally
+        {
+            Directory.Delete(testRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task A_rejected_token_is_reported_as_expired_rather_than_as_an_account_failure()
+    {
+        var testRoot = Path.Combine(Path.GetTempPath(), $"ai-vitals-claude-401-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            var credentialsPath = Path.Combine(testRoot, ".credentials.json");
+            await File.WriteAllTextAsync(credentialsPath, """{"claudeAiOauth":{"accessToken":"stale-token"}}""");
+            var adapter = new ClaudeCodeUsageAdapter(
+                sessionPseudonymKey: new byte[32],
+                pipeName: $"ai-vitals-401-{Guid.NewGuid():N}",
+                httpClient: new HttpClient(new StatusCodeHandler(HttpStatusCode.Unauthorized)),
+                credentialsPath: credentialsPath,
+                oauthPollInterval: TimeSpan.FromHours(1));
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var events = new ConcurrentQueue<AdapterEvent>();
+            var watch = Task.Run(async () =>
+            {
+                await foreach (var adapterEvent in adapter.WatchAsync(cancellation.Token))
+                    events.Enqueue(adapterEvent);
+            }, CancellationToken.None);
+
+            await WaitUntilAsync(
+                () => events.Any(item => item is AdapterHealthChanged
+                {
+                    Health: AdapterHealth.Degraded,
+                    Detail: ClaudeCodeHealthDetail.CredentialsExpired
+                }),
+                cancellation.Token);
+
+            await cancellation.CancelAsync();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => watch);
+        }
+        finally
+        {
+            Directory.Delete(testRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Absent_credentials_say_so_instead_of_leaving_the_account_quota_unexplained()
+    {
+        var adapter = new ClaudeCodeUsageAdapter(
+            sessionPseudonymKey: new byte[32],
+            pipeName: $"ai-vitals-no-credentials-{Guid.NewGuid():N}",
+            credentialsPath: MissingCredentialsPath(),
+            oauthPollInterval: TimeSpan.FromHours(1));
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var events = new ConcurrentQueue<AdapterEvent>();
+        var watch = Task.Run(async () =>
+        {
+            await foreach (var adapterEvent in adapter.WatchAsync(cancellation.Token))
+                events.Enqueue(adapterEvent);
+        }, CancellationToken.None);
+
+        await WaitUntilAsync(
+            () => events.Any(item => item is AdapterHealthChanged
+            {
+                Health: AdapterHealth.Unavailable,
+                Detail: ClaudeCodeHealthDetail.CredentialsMissing
+            }),
+            cancellation.Token);
+
+        await cancellation.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => watch);
+    }
+
+    [Fact]
+    public async Task Renewed_credentials_are_read_without_waiting_for_the_next_poll()
+    {
+        var testRoot = Path.Combine(Path.GetTempPath(), $"ai-vitals-claude-renewal-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            var now = new DateTimeOffset(2026, 8, 6, 8, 0, 0, TimeSpan.Zero);
+            var credentialsPath = Path.Combine(testRoot, ".credentials.json");
+            await WriteCredentialsAsync(credentialsPath, "expired-token", now.AddMinutes(-5));
+            var response = await File.ReadAllTextAsync(
+                Path.Combine(AppContext.BaseDirectory, "Fixtures", "ClaudeCode", "oauth-usage.full.json"));
+            var adapter = new ClaudeCodeUsageAdapter(
+                timeProvider: new ManualTimeProvider(now),
+                sessionPseudonymKey: new byte[32],
+                pipeName: $"ai-vitals-renewal-{Guid.NewGuid():N}",
+                httpClient: new HttpClient(new OAuthUsageHandler(response)),
+                credentialsPath: credentialsPath,
+                // An hour away, so only the credentials file can bring the reading back.
+                oauthPollInterval: TimeSpan.FromHours(1));
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var events = new ConcurrentQueue<AdapterEvent>();
+            var watch = Task.Run(async () =>
+            {
+                await foreach (var adapterEvent in adapter.WatchAsync(cancellation.Token))
+                    events.Enqueue(adapterEvent);
+            }, CancellationToken.None);
+
+            await WaitUntilAsync(
+                () => events.Any(item => item is AdapterHealthChanged
+                {
+                    Detail: ClaudeCodeHealthDetail.CredentialsExpired
+                }),
+                cancellation.Token);
+
+            await WriteCredentialsAsync(credentialsPath, "renewed-token", now.AddHours(8));
+
+            await WaitUntilAsync(
+                () => events.Any(item => item is ObservationReceived
+                {
+                    Observation.Source: "claude-code:oauth:rate-limit:five-hour"
+                }),
+                cancellation.Token);
+
+            await cancellation.CancelAsync();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => watch);
+        }
+        finally
+        {
+            Directory.Delete(testRoot, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Session_duration_is_only_emitted_once_per_whole_minute()
     {
         var pipeName = $"ai-vitals-duration-test-{Guid.NewGuid():N}";
@@ -293,6 +459,19 @@ public sealed class ClaudeCodeUsageAdapterTests
           "cost": { "total_cost_usd": {{costUsd.ToString(CultureInfo.InvariantCulture)}}, "total_duration_ms": {{durationMilliseconds}} }
         }
         """);
+
+    private static Task WriteCredentialsAsync(string path, string accessToken, DateTimeOffset expiresAt)
+    {
+        var credentials = new JsonObject
+        {
+            ["claudeAiOauth"] = new JsonObject
+            {
+                ["accessToken"] = accessToken,
+                ["expiresAt"] = expiresAt.ToUnixTimeMilliseconds()
+            }
+        };
+        return File.WriteAllTextAsync(path, credentials.ToJsonString());
+    }
 
     private static string MissingCredentialsPath() =>
         Path.Combine(Path.GetTempPath(), $"ai-vitals-absent-credentials-{Guid.NewGuid():N}.json");
@@ -349,13 +528,23 @@ public sealed class ClaudeCodeUsageAdapterTests
         }
     }
 
+    private sealed class StatusCodeHandler(HttpStatusCode statusCode) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(statusCode));
+    }
+
     private sealed class OAuthUsageHandler(string response) : HttpMessageHandler
     {
+        private int _calls;
+
         public AuthenticationHeaderValue? Authorization { get; private set; }
         public string? OAuthBeta { get; private set; }
+        public int Calls => Volatile.Read(ref _calls);
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            Interlocked.Increment(ref _calls);
             Authorization = request.Headers.Authorization;
             OAuthBeta = request.Headers.TryGetValues("anthropic-beta", out var values) ? values.Single() : null;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)

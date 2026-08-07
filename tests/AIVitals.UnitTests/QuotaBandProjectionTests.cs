@@ -248,6 +248,74 @@ public sealed class QuotaBandProjectionTests
         Assert.Equal("session-older", reversed.Observation.AnonymousSessionId);
     }
 
+    [Fact]
+    public void A_five_hour_window_without_a_published_reset_is_still_the_immediate_band()
+    {
+        // Anthropic omits the reset instant while a window carries no usage, which used to leave
+        // the band without a duration and let the weekly quota take the headline.
+        var fiveHours = WindowlessObservation(0m, "claude-code:oauth:rate-limit:five-hour");
+        var week = Observation(
+            16m,
+            TimeSpan.FromDays(7),
+            Now.AddDays(4),
+            "claude-code:oauth:rate-limit:seven-day");
+
+        var bands = QuotaBandProjection.Project([week, fiveHours], Now);
+
+        Assert.Collection(
+            bands,
+            immediate =>
+            {
+                Assert.Equal(QuotaBandKind.Immediate, immediate.Kind);
+                Assert.Equal(QuotaPeriod.FiveHours, immediate.Period);
+                Assert.Equal(0m, immediate.UsedPercentage);
+                Assert.Null(immediate.ResetsAtUtc);
+            },
+            total =>
+            {
+                Assert.Equal(QuotaBandKind.Total, total.Kind);
+                Assert.Equal(QuotaPeriod.Weekly, total.Period);
+                Assert.Equal(16m, total.UsedPercentage);
+            });
+    }
+
+    [Fact]
+    public void A_weekly_window_without_a_published_reset_keeps_its_weekly_period()
+    {
+        var week = WindowlessObservation(4m, "claude-code:oauth:rate-limit:seven-day-opus");
+
+        var band = Assert.Single(QuotaBandProjection.Project([week], Now));
+
+        Assert.Equal(QuotaPeriod.Weekly, band.Period);
+        Assert.Equal(QuotaBandKind.Total, band.Kind);
+    }
+
+    [Fact]
+    public void A_window_this_application_does_not_know_is_never_given_an_invented_duration()
+    {
+        var unknown = WindowlessObservation(50m, "codex:app-server:rate-limit:codex:primary");
+
+        var band = Assert.Single(QuotaBandProjection.Project([unknown], Now));
+
+        Assert.Equal(QuotaPeriod.Unknown, band.Period);
+        Assert.Null(band.Duration);
+    }
+
+    private static UsageObservation WindowlessObservation(
+        decimal value,
+        string source,
+        DateTimeOffset? observedAt = null) =>
+        new(
+            Guid.NewGuid(),
+            source.StartsWith("claude", StringComparison.Ordinal) ? "claude-code" : "codex",
+            "connection",
+            UsageCapability.QuotaWindow,
+            value,
+            "percent",
+            observedAt ?? Now,
+            source,
+            DataQuality.Exact);
+
     private static UsageObservation Observation(
         decimal value,
         TimeSpan duration,

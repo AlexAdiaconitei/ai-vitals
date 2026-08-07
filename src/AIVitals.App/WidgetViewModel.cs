@@ -67,7 +67,12 @@ public sealed class WidgetConnectionViewModel : INotifyPropertyChanged
         ? $"{DisplayName}, {StateText}"
         : $"{DisplayName}, {string.Join(", ", Bands.Select(item => $"{item.ShortLabel} {item.UsageText}"))}, {StateText}";
 
-    public void Apply(IReadOnlyList<UsageObservation> observations, AdapterHealth? health, DateTimeOffset now, string language)
+    public void Apply(
+        IReadOnlyList<UsageObservation> observations,
+        AdapterHealth? health,
+        string? healthDetail,
+        DateTimeOffset now,
+        string language)
     {
         var snapshots = QuotaBandProjection.Project(observations, now)
             .OrderBy(item => item.Duration ?? TimeSpan.MaxValue)
@@ -95,9 +100,12 @@ public sealed class WidgetConnectionViewModel : INotifyPropertyChanged
                 AdapterHealth.Unavailable => UiLanguageCatalog.Get(language, "StatusWaiting"),
                 _ => UiLanguageCatalog.Get(language, "StatusNoData")
             };
-        DetailText = snapshots.Length == 0
+        var readings = snapshots.Length == 0
             ? UiLanguageCatalog.Get(language, "NoQuotaObserved")
             : string.Join(" · ", bands.Select(item => $"{item.ShortLabel} {item.UsageText}, {item.ResetText}"));
+        // The reason leads: it is what explains a percentage that has stopped moving.
+        var reason = UiLanguageCatalog.HealthDetail(language, healthDetail);
+        DetailText = reason is null ? readings : $"{reason} · {readings}";
         OnPropertyChanged(nameof(BandCount));
         OnPropertyChanged(nameof(VerticalWidth));
         OnPropertyChanged(nameof(AccessibleName));
@@ -130,10 +138,13 @@ public sealed class WidgetConnectionViewModel : INotifyPropertyChanged
 
     private static string ShortLabel(QuotaBandSnapshot band)
     {
-        var source = band.Observation.Source;
-        if (source.Contains("oauth-apps", StringComparison.OrdinalIgnoreCase)) return "W·A";
-        if (source.Contains("sonnet", StringComparison.OrdinalIgnoreCase)) return "W·S";
-        if (source.Contains("opus", StringComparison.OrdinalIgnoreCase)) return "W·O";
+        switch (QuotaSourceMetadata.Variant(band.Observation.Source))
+        {
+            case "apps": return "W·A";
+            case "sonnet": return "W·S";
+            case "opus": return "W·O";
+        }
+
         return band.Period switch
         {
             QuotaPeriod.FiveHours => "5H",
@@ -267,7 +278,13 @@ public sealed class WidgetViewModel : INotifyPropertyChanged
         {
             var observations = state.LatestQuotaByProvider.TryGetValue(connection.ProviderId, out var latest) ? latest : [];
             state.AdapterHealth.TryGetValue(connection.ProviderId, out var health);
-            connection.Apply(observations, state.AdapterHealth.ContainsKey(connection.ProviderId) ? health : null, now, state.Preferences.Language);
+            state.AdapterHealthDetail.TryGetValue(connection.ProviderId, out var healthDetail);
+            connection.Apply(
+                observations,
+                state.AdapterHealth.ContainsKey(connection.ProviderId) ? health : null,
+                healthDetail,
+                now,
+                state.Preferences.Language);
         }
         OnPropertyChanged(nameof(TotalBandCount));
         OnPropertyChanged(nameof(VerticalContentWidth));

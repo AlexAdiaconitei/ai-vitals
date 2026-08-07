@@ -23,6 +23,12 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
     /// </summary>
     private const decimal SessionActivityResolutionMilliseconds = 60_000m;
 
+    /// <summary>
+    /// Claude Code rewrites its credentials file in more than one step while renewing a token.
+    /// Polling on the first change would read a half-written file and learn nothing.
+    /// </summary>
+    private static readonly TimeSpan CredentialsSettleDelay = TimeSpan.FromSeconds(1);
+
     private static readonly TimeSpan BridgeRetryDelay = TimeSpan.FromSeconds(1);
     private static readonly HttpClient SharedHttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
     private readonly TimeProvider _timeProvider;
@@ -100,7 +106,7 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
             await SetBridgeHealthAsync(
                 output,
                 AdapterHealth.Unavailable,
-                "Esperando actividad de Claude Code.",
+                ClaudeCodeHealthDetail.WaitingForActivity,
                 cancellationToken).ConfigureAwait(false);
 
             var producers = Enumerable
@@ -132,7 +138,7 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
                     await SetBridgeHealthAsync(
                         output,
                         AdapterHealth.Degraded,
-                        "No se pudo leer el puente local de Claude Code.",
+                        ClaudeCodeHealthDetail.BridgeUnreadable,
                         cancellationToken).ConfigureAwait(false);
                     await Task.Delay(BridgeRetryDelay, _timeProvider, cancellationToken).ConfigureAwait(false);
                 }
@@ -169,7 +175,7 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
             await SetBridgeHealthAsync(
                 output,
                 observations.Count > 0 ? AdapterHealth.Available : AdapterHealth.Degraded,
-                observations.Count > 0 ? null : "Claude Code envió un payload sin métricas utilizables.",
+                observations.Count > 0 ? null : ClaudeCodeHealthDetail.PayloadWithoutMetrics,
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is JsonException or InvalidDataException or EndOfStreamException)
@@ -177,7 +183,7 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
             await SetBridgeHealthAsync(
                 output,
                 AdapterHealth.Degraded,
-                "Claude Code envió un payload no compatible.",
+                ClaudeCodeHealthDetail.PayloadUnsupported,
                 cancellationToken).ConfigureAwait(false);
         }
     }
@@ -209,33 +215,112 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
         }
     }
 
+    /// <summary>
+    /// Polls the account endpoint on a timer, and again as soon as Claude Code rewrites its
+    /// credentials. Only Claude Code can renew an expired token, so watching the file is what turns
+    /// "the number is frozen until some later poll" into "the number returns when you come back".
+    /// </summary>
     private async Task RunOAuthPollingAsync(ChannelWriter<AdapterEvent> output, CancellationToken cancellationToken)
     {
         try
         {
             using var timer = new PeriodicTimer(_oauthPollInterval, _timeProvider);
-            do
-            {
-                var result = await _oauthClient.TryGetUsageAsync(
-                    _timeProvider.GetUtcNow(),
-                    cancellationToken).ConfigureAwait(false);
-                switch (result.Status)
-                {
-                    case ClaudeCodeOAuthUsageStatus.Succeeded:
-                        foreach (var observation in result.Observations)
-                            await output.WriteAsync(new ObservationReceived(observation), cancellationToken).ConfigureAwait(false);
-                        await SetOAuthHealthAsync(output, AdapterHealth.Available, null, cancellationToken).ConfigureAwait(false);
-                        break;
+            using var credentialsChanged = new SemaphoreSlim(0, 1);
+            using var watcher = TryWatchCredentials(credentialsChanged);
 
-                    case ClaudeCodeOAuthUsageStatus.Failed:
-                        await SetOAuthHealthAsync(output, AdapterHealth.Degraded, result.Detail, cancellationToken).ConfigureAwait(false);
-                        break;
+            var nextTick = timer.WaitForNextTickAsync(cancellationToken).AsTask();
+            var nextChange = credentialsChanged.WaitAsync(cancellationToken);
+            while (true)
+            {
+                await PollAccountUsageAsync(output, cancellationToken).ConfigureAwait(false);
+
+                var completed = await Task.WhenAny(nextTick, nextChange).ConfigureAwait(false);
+                if (completed == nextChange)
+                {
+                    await nextChange.ConfigureAwait(false);
+                    await Task.Delay(CredentialsSettleDelay, _timeProvider, cancellationToken).ConfigureAwait(false);
+                    // One renewal writes the file several times; the poll below covers all of them.
+                    while (credentialsChanged.Wait(0, CancellationToken.None))
+                    {
+                    }
+
+                    nextChange = credentialsChanged.WaitAsync(cancellationToken);
+                    continue;
                 }
+
+                if (!await nextTick.ConfigureAwait(false)) break;
+                nextTick = timer.WaitForNextTickAsync(cancellationToken).AsTask();
             }
-            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+        }
+    }
+
+    private async Task PollAccountUsageAsync(ChannelWriter<AdapterEvent> output, CancellationToken cancellationToken)
+    {
+        var result = await _oauthClient.TryGetUsageAsync(
+            _timeProvider.GetUtcNow(),
+            cancellationToken).ConfigureAwait(false);
+        switch (result.Status)
+        {
+            case ClaudeCodeOAuthUsageStatus.Succeeded:
+                foreach (var observation in result.Observations)
+                    await output.WriteAsync(new ObservationReceived(observation), cancellationToken).ConfigureAwait(false);
+                await SetOAuthHealthAsync(output, AdapterHealth.Available, null, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case ClaudeCodeOAuthUsageStatus.Failed:
+            case ClaudeCodeOAuthUsageStatus.Expired:
+                await SetOAuthHealthAsync(output, AdapterHealth.Degraded, result.Detail, cancellationToken).ConfigureAwait(false);
+                break;
+
+            // Absent credentials are not a fault, but they are the reason the account quota never
+            // appears. Staying silent about it leaves the interface with nothing to explain.
+            case ClaudeCodeOAuthUsageStatus.NotConfigured:
+                await SetOAuthHealthAsync(output, AdapterHealth.Unavailable, result.Detail, cancellationToken).ConfigureAwait(false);
+                break;
+        }
+    }
+
+    private FileSystemWatcher? TryWatchCredentials(SemaphoreSlim credentialsChanged)
+    {
+        var directory = Path.GetDirectoryName(_oauthClient.CredentialsPath);
+        var fileName = Path.GetFileName(_oauthClient.CredentialsPath);
+        if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName) || !Directory.Exists(directory))
+            return null;
+
+        void Signal(object? sender, FileSystemEventArgs eventArgs)
+        {
+            try
+            {
+                if (credentialsChanged.CurrentCount == 0) credentialsChanged.Release();
+            }
+            catch (Exception exception) when (exception is SemaphoreFullException or ObjectDisposedException)
+            {
+                // The poll loop is already awake, or has stopped for good.
+            }
+        }
+
+        FileSystemWatcher? watcher = null;
+        try
+        {
+            watcher = new FileSystemWatcher(directory, fileName)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
+            };
+            watcher.Changed += Signal;
+            watcher.Created += Signal;
+            watcher.Renamed += Signal;
+            watcher.Deleted += Signal;
+            watcher.EnableRaisingEvents = true;
+            return watcher;
+        }
+        // Watching is an optimisation over the timer; a platform that refuses it still polls.
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            watcher?.Dispose();
+            return null;
         }
     }
 
@@ -293,7 +378,9 @@ public sealed class ClaudeCodeUsageAdapter : IUsageAdapter
             else
             {
                 health = AdapterHealth.Unavailable;
-                detail = _bridgeDetail ?? _oauthDetail;
+                // With neither source reporting, the account endpoint is the one the user can act
+                // on; an idle bridge is the normal state and explains nothing.
+                detail = _oauthDetail ?? _bridgeDetail;
             }
 
             if (_publishedHealth == health && _publishedDetail == detail) return;
