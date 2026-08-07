@@ -85,6 +85,39 @@ public sealed class ClaudeCodeObservationMapperTests
         Assert.All(observations, item => Assert.StartsWith("claude-code:oauth:rate-limit:", item.Source, StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void A_window_with_no_usage_yet_is_mapped_without_inventing_a_reset()
+    {
+        using var fixture = LoadFixture("oauth-usage.window-not-started.json");
+
+        var observations = ClaudeCodeObservationMapper.Map(fixture.RootElement, ObservedAt, Key);
+
+        var fiveHour = Assert.Single(observations, item => item.Source.EndsWith("five-hour", StringComparison.Ordinal));
+        Assert.Equal(0m, fiveHour.Value);
+        Assert.Null(fiveHour.Window);
+        Assert.Contains(observations, item => item.Source.EndsWith("seven-day", StringComparison.Ordinal) && item.Window is not null);
+    }
+
+    [Fact]
+    public void The_same_reading_keeps_one_identity_when_the_reset_second_drifts()
+    {
+        using var onTheMinute = JsonDocument.Parse(StatuslineRateLimit(1786_406_400));
+        using var justBefore = JsonDocument.Parse(StatuslineRateLimit(1786_406_399));
+
+        var first = ClaudeCodeObservationMapper.Map(onTheMinute.RootElement, ObservedAt, Key);
+        var second = ClaudeCodeObservationMapper.Map(justBefore.RootElement, ObservedAt.AddSeconds(30), Key);
+
+        Assert.Equal(first[0].Id, second[0].Id);
+    }
+
+    private static string StatuslineRateLimit(long resetsAtUnixSeconds) =>
+        $$"""
+        {
+          "session_id": "identity-session",
+          "rate_limits": { "five_hour": { "used_percentage": 42, "resets_at": {{resetsAtUnixSeconds}} } }
+        }
+        """;
+
     private static JsonDocument LoadFixture(string name)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "Fixtures", "ClaudeCode", name);

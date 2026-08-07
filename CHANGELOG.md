@@ -5,6 +5,19 @@ All notable changes to AI Vitals are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.1 - 2026-08-08
+
+### Fixed
+
+- The Claude Code headline no longer shows the weekly percentage where the five-hour one belongs. Anthropic omits the reset instant while a window carries no usage yet, and a band with no reset used to lose its period, sort last, and hand the immediate slot to the weekly quota until the next request republished a reset. Window names this application understands now carry their own duration, so a five-hour window stays labelled and ordered as one from the moment it opens.
+- An expired Claude session is reported instead of leaving the last percentage on screen as though it were current. The stored expiry is checked before polling, a rejected request is read as a session to renew rather than as a network failure, and the account is polled again as soon as Claude Code rewrites its credentials, so the reading returns when you come back instead of at some later poll.
+- Missing Claude Code credentials are reported. The account poller used to skip in silence, leaving an absent account quota with nothing to explain it.
+- One reading is stored once. Anthropic publishes the same reset instant as either the last second of a minute or the first of the next, which gave a single reading two identities and two rows in the history.
+
+### Added
+
+- Each provider card in the dashboard, and each widget tooltip, says why an adapter is in the state it reports: waiting for Claude Code activity, session expired, credentials missing, or account unreachable. The reasons follow the interface language.
+
 ## 0.1.0 - 2026-08-06
 
 ### Added

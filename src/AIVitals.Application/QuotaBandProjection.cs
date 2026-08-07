@@ -96,10 +96,15 @@ public static class QuotaBandProjection
             ? QuotaBandKind.Immediate
             : QuotaBandKind.Total;
 
+    /// <summary>
+    /// The observed window when the provider published one, and the duration its name implies when
+    /// it did not. A window with no usage yet is reported without a reset instant, and a band that
+    /// lost its duration would be sorted and labelled as an unknown quota.
+    /// </summary>
     private static TimeSpan? DurationOf(UsageObservation observation) =>
         observation.Window?.ResetsAtUtc is { } reset
             ? reset - observation.Window.StartsAtUtc
-            : null;
+            : QuotaSourceMetadata.NominalDuration(observation.Source);
 
     private static bool IsActive(UsageObservation observation, DateTimeOffset nowUtc) =>
         (observation.Window?.StartsAtUtc is null || observation.Window.StartsAtUtc <= nowUtc) &&
@@ -111,14 +116,10 @@ public static class QuotaBandProjection
     private static bool IsOAuth(UsageObservation observation) =>
         observation.Source.Contains(":oauth:rate-limit:", StringComparison.OrdinalIgnoreCase);
 
-    private static string QuotaIdentity(UsageObservation observation)
-    {
-        const string marker = "rate-limit:";
-        var markerIndex = observation.Source.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-        return markerIndex >= 0
-            ? $"{observation.ProviderId}:{observation.Source[(markerIndex + marker.Length)..]}"
+    private static string QuotaIdentity(UsageObservation observation) =>
+        QuotaSourceMetadata.Suffix(observation.Source) is { } window
+            ? $"{observation.ProviderId}:{window}"
             : $"{observation.ProviderId}:{observation.Source}";
-    }
 
     private static QuotaPeriod ClassifyPeriod(TimeSpan? duration)
     {
