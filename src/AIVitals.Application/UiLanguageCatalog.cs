@@ -187,6 +187,14 @@ public static class UiLanguageCatalog
         ["StatusNoData"] = "SIN DATOS",
         ["StatusStarting"] = "INICIANDO",
         ["StatusNoActivity"] = "SIN ACTIVIDAD",
+        ["HealthDetail:claude-code.waiting-for-activity"] = "Esperando actividad de Claude Code",
+        ["HealthDetail:claude-code.bridge-unreadable"] = "No se pudo leer el puente local de Claude Code",
+        ["HealthDetail:claude-code.payload-unsupported"] = "Claude Code envió datos no compatibles",
+        ["HealthDetail:claude-code.payload-without-metrics"] = "Claude Code envió datos sin métricas utilizables",
+        ["HealthDetail:claude-code.credentials-missing"] = "Sin credenciales de Claude Code",
+        ["HealthDetail:claude-code.credentials-expired"] = "Sesión de Claude caducada · ábrelo para renovarla",
+        ["HealthDetail:claude-code.account-rejected"] = "Anthropic rechazó la consulta de uso de la cuenta",
+        ["HealthDetail:claude-code.account-unreachable"] = "No se pudo consultar el uso de la cuenta",
         ["NoQuotaObserved"] = "Sin cuota observada",
         ["UpdatedAt"] = "Actualizado {0}",
         ["ResetNotPublished"] = "Reinicio no publicado",
@@ -431,6 +439,14 @@ public static class UiLanguageCatalog
         ["StatusNoData"] = "NO DATA",
         ["StatusStarting"] = "STARTING",
         ["StatusNoActivity"] = "NO ACTIVITY",
+        ["HealthDetail:claude-code.waiting-for-activity"] = "Waiting for Claude Code activity",
+        ["HealthDetail:claude-code.bridge-unreadable"] = "The local Claude Code bridge could not be read",
+        ["HealthDetail:claude-code.payload-unsupported"] = "Claude Code sent data this version cannot read",
+        ["HealthDetail:claude-code.payload-without-metrics"] = "Claude Code sent data without usable metrics",
+        ["HealthDetail:claude-code.credentials-missing"] = "No Claude Code credentials found",
+        ["HealthDetail:claude-code.credentials-expired"] = "Claude session expired · open Claude Code to renew it",
+        ["HealthDetail:claude-code.account-rejected"] = "Anthropic rejected the account usage request",
+        ["HealthDetail:claude-code.account-unreachable"] = "The account usage could not be read",
         ["NoQuotaObserved"] = "No quota observed",
         ["UpdatedAt"] = "Updated {0}",
         ["ResetNotPublished"] = "Reset not published",
@@ -495,4 +511,14 @@ public static class UiLanguageCatalog
 
     public static string Get(string? language, string key) =>
         For(language).TryGetValue(key, out var value) ? value : key;
+
+    /// <summary>
+    /// The readable reason behind an adapter's health, or null when the adapter reported something
+    /// this catalogue does not describe. Showing an untranslated code would be worse than showing
+    /// the generic status it replaces.
+    /// </summary>
+    public static string? HealthDetail(string? language, string? code) =>
+        !string.IsNullOrWhiteSpace(code) && For(language).TryGetValue($"HealthDetail:{code}", out var value)
+            ? value
+            : null;
 }

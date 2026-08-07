@@ -9,6 +9,13 @@ public sealed record UsageMonitorState(
     IReadOnlyDictionary<string, IReadOnlyList<UsageObservation>> LatestQuotaByProvider,
     IReadOnlyDictionary<string, AdapterHealth> AdapterHealth)
 {
+    /// <summary>
+    /// Why each adapter is in the health it reports, keyed by adapter id. A frozen reading with no
+    /// explanation is indistinguishable from a live one that simply has not moved.
+    /// </summary>
+    public IReadOnlyDictionary<string, string?> AdapterHealthDetail { get; init; } =
+        new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
     public UsageObservation? LatestObservation => LatestByProvider.Values
         .OrderByDescending(observation => observation.ObservedAtUtc)
         .FirstOrDefault();
@@ -145,7 +152,11 @@ public sealed class UsageMonitorService : IAsyncDisposable
                     case AdapterHealthChanged health:
                         UpdateState(current => current with
                         {
-                            AdapterHealth = CopyHealth(current.AdapterHealth, health.AdapterId, health.Health)
+                            AdapterHealth = CopyHealth(current.AdapterHealth, health.AdapterId, health.Health),
+                            AdapterHealthDetail = CopyHealthDetail(
+                                current.AdapterHealthDetail,
+                                health.AdapterId,
+                                health.Detail)
                         });
                         break;
                 }
@@ -158,7 +169,8 @@ public sealed class UsageMonitorService : IAsyncDisposable
         {
             UpdateState(current => current with
             {
-                AdapterHealth = CopyHealth(current.AdapterHealth, adapter.Descriptor.Id, AdapterHealth.Degraded)
+                AdapterHealth = CopyHealth(current.AdapterHealth, adapter.Descriptor.Id, AdapterHealth.Degraded),
+                AdapterHealthDetail = CopyHealthDetail(current.AdapterHealthDetail, adapter.Descriptor.Id, null)
             });
         }
     }
@@ -181,6 +193,18 @@ public sealed class UsageMonitorService : IAsyncDisposable
         AdapterHealth health)
     {
         var copy = new Dictionary<string, AdapterHealth>(current) { [adapterId] = health };
+        return copy;
+    }
+
+    private static IReadOnlyDictionary<string, string?> CopyHealthDetail(
+        IReadOnlyDictionary<string, string?> current,
+        string adapterId,
+        string? detail)
+    {
+        var copy = new Dictionary<string, string?>(current, StringComparer.OrdinalIgnoreCase)
+        {
+            [adapterId] = detail
+        };
         return copy;
     }
 
