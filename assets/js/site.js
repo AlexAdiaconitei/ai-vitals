@@ -14,27 +14,31 @@
       'nav.screens': 'Screens',
       'nav.features': 'Features',
       'nav.privacy': 'Privacy',
-      'nav.install': 'Run it',
+      'nav.install': 'Download',
       'nav.about': 'About me',
       'rail.note': 'Reads local provider data only.',
+      'topbar.version': 'latest',
+      'topbar.version.live': '{version}',
 
       'hero.eyebrow': 'WINDOWS TRAY · LOCAL-FIRST',
       'hero.title': 'Your AI quotas, always in sight.',
       'hero.sub': 'AI Vitals reads Codex and Claude Code usage from your own machine and shows it in an always-on-top widget, a tray popup, and a full dashboard. No account, no backend, no telemetry.',
-      'hero.cta.code': 'Get the code on GitHub',
+      'hero.cta.code': 'Source on GitHub',
       'hero.cta.kofi': 'Support on Ko-fi',
-      'hero.foot': 'No installer released yet — clone the repo and run it with .NET 9.',
+      'hero.cta.x64': 'Download for Windows · x64',
+      'hero.cta.arm64': 'ARM64',
+      'hero.cta.notes': 'Release notes',
+      'hero.foot': 'Windows 10 22H2 or Windows 11 · .exe installer, nothing else to set up.',
+      'hero.foot.live': '{version} · Windows 10 22H2 or Windows 11 · .exe installer, nothing else to set up.',
       'hero.panel.label': 'Sample reading: Codex and Claude Code quota windows',
       'hero.panel.stamp': 'CAPTURE · 5 AUG 18:54',
       'hero.panel.available': 'AVAILABLE',
       'hero.win.week': 'Week',
       'hero.win.5h': '5 hours',
       'hero.win.resets': 'RESETS IN',
-      'hero.win.clock': 'CLOCK',
       'hero.a11y.codexWeek': 'Codex, week window, 71 percent used',
       'hero.a11y.claude5h': 'Claude Code, 5-hour window, 4 percent used',
       'hero.a11y.claudeWeek': 'Claude Code, week window, 81 percent used',
-      'hero.caption': 'Percentages from one capture on 5 Aug. The clocks run live, and the hairline marks how much of each window has already passed.',
 
       'layouts.eyebrow': 'WIDGET',
       'layouts.title': 'Three layouts. Pick the one your desk has room for.',
@@ -98,9 +102,15 @@
       'privacy.yes.3': 'Session identifiers, pseudonymized locally with HMAC',
       'privacy.note': 'No account, no backend, no update ping. Raw provider payloads are discarded once the allowlisted fields are read.',
 
-      'install.eyebrow': 'RUN IT',
-      'install.title': 'Two commands from clone to tray.',
-      'install.lede': 'Windows 10 22H2 or Windows 11, .NET SDK 9, and Codex or Claude Code signed in locally for live data. There is no packaged installer yet.',
+      'install.eyebrow': 'GET IT',
+      'install.title': 'One installer, then it lives in the tray.',
+      'install.lede': 'Windows 10 22H2 or Windows 11, and Codex or Claude Code signed in locally for live data. Pick the build that matches your CPU — x64 for most machines, ARM64 for Snapdragon and other Arm laptops.',
+      'download.x64': 'AIVitalsApp-win-x64-Setup.exe',
+      'download.arm64': 'AIVitalsApp-win-arm64-Setup.exe',
+      'download.notes': 'Release notes',
+      'download.meta': 'Always the newest published build',
+      'download.meta.live': '{version} · x64 {x64} · ARM64 {arm64}',
+      'install.source': 'PREFER TO BUILD IT YOURSELF? .NET SDK 9 AND TWO COMMANDS.',
       'install.s1': 'Clone',
       'install.s2': 'Run',
       'install.copy': 'Copy command',
@@ -127,27 +137,31 @@
       'nav.screens': 'Pantallas',
       'nav.features': 'Funciones',
       'nav.privacy': 'Privacidad',
-      'nav.install': 'Ejecutar',
+      'nav.install': 'Descargar',
       'nav.about': 'Sobre mí',
       'rail.note': 'Solo lee datos locales de los proveedores.',
+      'topbar.version': 'última',
+      'topbar.version.live': '{version}',
 
       'hero.eyebrow': 'BANDEJA DE WINDOWS · LOCAL',
       'hero.title': 'Tus cuotas de IA, siempre a la vista.',
       'hero.sub': 'AI Vitals lee el uso de Codex y Claude Code desde tu propio equipo y lo muestra en un widget siempre visible, un menú en la bandeja y un panel completo. Sin cuenta, sin servidor y sin telemetría.',
-      'hero.cta.code': 'Ver el código en GitHub',
+      'hero.cta.code': 'Código en GitHub',
       'hero.cta.kofi': 'Apoyar en Ko-fi',
-      'hero.foot': 'Todavía no hay instalador — clona el repositorio y ejecútalo con .NET 9.',
+      'hero.cta.x64': 'Descargar para Windows · x64',
+      'hero.cta.arm64': 'ARM64',
+      'hero.cta.notes': 'Notas de la versión',
+      'hero.foot': 'Windows 10 22H2 o Windows 11 · instalador .exe, nada más que configurar.',
+      'hero.foot.live': '{version} · Windows 10 22H2 o Windows 11 · instalador .exe, nada más que configurar.',
       'hero.panel.label': 'Lectura de ejemplo: ventanas de cuota de Codex y Claude Code',
       'hero.panel.stamp': 'CAPTURA · 5 AGO 18:54',
       'hero.panel.available': 'DISPONIBLE',
       'hero.win.week': 'Semana',
       'hero.win.5h': '5 horas',
       'hero.win.resets': 'SE REINICIA EN',
-      'hero.win.clock': 'RELOJ',
       'hero.a11y.codexWeek': 'Codex, ventana semanal, 71 por ciento consumido',
       'hero.a11y.claude5h': 'Claude Code, ventana de 5 horas, 4 por ciento consumido',
       'hero.a11y.claudeWeek': 'Claude Code, ventana semanal, 81 por ciento consumido',
-      'hero.caption': 'Porcentajes de una captura del 5 de agosto. Los relojes corren en vivo y la línea marca cuánto tiempo ha pasado de cada ventana.',
 
       'layouts.eyebrow': 'WIDGET',
       'layouts.title': 'Tres formatos. Elige el que te quepa en pantalla.',
@@ -211,9 +225,15 @@
       'privacy.yes.3': 'Identificadores de sesión, seudonimizados en local con HMAC',
       'privacy.note': 'Sin cuenta, sin servidor y sin comprobación de actualizaciones. Las respuestas del proveedor se descartan en cuanto se leen los campos permitidos.',
 
-      'install.eyebrow': 'EJECUTAR',
-      'install.title': 'Dos comandos, del clone a la bandeja.',
-      'install.lede': 'Windows 10 22H2 o Windows 11, .NET SDK 9 y Codex o Claude Code con sesión iniciada en local para ver datos en vivo. Todavía no hay instalador empaquetado.',
+      'install.eyebrow': 'DESCARGAR',
+      'install.title': 'Un instalador y ya vive en la bandeja.',
+      'install.lede': 'Windows 10 22H2 o Windows 11, y Codex o Claude Code con sesión iniciada en local para ver datos en vivo. Elige la versión de tu procesador: x64 para la mayoría de equipos y ARM64 para portátiles Snapdragon y otros Arm.',
+      'download.x64': 'AIVitalsApp-win-x64-Setup.exe',
+      'download.arm64': 'AIVitalsApp-win-arm64-Setup.exe',
+      'download.notes': 'Notas de la versión',
+      'download.meta': 'Siempre la última build publicada',
+      'download.meta.live': '{version} · x64 {x64} · ARM64 {arm64}',
+      'install.source': '¿PREFIERES COMPILARLO TÚ? .NET SDK 9 Y DOS COMANDOS.',
       'install.s1': 'Clonar',
       'install.s2': 'Ejecutar',
       'install.copy': 'Copiar comando',
@@ -242,16 +262,40 @@
     if (stored === 'es' || stored === 'en') { lang = stored; }
   } catch (e) { /* storage unavailable */ }
 
+  /* ── release facts ──────────────────────────────────────────────────
+     The download links are version-less on purpose: /releases/latest/
+     resolves to whatever is newest, so they never need editing. The tag
+     and the file sizes beside them would go stale, so they are read once
+     from the GitHub release API and substituted into the copy. Until
+     that answers — offline, rate-limited, blocked — elements fall back to
+     their plain data-i18n key, and the page claims no version it cannot
+     back up. Once it answers, the data-i18n-live key takes over. */
+  var RELEASE = { version: '', x64: '', arm64: '' };
+  var haveRelease = false;
+
   function t(key) {
     var pack = I18N[lang] || I18N.en;
-    return pack[key] !== undefined ? pack[key] : (I18N.en[key] || '');
+    var copy = pack[key] !== undefined ? pack[key] : (I18N.en[key] || '');
+    return copy.indexOf('{') < 0 ? copy : copy.replace(/\{(\w+)\}/g, function (_, name) {
+      return RELEASE[name] || '';
+    });
+  }
+
+  /* a live line is only worth showing when every fact in it arrived */
+  function resolvable(key) {
+    var copy = (I18N.en[key] || '');
+    var slots = copy.match(/\{(\w+)\}/g) || [];
+    return slots.every(function (slot) { return !!RELEASE[slot.slice(1, -1)]; });
   }
 
   function applyLanguage() {
     document.documentElement.lang = lang;
     document.documentElement.setAttribute('data-lang', lang);
 
-    $$('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+    $$('[data-i18n]').forEach(function (el) {
+      var live = haveRelease ? el.getAttribute('data-i18n-live') : null;
+      el.textContent = t(live && resolvable(live) ? live : el.getAttribute('data-i18n'));
+    });
     $$('[data-i18n-label]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-label'))); });
     $$('[data-i18n-alt]').forEach(function (el) { el.alt = t(el.getAttribute('data-i18n-alt')); });
 
@@ -276,9 +320,9 @@
 
   /* ── hero panel ─────────────────────────────────────────────────────
      Percentages are frozen sample values from the capture of 5 Aug. The
-     clocks are not: each window has a real reset schedule, so the panel
-     counts down to the next reset and marks how far the clock has moved
-     inside the window. Nothing here is dressed up as something it isn't. */
+     countdowns are not: each window has a real reset schedule, so the
+     panel counts down to its next reset. Nothing here is dressed up as
+     something it isn't. */
   var HOUR = 3600000;
   var WINDOWS = {
     'codex-week':  { reset: new Date(2025, 7, 9, 18, 54, 0), span: 7 * 24 * HOUR },
@@ -311,13 +355,8 @@
       var key = el.getAttribute('data-window');
       var win = WINDOWS[key];
       if (!win) { return; }
-      if (!cache[key]) {
-        var left = nextReset(win, now) - now;
-        cache[key] = { left: left, elapsed: Math.min(100, Math.max(0, (1 - left / win.span) * 100)) };
-      }
-      if (el.classList.contains('meter__now')) { el.style.left = cache[key].elapsed.toFixed(1) + '%'; }
-      else if (el.tagName === 'TIME') { el.textContent = clockText(cache[key].left); }
-      else { el.textContent = Math.round(cache[key].elapsed) + '%'; }
+      if (cache[key] === undefined) { cache[key] = nextReset(win, now) - now; }
+      el.textContent = clockText(cache[key]);
     });
   }
 
@@ -331,6 +370,18 @@
     $$('[data-fill]').forEach(function (el) { el.style.width = el.getAttribute('data-fill') + '%'; });
   }
   if (reduced) { fillMeters(); } else { setTimeout(fillMeters, 220); }
+
+  /* the rail rings draw themselves clockwise from twelve, like the widget's
+     own arcs. Circumference comes from the radius, so the geometry stays
+     correct if the ring sizes ever change. */
+  $$('.rings__arc').forEach(function (arc) {
+    var circumference = 2 * Math.PI * parseFloat(arc.getAttribute('r'));
+    var value = Math.min(100, Math.max(0, parseFloat(arc.getAttribute('data-arc')) || 0));
+    arc.style.strokeDasharray = circumference.toFixed(2);
+    arc.style.strokeDashoffset = circumference.toFixed(2);
+    var draw = function () { arc.style.strokeDashoffset = (circumference * (1 - value / 100)).toFixed(2); };
+    if (reduced) { draw(); } else { setTimeout(draw, 260); }
+  });
 
   /* count the figures up once, in step with the meters */
   $$('[data-count]').forEach(function (el) {
@@ -497,12 +548,40 @@
     var spy = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) { return; }
-        railItems.forEach(function (item) {
-          item.classList.toggle('is-current', item.getAttribute('href') === '#' + entry.target.id);
+        var at = -1;
+        railItems.forEach(function (item, index) {
+          var on = item.getAttribute('href') === '#' + entry.target.id;
+          if (on) { at = index; }
+          item.classList.toggle('is-current', on);
+        });
+        /* stations already passed read as spent, the way a filled window does */
+        railItems.forEach(function (item, index) {
+          item.classList.toggle('is-past', at > -1 && index < at);
         });
       });
     }, { rootMargin: '-45% 0px -50% 0px' });
     sections.forEach(function (section) { spy.observe(section); });
+  }
+
+  /* the rail track reads like a quota window: the fill is how much of the
+     page has been read, the hairline is where you stand inside it */
+  var gauge = $('.rail__gauge');
+  if (gauge) {
+    var queued = false;
+    var syncGauge = function () {
+      queued = false;
+      var doc = document.documentElement;
+      var travel = doc.scrollHeight - window.innerHeight;
+      var read = travel > 0 ? Math.min(1, Math.max(0, window.pageYOffset / travel)) : 0;
+      gauge.style.setProperty('--rail-progress', (read * 100).toFixed(2) + '%');
+    };
+    window.addEventListener('scroll', function () {
+      if (queued) { return; }
+      queued = true;
+      requestAnimationFrame(syncGauge);
+    }, { passive: true });
+    window.addEventListener('resize', syncGauge);
+    syncGauge();
   }
 
   if ('IntersectionObserver' in window && !reduced) {
@@ -519,6 +598,30 @@
     revealables.forEach(function (el) { revealer.observe(el); });
   }
 
+  /* one read of the release feed, no key, no user data, no retry */
+  function megabytes(bytes) {
+    return (bytes / 1048576).toFixed(0) + ' MB';
+  }
+
+  function loadRelease() {
+    if (!window.fetch) { return; }
+    fetch('https://api.github.com/repos/AlexAdiaconitei/ai-vitals/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json' }
+    }).then(function (response) {
+      return response.ok ? response.json() : Promise.reject(response.status);
+    }).then(function (data) {
+      if (!data || !data.tag_name) { return; }
+      RELEASE.version = data.tag_name;
+      (data.assets || []).forEach(function (asset) {
+        if (asset.name === 'AIVitalsApp-win-x64-Setup.exe') { RELEASE.x64 = megabytes(asset.size); }
+        if (asset.name === 'AIVitalsApp-win-arm64-Setup.exe') { RELEASE.arm64 = megabytes(asset.size); }
+      });
+      haveRelease = true;
+      applyLanguage();
+    }).catch(function () { /* keep the version-less copy */ });
+  }
+
   applyLanguage();
   renderStage();
+  loadRelease();
 })();
