@@ -26,7 +26,7 @@
   --r-widget: 16px;
   --r-btn: 7px;
   --topbar-h: 54px;
-  --rail-w: 202px;
+  --rail-w: 236px;
 }
 
 * { box-sizing: border-box; }
@@ -183,27 +183,221 @@ a { color: inherit; }
     position: sticky;
     top: var(--topbar-h);
     height: calc(100vh - var(--topbar-h));
-    padding: 22px 12px 18px;
-    background: #091524;
+    padding: 24px 14px 16px;
+    background: linear-gradient(180deg, #0A1828 0%, #071220 100%);
     border-right: 1px solid var(--line);
   }
-  .main { margin: 0; padding: 0 48px 72px; max-width: 1080px; }
+  /* margin-inline: auto keeps the column centred — with margin:0 the content
+     pinned to the left edge of a grid track that is far wider on big screens */
+  .main { margin: 0 auto; padding: 0 48px 72px; max-width: 1180px; }
 }
 
-.rail__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+/* wide desktops: let the instrument use the glass it has */
+@media (min-width: 1500px) {
+  .main { max-width: 1320px; padding: 0 56px 80px; }
+}
+@media (min-width: 1800px) {
+  .main { max-width: 1440px; padding: 0 64px 88px; }
+}
+
+/* ── rail gauge ──────────────────────────────────────────────────────
+   The nav is read as one instrument: a single track down the left, one
+   station per section, and a hairline marking how far down the page you
+   have read. --rail-progress is written by site.js on scroll; without JS
+   the track simply stays empty. */
+.rail__gauge { position: relative; padding-left: 20px; --rail-progress: 0%; }
+
+.rail__track {
+  position: absolute;
+  left: 5px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.rail__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--rail-progress);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(49, 214, 198, .35), var(--teal));
+}
+.rail__now {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: var(--rail-progress);
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
+  background: var(--text);
+  opacity: .55;
+}
+
+.rail__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
 .rail__item {
+  position: relative;
   display: block;
-  padding: 9px 12px;
+  padding: 8px 11px;
   border-radius: var(--r-btn);
   color: var(--muted);
   text-decoration: none;
   font-size: 13.5px;
-  border: 1px solid transparent;
+  transition: color .16s ease, background .16s ease;
 }
-.rail__item:hover { background: var(--surface); color: var(--text); }
-.rail__item.is-current { background: var(--selection); color: var(--text); border-color: rgba(49, 214, 198, .28); }
-.rail__foot { border-top: 1px solid var(--line); padding-top: 12px; }
-.rail__note { font-size: 10px; color: #7D8FA4; letter-spacing: .04em; margin: 0; line-height: 1.6; }
+/* station: sits on the track, filled only for the section being read */
+.rail__node {
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--canvas);
+  border: 1.5px solid var(--line);
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.rail__item.is-past .rail__node { border-color: rgba(49, 214, 198, .5); }
+.rail__item:hover { color: var(--text); background: rgba(23, 42, 66, .55); }
+.rail__item:hover .rail__node { border-color: #3D5A7A; }
+.rail__item.is-current {
+  color: var(--text);
+  background: linear-gradient(90deg, rgba(49, 214, 198, .12), rgba(49, 214, 198, 0));
+}
+.rail__item.is-current .rail__node {
+  background: var(--teal);
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(49, 214, 198, .16);
+}
+
+/* ── docked widget ───────────────────────────────────────────────────
+   The product is a widget that stays in sight, so the rail keeps one —
+   the ring layout, rebuilt to the app's own geometry: 7-unit arcs with
+   round caps, longest window outside, the first window's figure in the
+   middle, short labels beneath. */
+.rail__foot { display: grid; gap: 10px; }
+.mini {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .32);
+  overflow: hidden;
+}
+.mini__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  background: rgba(18, 34, 56, .55);
+  border-bottom: 1px solid var(--line-soft);
+}
+.mini__title { font-size: 11px; font-weight: 600; }
+.mini__glyph { margin-left: auto; color: #6E8199; }
+
+.mini__grid { display: grid; grid-template-columns: 1fr 1fr; }
+.mini__cell { padding: 10px 4px 11px; text-align: center; }
+.mini__cell + .mini__cell { border-left: 1px solid var(--line-soft); }
+.mini__name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 0 0 6px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--text);
+}
+.mini__name svg { flex: none; color: currentColor; }
+.mini__cell.prov--codex .mini__name svg { color: var(--blue); }
+.mini__cell.prov--claude .mini__name svg { color: var(--orange); }
+
+.rings { position: relative; display: grid; place-items: center; }
+.rings svg { display: block; }
+.rings__track { fill: none; stroke: var(--line); stroke-width: 6; }
+.rings__arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.1s cubic-bezier(.22, .8, .28, 1);
+}
+/* secondary windows stay in the provider's hue but quieter, so two arcs
+   never read as one metric — the same rule the app applies to its bands */
+.rings__arc--dim { opacity: .62; }
+.rings__value {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mini__bands {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 7px;
+  margin: 7px 0 0;
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: .02em;
+}
+/* the short label carries the band's colour, the figure stays neutral */
+.mini__bands b { font-weight: 700; }
+.mini__cell.prov--codex .mini__bands b { color: var(--blue); }
+.mini__cell.prov--claude .mini__bands b { color: var(--orange); }
+.mini__bands .is-dim b { opacity: .62; }
+
+.rail__note { font-size: 9.5px; color: #6E8199; letter-spacing: .04em; margin: 0; line-height: 1.6; }
+
+/* ── the gauge, alone, on narrow screens ─────────────────────────────
+   No room for a sidebar, but the track and its stations cost 26px and
+   still say where you are and how much is left. Labels stay in the
+   markup for screen readers; only the ink is dropped. */
+@media (max-width: 1179px) {
+  .rail {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: var(--topbar-h);
+    z-index: 30;
+    width: 26px;
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100dvh - var(--topbar-h));
+    padding: 0;
+    background: none;
+    border: 0;
+    pointer-events: none;
+  }
+  .rail__foot { display: none; }
+
+  /* the track runs the whole screen, so the stations spread across it and
+     the fill reads as the page's full travel */
+  .rail__gauge { position: absolute; inset: 0; padding: 0; pointer-events: auto; }
+  .rail__track { left: 12px; top: 6px; bottom: 6px; }
+  .rail__list { height: 100%; grid-auto-rows: 1fr; gap: 0; }
+  .rail__item { height: 100%; padding: 0; border-radius: 0; }
+  .rail__item.is-current, .rail__item:hover { background: none; }
+  /* the label still names the link, it just stops taking space */
+  .rail__item > span:not(.rail__node) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .rail__node { left: 50%; margin-left: -3.5px; }
+
+  .main { padding-left: 34px; }
+}
 
 /* ── shared section furniture ────────────────────────────────────── */
 .eyebrow {
@@ -271,6 +465,8 @@ a { color: inherit; }
 .btn--kofi:hover { background: rgba(255, 100, 51, .18); }
 .btn--ghost { color: var(--muted); }
 .btn--ghost:hover { color: var(--text); }
+/* secondary weight for the release-notes link: same shape, less presence */
+.btn--sm { padding: 8px 13px; font-size: 12.5px; gap: 7px; }
 
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
 .dot--teal { background: var(--teal); }
@@ -349,25 +545,10 @@ a { color: inherit; }
   background: currentColor;
   transition: width 1.1s cubic-bezier(.22, .8, .28, 1);
 }
-/* the hairline: where the clock stands inside the window, so a filled bar
-   can be read against the time it has left */
-.meter__now {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  left: 0;
-  width: 2px;
-  margin-left: -1px;
-  border-radius: 2px;
-  background: var(--text);
-  opacity: .6;
-}
-
 .win__foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 3px 12px;
   margin: 0;
   font-size: 10px;
@@ -375,19 +556,6 @@ a { color: inherit; }
   color: #7D8FA4;
 }
 .win__clock time { color: var(--muted); font-variant-numeric: tabular-nums; }
-.win__pace::before {
-  content: "";
-  display: inline-block;
-  width: 2px;
-  height: 9px;
-  margin-right: 6px;
-  vertical-align: -1px;
-  border-radius: 2px;
-  background: var(--text);
-  opacity: .6;
-}
-
-.hero__caption { margin: 14px auto 0; font-size: 10.5px; color: #7D8FA4; max-width: 420px; line-height: 1.65; }
 
 /* ── segmented switchers (same language as the tray menu) ────────── */
 .switcher {
@@ -549,10 +717,30 @@ a { color: inherit; }
 .privacy__path { margin: 16px 0 0; font-size: 11px; color: var(--teal); word-break: break-all; }
 .privacy__note { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
 
+/* ── download ────────────────────────────────────────────────────── */
+/* the two installers read as one choice: same row, x64 carrying the
+   primary weight because it is what most machines need */
+.dl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 26px 0 0; }
+.dl .btn { font-family: var(--font-mono); font-size: 12.5px; }
+.dl .btn--sm { font-family: inherit; }
+.dl__meta { margin: 12px 0 0; font-size: 11px; color: #7D8FA4; letter-spacing: .02em; }
+.dl__meta a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+.dl__meta a:hover { color: var(--teal); border-bottom-color: rgba(49, 214, 198, .5); }
+
+.subhead {
+  margin: 40px 0 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
 /* ── install steps ───────────────────────────────────────────────── */
 /* minmax(0, 1fr): the nowrap command must scroll inside its box, never
    widen the page on narrow screens */
 .steps { list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.subhead + .steps { margin-top: 14px; }
 .step__label { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
 .code {
   display: flex;

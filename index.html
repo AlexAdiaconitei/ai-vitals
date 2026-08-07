@@ -28,7 +28,7 @@
     <img class="topbar__icon" src="assets/img/app-icon.svg" alt="" width="26" height="26" />
     <span class="topbar__name">AI Vitals</span>
     <span class="chip chip--teal">LOCAL</span>
-    <span class="chip chip--line mono">v0.1.0</span>
+    <span class="chip chip--line mono" data-i18n="topbar.version" data-i18n-live="topbar.version.live">latest</span>
   </div>
   <div class="topbar__actions">
     <div class="langswitch" role="group" aria-label="Language / Idioma">
@@ -48,16 +48,73 @@
 
   <!-- ── app chrome: sidebar nav ─────────────────────────────────────── -->
   <nav class="rail" aria-label="Sections">
-    <ul class="rail__list">
-      <li><a class="rail__item" href="#overview" data-i18n="nav.overview">Overview</a></li>
-      <li><a class="rail__item" href="#layouts" data-i18n="nav.layouts">Widget layouts</a></li>
-      <li><a class="rail__item" href="#screens" data-i18n="nav.screens">Screens</a></li>
-      <li><a class="rail__item" href="#features" data-i18n="nav.features">Features</a></li>
-      <li><a class="rail__item" href="#privacy" data-i18n="nav.privacy">Privacy</a></li>
-      <li><a class="rail__item" href="#install" data-i18n="nav.install">Run it</a></li>
-      <li><a class="rail__item" href="#about" data-i18n="nav.about">About me</a></li>
-    </ul>
+    <!-- the nav is a gauge: one station per section, and a hairline marking
+         how far down the page you have read. -->
+    <div class="rail__gauge">
+      <span class="rail__track" aria-hidden="true">
+        <span class="rail__fill"></span>
+        <span class="rail__now"></span>
+      </span>
+      <ul class="rail__list">
+        <li><a class="rail__item" href="#overview"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.overview">Overview</span></a></li>
+        <li><a class="rail__item" href="#layouts"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.layouts">Widget layouts</span></a></li>
+        <li><a class="rail__item" href="#screens"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.screens">Screens</span></a></li>
+        <li><a class="rail__item" href="#features"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.features">Features</span></a></li>
+        <li><a class="rail__item" href="#privacy"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.privacy">Privacy</span></a></li>
+        <li><a class="rail__item" href="#install"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.install">Download</span></a></li>
+        <li><a class="rail__item" href="#about"><span class="rail__node" aria-hidden="true"></span><span data-i18n="nav.about">About me</span></a></li>
+      </ul>
+    </div>
+
     <div class="rail__foot">
+      <!-- the ring widget, docked. Same geometry as WidgetView: one arc per
+           quota window, longest outside, the first window's figure in the
+           middle, short labels underneath. aria-hidden because the hero
+           already states this reading in text. -->
+      <div class="mini" aria-hidden="true">
+        <div class="mini__head">
+          <img src="assets/img/app-icon.svg" alt="" width="14" height="14" />
+          <span class="mini__title">AI Vitals</span>
+          <svg class="mini__glyph" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        </div>
+        <div class="mini__grid">
+          <div class="mini__cell prov--codex">
+            <p class="mini__name">
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="11" height="11"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z"/></svg>
+              <span>CODEX</span>
+            </p>
+            <div class="rings">
+              <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+                <g transform="rotate(-90 32 32)">
+                  <circle class="rings__track" cx="32" cy="32" r="27" />
+                  <circle class="rings__arc" cx="32" cy="32" r="27" data-arc="71" />
+                </g>
+              </svg>
+              <span class="rings__value mono">71%</span>
+            </div>
+            <p class="mini__bands mono"><span><b>W</b> 71%</span></p>
+          </div>
+
+          <div class="mini__cell prov--claude">
+            <p class="mini__name">
+              <svg viewBox="0 0 256 257" aria-hidden="true" width="11" height="11"><path fill="currentColor" d="m50.228 170.321 50.357-28.257.843-2.463-.843-1.361h-2.462l-8.426-.518-28.775-.778-24.952-1.037-24.175-1.296-6.092-1.297L0 125.796l.583-3.759 5.12-3.434 7.324.648 16.202 1.101 24.304 1.685 17.629 1.037 26.118 2.722h4.148l.583-1.685-1.426-1.037-1.101-1.037-25.147-17.045-27.22-18.017-14.258-10.37-7.713-5.25-3.888-4.925-1.685-10.758 7-7.713 9.397.649 2.398.648 9.527 7.323 20.35 15.75L94.817 91.9l3.889 3.24 1.555-1.102.195-.777-1.75-2.917-14.453-26.118-15.425-26.572-6.87-11.018-1.814-6.61c-.648-2.723-1.102-4.991-1.102-7.778l7.972-10.823L71.42 0 82.05 1.426l4.472 3.888 6.61 15.101 10.694 23.786 16.591 32.34 4.861 9.592 2.592 8.879.973 2.722h1.685v-1.556l1.36-18.211 2.528-22.36 2.463-28.776.843-8.1 4.018-9.722 7.971-5.25 6.222 2.981 5.12 7.324-.713 4.73-3.046 19.768-5.962 30.98-3.889 20.739h2.268l2.593-2.593 10.499-13.934 17.628-22.036 7.778-8.749 9.073-9.657 5.833-4.601h11.018l8.1 12.055-3.628 12.443-11.342 14.388-9.398 12.184-13.48 18.147-8.426 14.518.778 1.166 2.01-.194 30.46-6.481 16.462-2.982 19.637-3.37 8.88 4.148.971 4.213-3.5 8.62-20.998 5.184-24.628 4.926-36.682 8.685-.454.324.519.648 16.526 1.555 7.065.389h17.304l32.21 2.398 8.426 5.574 5.055 6.805-.843 5.184-12.962 6.611-17.498-4.148-40.83-9.721-14-3.5h-1.944v1.167l11.666 11.406 21.387 19.314 26.767 24.887 1.36 6.157-3.434 4.86-3.63-.518-23.526-17.693-9.073-7.972-20.545-17.304h-1.36v1.814l4.73 6.935 25.017 37.59 1.296 11.536-1.814 3.76-6.481 2.268-7.13-1.297-14.647-20.544-15.1-23.138-12.185-20.739-1.49.843-7.194 77.448-3.37 3.953-7.778 2.981-6.48-4.925-3.436-7.972 3.435-15.749 4.148-20.544 3.37-16.333 3.046-20.285 1.815-6.74-.13-.454-1.49.194-15.295 20.999-23.267 31.433-18.406 19.702-4.407 1.75-7.648-3.954.713-7.064 4.277-6.286 25.47-32.405 15.36-20.092 9.917-11.6-.065-1.686h-.583L44.07 198.125l-12.055 1.555-5.185-4.86.648-7.972 2.463-2.593 20.35-13.999-.064.065Z"/></svg>
+              <span>CLAUDE</span>
+            </p>
+            <div class="rings">
+              <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+                <g transform="rotate(-90 32 32)">
+                  <circle class="rings__track" cx="32" cy="32" r="27" />
+                  <circle class="rings__track" cx="32" cy="32" r="20" />
+                  <circle class="rings__arc rings__arc--dim" cx="32" cy="32" r="27" data-arc="81" />
+                  <circle class="rings__arc" cx="32" cy="32" r="20" data-arc="4" />
+                </g>
+              </svg>
+              <span class="rings__value mono">4%</span>
+            </div>
+            <p class="mini__bands mono"><span><b>5H</b> 4%</span><span class="is-dim"><b>W</b> 81%</span></p>
+          </div>
+        </div>
+      </div>
       <p class="mono rail__note" data-i18n="rail.note">Reads local provider data only.</p>
     </div>
   </nav>
@@ -71,16 +128,28 @@
         <h1 class="hero__title" data-i18n="hero.title">Your AI quotas, always in sight.</h1>
         <p class="hero__sub" data-i18n="hero.sub">AI Vitals reads Codex and Claude Code usage from your own machine and shows it in an always-on-top widget, a tray popup, and a full dashboard. No account, no backend, no telemetry.</p>
         <div class="hero__cta">
-          <a class="btn btn--primary" href="https://github.com/AlexAdiaconitei/ai-vitals">
-            <svg viewBox="0 0 1024 1024" aria-hidden="true" width="17" height="17"><path fill="currentColor" fill-rule="evenodd" d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 738.56 1024 512 1024 229.12 794.88 0 512 0"/></svg>
-            <span data-i18n="hero.cta.code">Get the code on GitHub</span>
+          <a class="btn btn--primary" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest/download/AIVitalsApp-win-x64-Setup.exe">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+            <span data-i18n="hero.cta.x64">Download for Windows · x64</span>
           </a>
-          <a class="btn btn--kofi" href="https://ko-fi.com/K3Q5236GOO">
-            <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17"><path fill="currentColor" d="M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.532 0-2.545 1.428-3.766 4-4 1.376-.13 2.234-.182 5.402-.182zm5.117 2.287v4.911h1.195c1.351 0 2.415-1.09 2.415-2.442 0-1.35-1.064-2.469-2.415-2.469zM5.663 6.976c-1.013 0-1.87.831-1.87 1.87 0 3.298 4.598 5.998 4.806 6.128a.66.66 0 0 0 .676 0c.208-.13 4.805-2.83 4.805-6.129 0-1.038-.857-1.869-1.87-1.869-1.194 0-1.87.987-2.311 1.61l-.961-.001c-.442-.623-1.09-1.61-2.286-1.61z"/></svg>
+          <a class="btn" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest/download/AIVitalsApp-win-arm64-Setup.exe">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+            <span data-i18n="hero.cta.arm64">ARM64</span>
+          </a>
+          <a class="btn btn--sm btn--ghost" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M9 12h7M9 16h5"/></svg>
+            <span data-i18n="hero.cta.notes">Release notes</span>
+          </a>
+          <a class="btn btn--sm btn--ghost" href="https://github.com/AlexAdiaconitei/ai-vitals">
+            <svg viewBox="0 0 1024 1024" aria-hidden="true" width="14" height="14"><path fill="currentColor" fill-rule="evenodd" d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 738.56 1024 512 1024 229.12 794.88 0 512 0"/></svg>
+            <span data-i18n="hero.cta.code">Source on GitHub</span>
+          </a>
+          <a class="btn btn--sm btn--kofi" href="https://ko-fi.com/K3Q5236GOO">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14"><path fill="currentColor" d="M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.532 0-2.545 1.428-3.766 4-4 1.376-.13 2.234-.182 5.402-.182zm5.117 2.287v4.911h1.195c1.351 0 2.415-1.09 2.415-2.442 0-1.35-1.064-2.469-2.415-2.469zM5.663 6.976c-1.013 0-1.87.831-1.87 1.87 0 3.298 4.598 5.998 4.806 6.128a.66.66 0 0 0 .676 0c.208-.13 4.805-2.83 4.805-6.129 0-1.038-.857-1.869-1.87-1.869-1.194 0-1.87.987-2.311 1.61l-.961-.001c-.442-.623-1.09-1.61-2.286-1.61z"/></svg>
             <span data-i18n="hero.cta.kofi">Support on Ko-fi</span>
           </a>
         </div>
-        <p class="hero__foot mono" data-i18n="hero.foot">No installer released yet — clone the repo and run it with .NET 9.</p>
+        <p class="hero__foot mono" data-i18n="hero.foot" data-i18n-live="hero.foot.live">Windows 10 22H2 or Windows 11 · .exe installer, nothing else to set up.</p>
       </div>
 
       <!-- signature: the reading itself — one meter per quota window, each
@@ -107,11 +176,9 @@
                 <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="71"
                      data-i18n-label="hero.a11y.codexWeek" aria-label="Codex, week window, 71 percent used">
                   <span class="meter__fill" data-fill="71"></span>
-                  <span class="meter__now" data-window="codex-week"></span>
                 </div>
                 <p class="win__foot mono">
                   <span class="win__clock"><span data-i18n="hero.win.resets">RESETS IN</span> <time data-window="codex-week">—</time></span>
-                  <span class="win__pace"><span data-i18n="hero.win.clock">CLOCK</span> <span data-window="codex-week">—</span></span>
                 </p>
               </li>
             </ul>
@@ -132,11 +199,9 @@
                 <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4"
                      data-i18n-label="hero.a11y.claude5h" aria-label="Claude Code, 5-hour window, 4 percent used">
                   <span class="meter__fill" data-fill="4"></span>
-                  <span class="meter__now" data-window="claude-5h"></span>
                 </div>
                 <p class="win__foot mono">
                   <span class="win__clock"><span data-i18n="hero.win.resets">RESETS IN</span> <time data-window="claude-5h">—</time></span>
-                  <span class="win__pace"><span data-i18n="hero.win.clock">CLOCK</span> <span data-window="claude-5h">—</span></span>
                 </p>
               </li>
               <li class="win">
@@ -147,11 +212,9 @@
                 <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="81"
                      data-i18n-label="hero.a11y.claudeWeek" aria-label="Claude Code, week window, 81 percent used">
                   <span class="meter__fill" data-fill="81"></span>
-                  <span class="meter__now" data-window="claude-week"></span>
                 </div>
                 <p class="win__foot mono">
                   <span class="win__clock"><span data-i18n="hero.win.resets">RESETS IN</span> <time data-window="claude-week">—</time></span>
-                  <span class="win__pace"><span data-i18n="hero.win.clock">CLOCK</span> <span data-window="claude-week">—</span></span>
                 </p>
               </li>
             </ul>
@@ -307,10 +370,29 @@
     <!-- ── install ──────────────────────────────────────────────────── -->
     <section class="section" id="install">
       <header class="section__head">
-        <p class="eyebrow mono" data-i18n="install.eyebrow">RUN IT</p>
-        <h2 class="section__title" data-i18n="install.title">Two commands from clone to tray.</h2>
-        <p class="section__lede" data-i18n="install.lede">Windows 10 22H2 or Windows 11, .NET SDK 9, and Codex or Claude Code signed in locally for live data. There is no packaged installer yet.</p>
+        <p class="eyebrow mono" data-i18n="install.eyebrow">GET IT</p>
+        <h2 class="section__title" data-i18n="install.title">One installer, then it lives in the tray.</h2>
+        <p class="section__lede" data-i18n="install.lede">Windows 10 22H2 or Windows 11, and Codex or Claude Code signed in locally for live data. Pick the build that matches your CPU — x64 for most machines, ARM64 for Snapdragon and other Arm laptops.</p>
       </header>
+
+      <div class="dl">
+        <a class="btn btn--primary" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest/download/AIVitalsApp-win-x64-Setup.exe">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+          <span data-i18n="download.x64">AIVitalsApp-win-x64-Setup.exe</span>
+        </a>
+        <a class="btn" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest/download/AIVitalsApp-win-arm64-Setup.exe">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+          <span data-i18n="download.arm64">AIVitalsApp-win-arm64-Setup.exe</span>
+        </a>
+        <a class="btn btn--sm btn--ghost" href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M9 12h7M9 16h5"/></svg>
+          <span data-i18n="download.notes">Release notes</span>
+        </a>
+      </div>
+      <p class="dl__meta mono"><span data-i18n="download.meta" data-i18n-live="download.meta.live">Always the newest published build</span> · <a href="https://github.com/AlexAdiaconitei/ai-vitals/releases/latest/download/SHA256SUMS.txt">SHA256SUMS</a></p>
+      <p class="install__after" data-i18n="install.after">AI Vitals starts in the notification area. Left-click the tray icon for status, right-click for the widget and appearance controls.</p>
+
+      <h3 class="subhead mono" data-i18n="install.source">PREFER TO BUILD IT YOURSELF? .NET SDK 9 AND TWO COMMANDS.</h3>
       <ol class="steps">
         <li class="step">
           <p class="step__label mono" data-i18n="install.s1">Clone</p>
@@ -327,7 +409,6 @@
           </div>
         </li>
       </ol>
-      <p class="install__after" data-i18n="install.after">AI Vitals starts in the notification area. Left-click the tray icon for status, right-click for the widget and appearance controls.</p>
     </section>
 
     <!-- ── about ────────────────────────────────────────────────────── -->
