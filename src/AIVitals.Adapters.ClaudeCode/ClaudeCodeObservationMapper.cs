@@ -33,22 +33,23 @@ public static class ClaudeCodeObservationMapper
 
         foreach (var property in payload.EnumerateObject())
         {
-            if (property.NameEquals("extra_usage") ||
-                property.Value.ValueKind != JsonValueKind.Object ||
-                !TryGetDecimal(property.Value, "utilization", out var utilization) ||
-                utilization is < 0 or > 100)
-                continue;
-
             var duration = property.Name switch
             {
                 "five_hour" => TimeSpan.FromHours(5),
                 _ when property.Name.StartsWith("seven_day", StringComparison.Ordinal) => TimeSpan.FromDays(7),
                 _ => (TimeSpan?)null
             };
+            // This endpoint also exposes internal metadata objects. A utilization property alone
+            // does not make one a user-facing quota (nimbus_quill was one such transient field).
+            if (duration is null ||
+                property.Value.ValueKind != JsonValueKind.Object ||
+                !TryGetDecimal(property.Value, "utilization", out var utilization) ||
+                utilization is < 0 or > 100)
+                continue;
+
             QuotaWindow? window = null;
-            if (duration is { } knownDuration &&
-                TryGetDateTimeOffset(property.Value, "resets_at", out var reset))
-                window = new QuotaWindow(reset - knownDuration, reset);
+            if (TryGetDateTimeOffset(property.Value, "resets_at", out var reset))
+                window = new QuotaWindow(reset - duration.Value, reset);
 
             observations.Add(CreateObservation(
                 $"claude-code:oauth:rate-limit:{property.Name.Replace('_', '-')}",

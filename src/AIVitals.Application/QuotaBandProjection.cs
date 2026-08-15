@@ -42,6 +42,9 @@ public static class QuotaBandProjection
                 item.Capability == UsageCapability.QuotaWindow &&
                 item.Value is >= 0 and <= 100 &&
                 item.Unit.Equals("percent", StringComparison.OrdinalIgnoreCase))
+            // Older builds persisted any OAuth object carrying `utilization` as a quota. Keep those
+            // observations in history, but do not give an unclassified, windowless field a live band.
+            .Where(item => !IsOAuth(item) || DurationOf(item) is not null)
             .GroupBy(QuotaIdentity, StringComparer.OrdinalIgnoreCase)
             .Select(group => group
                 .OrderByDescending(item => IsActive(item, nowUtc))
