@@ -86,6 +86,26 @@ public sealed class ClaudeCodeObservationMapperTests
     }
 
     [Fact]
+    public void Unknown_oauth_metadata_is_not_invented_as_a_quota()
+    {
+        using var payload = JsonDocument.Parse("""
+        {
+          "five_hour": {
+            "utilization": 12,
+            "resets_at": "2026-08-05T15:00:00Z"
+          },
+          "nimbus_quill": {
+            "utilization": 0
+          }
+        }
+        """);
+
+        var observation = Assert.Single(ClaudeCodeObservationMapper.Map(payload.RootElement, ObservedAt, Key));
+
+        Assert.EndsWith("five-hour", observation.Source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_window_with_no_usage_yet_is_mapped_without_inventing_a_reset()
     {
         using var fixture = LoadFixture("oauth-usage.window-not-started.json");

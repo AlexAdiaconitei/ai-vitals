@@ -83,6 +83,14 @@
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="16,14">
+                    <Border x:Name="UpdateBanner" Visibility="Collapsed" Margin="0,0,0,10" Padding="12,10" CornerRadius="9"
+                            Background="{DynamicResource SelectionBrush}" BorderBrush="{DynamicResource SignalBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock x:Name="UpdateBannerText" TextWrapping="Wrap" FontSize="12" AutomationProperties.LiveSetting="Polite" />
+                            <Button Margin="0,8,0,0" HorizontalAlignment="Left" Padding="10,6" Style="{StaticResource PopupButton}"
+                                    Content="{DynamicResource UpdateInstallAndRestart}" Click="OnApplyUpdate" />
+                        </StackPanel>
+                    </Border>
                     <Border Padding="14" CornerRadius="9" Background="{DynamicResource WidgetSurfaceBrush}" BorderBrush="{DynamicResource CodexBrush}" BorderThickness="1,1,1,2">
                         <StackPanel>
                             <Grid>

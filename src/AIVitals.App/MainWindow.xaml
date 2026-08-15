@@ -737,7 +737,7 @@
             </TabItem>
 
             <TabItem>
-                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE946;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource AboutTab}" /></StackPanel></TabItem.Header>
+                <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE946;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource AboutTab}" /><Ellipse x:Name="AboutUpdateDot" Visibility="Collapsed" Width="7" Height="7" Margin="7,1,0,0" VerticalAlignment="Center" Fill="{DynamicResource SignalBrush}" /></StackPanel></TabItem.Header>
                 <StackPanel MaxWidth="850" HorizontalAlignment="Left">
                     <TextBlock Text="{DynamicResource AboutTitle}" FontSize="28" FontWeight="SemiBold" />
                     <TextBlock Margin="0,5,0,20" Text="{DynamicResource AboutDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />

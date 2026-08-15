@@ -301,6 +301,18 @@ public sealed class QuotaBandProjectionTests
         Assert.Null(band.Duration);
     }
 
+    [Fact]
+    public void An_unclassified_window_without_provider_period_is_not_presented_as_a_quota()
+    {
+        var internalMetadata = WindowlessObservation(
+            0m,
+            "claude-code:oauth:rate-limit:nimbus-quill");
+
+        var bands = QuotaBandProjection.Project([internalMetadata], Now);
+
+        Assert.Empty(bands);
+    }
+
     private static UsageObservation WindowlessObservation(
         decimal value,
         string source,

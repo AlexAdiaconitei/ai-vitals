@@ -23,6 +23,7 @@ public partial class TrayMenuWindow : Window
     private readonly Func<Task> _exit;
     private WidgetPreferences _widget = new();
     private string _theme = "System";
+    private AppUpdateStatus? _pendingUpdate;
 
     private const double CollapsedHeight = 458;
     private const double HeightWithUpdateBanner = 552;
@@ -60,6 +61,8 @@ public partial class TrayMenuWindow : Window
         _widget = WidgetPreferenceRules.Normalize(widget);
         _theme = theme;
         ApplySelectionStates();
+        // The banner text is formatted, not bound, so a language change has to reformat it here.
+        ApplyPendingUpdate();
     }
 
     /// <summary>
@@ -68,18 +71,25 @@ public partial class TrayMenuWindow : Window
     /// </summary>
     public void UpdatePendingUpdate(AppUpdateStatus? status)
     {
-        var pending = status is { IsPending: true };
+        _pendingUpdate = status;
+        ApplyPendingUpdate();
+    }
+
+    private void ApplyPendingUpdate()
+    {
+        var pending = _pendingUpdate is { IsPending: true };
         UpdateBanner.Visibility = pending ? Visibility.Visible : Visibility.Collapsed;
         Height = pending ? HeightWithUpdateBanner : CollapsedHeight;
         if (!pending) return;
 
         var format = System.Windows.Application.Current?.TryFindResource("UpdateReadyBanner") as string;
-        UpdateBannerText.Text = string.Format(format ?? "{0}", status!.AvailableVersion);
+        UpdateBannerText.Text = string.Format(format ?? "{0}", _pendingUpdate!.AvailableVersion);
     }
 
     public void ShowNearCursor()
     {
         ApplySelectionStates();
+        ApplyPendingUpdate();
         if (!IsVisible) Show();
         var dpi = VisualTreeHelper.GetDpi(this);
         var cursor = Forms.Cursor.Position;
