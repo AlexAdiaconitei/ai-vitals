@@ -101,6 +101,7 @@ public partial class MainWindow : Window
         CheckForUpdatesButton.IsEnabled = supported && !status.IsBusy;
 
         UpdateReadyCard.Visibility = status.IsPending ? Visibility.Visible : Visibility.Collapsed;
+        AboutUpdateDot.Visibility = status.IsPending ? Visibility.Visible : Visibility.Collapsed;
         if (status.IsPending)
             UpdateReadyText.Text = string.Format(T("UpdateReadyBanner"), status.AvailableVersion);
 
@@ -150,6 +151,8 @@ public partial class MainWindow : Window
         var theme = (ThemeSelector.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "System";
         await _viewModel.SaveAppearanceAsync(language, theme);
         WindowsAppearance.Apply(_viewModel.Preferences);
+        // Update copy is formatted in code, so the new language only reaches it by re-running this.
+        SyncUpdateControls();
         await RefreshHistoryAsync();
         ActionStatus.Text = T("AppearanceApplied");
     }
