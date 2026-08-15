@@ -17,6 +17,8 @@ public partial class QuickPopupWindow : Window
     private readonly Func<Task> _toggleWidgetLock;
     private readonly Func<Task> _toggleClickThrough;
     private readonly Func<Task> _recoverWidget;
+    private readonly Func<Task> _applyUpdate;
+    private AppUpdateStatus? _pendingUpdate;
 
     public QuickPopupWindow(
         MainViewModel viewModel,
@@ -25,7 +27,8 @@ public partial class QuickPopupWindow : Window
         Func<WidgetVisualMode, Task> setWidgetMode,
         Func<Task> toggleWidgetLock,
         Func<Task> toggleClickThrough,
-        Func<Task> recoverWidget)
+        Func<Task> recoverWidget,
+        Func<Task> applyUpdate)
     {
         _viewModel = viewModel;
         _showDashboard = showDashboard;
@@ -34,15 +37,37 @@ public partial class QuickPopupWindow : Window
         _toggleWidgetLock = toggleWidgetLock;
         _toggleClickThrough = toggleClickThrough;
         _recoverWidget = recoverWidget;
+        _applyUpdate = applyUpdate;
         InitializeComponent();
         DataContext = viewModel;
         RefreshWidgetControls();
         Deactivated += (_, _) => Hide();
     }
 
+    /// <summary>
+    /// The quick view is the left-click surface, so it carries the same pending-update entry as the
+    /// tray menu instead of making the user find the right-click menu or the dashboard.
+    /// </summary>
+    public void UpdatePendingUpdate(AppUpdateStatus? status)
+    {
+        _pendingUpdate = status;
+        ApplyPendingUpdate();
+    }
+
+    private void ApplyPendingUpdate()
+    {
+        var pending = _pendingUpdate is { IsPending: true };
+        UpdateBanner.Visibility = pending ? Visibility.Visible : Visibility.Collapsed;
+        if (!pending) return;
+
+        var format = System.Windows.Application.Current?.TryFindResource("UpdateReadyBanner") as string;
+        UpdateBannerText.Text = string.Format(format ?? "{0}", _pendingUpdate!.AvailableVersion);
+    }
+
     public void ShowNearCursor()
     {
         RefreshWidgetControls();
+        ApplyPendingUpdate();
         if (!IsVisible) Show();
         PositionNearCursor();
         Activate();
@@ -75,6 +100,7 @@ public partial class QuickPopupWindow : Window
     private async void OnToggleWidgetLock(object sender, RoutedEventArgs eventArgs) { await _toggleWidgetLock(); RefreshWidgetControls(); }
     private async void OnToggleClickThrough(object sender, RoutedEventArgs eventArgs) { await _toggleClickThrough(); RefreshWidgetControls(); }
     private async void OnRecoverWidget(object sender, RoutedEventArgs eventArgs) { await _recoverWidget(); RefreshWidgetControls(); }
+    private async void OnApplyUpdate(object sender, RoutedEventArgs eventArgs) { Hide(); await _applyUpdate(); }
 
     private void RefreshWidgetControls()
     {

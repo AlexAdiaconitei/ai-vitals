@@ -30,6 +30,7 @@ public partial class App : System.Windows.Application
     private DispatcherTimer? _freshnessTimer;
     private string? _appliedAppearance;
     private string? _trayPreferenceSignature;
+    private string? _announcedUpdateVersion;
     private bool _isExiting;
 
     [STAThread]
@@ -149,7 +150,8 @@ public partial class App : System.Windows.Application
                 SetWidgetModeAsync,
                 ToggleWidgetLockAsync,
                 ToggleWidgetClickThroughAsync,
-                RecoverWidgetAsync);
+                RecoverWidgetAsync,
+                ApplyUpdateAsync);
             _widgetWindow = new WidgetWindow(
                 _monitor,
                 widgetPreferences,
@@ -211,6 +213,8 @@ public partial class App : System.Windows.Application
         {
             WindowsAppearance.Apply(state.Preferences);
             _appliedAppearance = appearance;
+            // A language change swaps the string resources; formatted update copy has to be rebuilt.
+            RefreshUpdateSurfaces();
         }
         var trayPreferences = TrayPreferenceSignature(state.Preferences);
         if (_trayPreferenceSignature != trayPreferences)
@@ -258,9 +262,27 @@ public partial class App : System.Windows.Application
             ApplyUpdateAsync,
             ExitAsync);
         _trayMenu.UpdateState(widget, theme);
-        _trayMenu.UpdatePendingUpdate(_updateService?.Status);
-        _trayIcon ??= new TrayIconHost(ShowQuickView, ShowDashboard, ShowTrayMenu);
+        _trayIcon ??= new TrayIconHost(ShowQuickView, ShowDashboard, ShowTrayMenu, ShowUpdateSection);
+        RefreshUpdateSurfaces();
         if (_monitor is not null) _trayPreferenceSignature = TrayPreferenceSignature(_monitor.State.Preferences);
+    }
+
+    private void ShowUpdateSection()
+    {
+        ShowDashboard();
+        _mainWindow?.ShowSection(6);
+    }
+
+    /// <summary>
+    /// Repaints every place a waiting update is advertised: the tray badge, the left-click quick view
+    /// and the right-click menu. The dashboard keeps its own subscription to the update service.
+    /// </summary>
+    private void RefreshUpdateSurfaces()
+    {
+        var status = _updateService?.Status;
+        _trayMenu?.UpdatePendingUpdate(status);
+        _quickPopup?.UpdatePendingUpdate(status);
+        _trayIcon?.SetUpdateAvailable(status is { IsPending: true });
     }
 
     private void ShowTrayMenu() => _trayMenu?.ShowNearCursor();
@@ -327,7 +349,23 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        _trayMenu?.UpdatePendingUpdate(status);
+        RefreshUpdateSurfaces();
+        AnnounceUpdate(status);
+    }
+
+    /// <summary>
+    /// One balloon per version. The status event repeats on every check, and a notification the user
+    /// already dismissed should not come back until there is genuinely something new.
+    /// </summary>
+    private void AnnounceUpdate(AppUpdateStatus status)
+    {
+        if (!status.IsPending || string.IsNullOrWhiteSpace(status.AvailableVersion)) return;
+        if (_announcedUpdateVersion == status.AvailableVersion) return;
+
+        _announcedUpdateVersion = status.AvailableVersion;
+        _trayIcon?.ShowUpdateNotification(
+            Text("UpdateNotificationTitle"),
+            string.Format(Text("UpdateNotificationBody"), status.AvailableVersion));
     }
 
     /// <summary>

@@ -33,21 +33,24 @@ public sealed class TrayIconHost : IDisposable
     private readonly NotifyIcon _notifyIcon;
     private readonly SynchronizationContext _uiContext;
     private readonly System.Windows.Forms.Timer _leftClickTimer;
+    private bool _updateAvailable;
 
     public TrayIconHost(
         Action showQuickView,
         Action showDashboard,
-        Action showContextMenu)
+        Action showContextMenu,
+        Action showUpdateDetails)
     {
         _uiContext = SynchronizationContext.Current
             ?? throw new InvalidOperationException("TrayIconHost must be created on the UI thread.");
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = CreateTrayIcon(),
+            Icon = CreateTrayIcon(updateAvailable: false),
             Text = "AI Vitals",
             Visible = true
         };
+        _notifyIcon.BalloonTipClicked += (_, _) => OnUi(showUpdateDetails);
         _leftClickTimer = new System.Windows.Forms.Timer
         {
             Interval = SystemInformation.DoubleClickTime
@@ -84,6 +87,25 @@ public sealed class TrayIconHost : IDisposable
         OnUi(() => _notifyIcon.Text = tooltip);
     }
 
+    /// <summary>
+    /// Badges the tray icon while an update waits. The dot is the only always-visible surface the
+    /// application owns, so it is what tells the user something is pending before any menu is opened.
+    /// </summary>
+    public void SetUpdateAvailable(bool available)
+    {
+        if (_updateAvailable == available) return;
+        _updateAvailable = available;
+        OnUi(() =>
+        {
+            var previous = _notifyIcon.Icon;
+            _notifyIcon.Icon = CreateTrayIcon(available);
+            previous?.Dispose();
+        });
+    }
+
+    public void ShowUpdateNotification(string title, string message) =>
+        OnUi(() => _notifyIcon.ShowBalloonTip(10000, title, message, ToolTipIcon.Info));
+
     public void Dispose()
     {
         _leftClickTimer.Stop();
@@ -93,7 +115,7 @@ public sealed class TrayIconHost : IDisposable
         _notifyIcon.Dispose();
     }
 
-    private static Icon CreateTrayIcon()
+    private static Icon CreateTrayIcon(bool updateAvailable)
     {
         using var bitmap = new Bitmap(32, 32);
         using var graphics = Graphics.FromImage(bitmap);
@@ -105,6 +127,14 @@ public sealed class TrayIconHost : IDisposable
         graphics.DrawArc(outer, 2.5f, 2.5f, 27, 27, -90, 304);
         graphics.DrawArc(middle, 7.5f, 7.5f, 17, 17, -90, 266);
         graphics.DrawArc(inner, 12.5f, 12.5f, 7, 7, -90, 226);
+        if (updateAvailable)
+        {
+            // The dark halo keeps the badge separate from the ring it sits on, whatever the taskbar colour.
+            using var halo = new SolidBrush(Color.FromArgb(235, 12, 17, 24));
+            using var badge = new SolidBrush(Color.FromArgb(49, 214, 198));
+            graphics.FillEllipse(halo, 17f, 17f, 15, 15);
+            graphics.FillEllipse(badge, 19.5f, 19.5f, 10, 10);
+        }
         var handle = bitmap.GetHicon();
         try { return (Icon)Icon.FromHandle(handle).Clone(); }
         finally { DestroyIcon(handle); }
