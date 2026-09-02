@@ -101,6 +101,7 @@ Both images are direct captures of the running application, cropped to their exa
 
 - **Live provider monitoring** for Codex and Claude Code through local integrations.
 - **Three widget layouts**: activity rings, horizontal bars, and vertical bars.
+- **Optional activity traffic light** for Claude Code and Codex, implemented natively in C# as a second independent widget.
 - **Tray-first workflow** with quick status, dashboard access, and widget controls.
 - **Usage history** with provider and date filters, backed by SQLite.
 - **CSV and JSON export** for the exact data currently in view.
@@ -114,9 +115,9 @@ Both images are direct captures of the running application, cropped to their exa
 | Layer | Responsibility |
 | --- | --- |
 | Provider adapters | Read structured usage data from Codex and Claude Code. |
-| Application core | Normalizes observations without merging incompatible quota windows. |
+| Application core | Normalizes quota observations and reduces ephemeral agent activity without mixing the two paths. |
 | Local storage | Stores detailed observations in SQLite and preferences in JSON. |
-| Windows UI | Presents the tray menu, quick popup, dashboard, and configurable widget. |
+| Windows UI | Presents the tray menu, quick popup, dashboard, quota widget, and activity traffic light. |
 
 Codex data comes from the local `codex app-server`. Claude Code quotas come from its local OAuth usage endpoint, while the optional reversible `statusLine` bridge provides session telemetry. The deterministic fake adapter is retained for automated tests.
 
@@ -143,7 +144,7 @@ AI Vitals checks the published releases when it starts and once a day afterwards
 
 ### Uninstall
 
-Uninstall AI Vitals from **Settings → Apps → Installed apps**. Uninstalling restores the Claude Code `statusLine` to its previous configuration and removes the startup entry. Local usage history and settings are kept in `%LOCALAPPDATA%\AIVitals`; delete that folder to remove them, or use **Privacy → Delete all data** before uninstalling.
+Uninstall AI Vitals from **Settings → Apps → Installed apps**. Uninstalling restores the Claude Code `statusLine`, removes activity hooks installed by AI Vitals from Claude Code and Codex, and removes the startup entry. Local usage history and settings are kept in `%LOCALAPPDATA%\AIVitals`; delete that folder to remove them, or use **Privacy → Delete all data** before uninstalling.
 
 ## Getting started
 
@@ -166,7 +167,15 @@ AI Vitals starts in the notification area. Left-click the tray icon for quick st
 
 Use the tray menu to show or hide the widget, change its layout, lock its position, or enable click-through. Drag any free area to move it; the widget snaps to the current monitor's work area and restores its last position at startup.
 
+A session name wider than its light slides gently between its two ends so the whole name can be read, and stops at an ellipsis when Windows animations are off or high contrast is on. The full name is always in the tooltip.
+
+Once an activity integration is enabled, the tray menu shows two tabs: one for the usage widget and one for the traffic light. The traffic-light tab carries the same show, lock, click-through, and recover actions, plus a shortcut to its settings and a read-only row with the current state and session count. Without an enabled integration the tab strip is not shown at all.
+
 Press `Ctrl+Shift+U` to recover the widget. This makes it visible, disables click-through, unlocks it, and moves it to the monitor containing the pointer.
+
+The Widget section also contains an optional activity traffic light. Claude Code and Codex are enabled independently and only after explicit confirmation. Codex requires one additional review in its `/hooks` screen before a newly installed hook can run. The traffic light starts gray after every application restart, becomes yellow while the agent is processing, red while one or more tools are running, and green only after a fresh stop or session-start event.
+
+The widget shows one light per agent session. It holds at most two rows by two columns at the width of the vertical usage widget: one session is a single narrow light, two sit side by side, three place the odd one centred on the second row, and past four the widget pages through them every five seconds, pausing while the pointer rests on it. **Show session folder** is off by default; enabling it labels each light with the leaf directory name of its session so concurrent sessions can be told apart. The Widget settings tab previews the traffic light next to the usage widget.
 
 ## Privacy
 
@@ -177,6 +186,10 @@ AI Vitals is designed around data minimization:
 - no provider credentials copied into application storage;
 - Claude Code session identifiers are pseudonymized locally with HMAC;
 - raw Claude Code payloads are discarded after allowlisted fields are extracted;
+- activity-hook input is bounded and filtered in the native helper process; only HMAC session/tool identifiers, provider, event type, and timestamp cross the current-user named pipe;
+- session labels are opt-in and reduced to a leaf directory name. With **Show session folder** enabled, the helper adds the last folder of the session's working directory, never the parent path, the drive, or any control character. The label is rejected at the pipe boundary if it carries a path separator or exceeds 32 characters, it is displayed on the traffic light only, and it is never written to SQLite, history, or exports;
+- activity state is memory-only: it is never inserted into SQLite, history, analytics, or exports, and stale signals become gray rather than green;
+- activity hooks are opt-in, additive, reversible, and use no network connection;
 - exports happen only when explicitly requested.
 
 Local data is stored under `%LOCALAPPDATA%\AIVitals`. Development and verification overrides use `AI_VITALS_DATA_DIRECTORY`.

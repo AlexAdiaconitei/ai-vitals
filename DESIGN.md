@@ -193,6 +193,31 @@ The sidebar uses a neutral border and one selected surface. Do not add different
 - Use short quota labels: `5H`, `W`, `W·S`, `W·O`, or compact `D`/`M`/duration labels for future windows.
 - Do not show long labels such as “immediate” or “total” inside the widget.
 
+### Activity traffic light
+
+- The activity traffic light is a second independent always-on-top window, not a quota visual mode.
+- It shares the usage widget's frame: 7 px margin, `11,8,11,10` padding, 15 px corner radius, the same drop shadow, and a 19 px header. The header carries the rings icon and the lock, unlock, or click-through glyph, and nothing else: the widget is too narrow to spend a row on its own name, and every light already reports its own state.
+- One light per agent session, plus one grey light for an enabled provider that has not reported yet. Each light is a 64 × 90 tile with a 26 px lamp column of three 13 px lamps.
+- The grid never exceeds two rows by two columns, and its width stays inside the range the vertical usage widget occupies:
+
+  | Sessions | Grid | Window |
+  | --- | --- | --- |
+  | 1 | one light | `108 × 147` |
+  | 2 | two columns | `178 × 147` |
+  | 3 | two, then one centred | `178 × 243` |
+  | 4 | two by two | `178 × 243` |
+  | 5 or more | two by two, paged | `178 × 259` |
+
+- Past four sessions the widget pages rather than grows. One page every five seconds, held while the pointer is over the widget, with page dots and an accessible page position. The page turn is a 200 ms cross-fade, and an instant swap when the system asks for no animation or reports high contrast.
+- Order lights by the configured provider order, then by first sighting. A light must never change place because its own state changed.
+- Red means at least one tool is running, yellow means a turn is processing without a running tool, and green means a fresh idle event. All lamps dimmed plus “No signal” is the restart, missing, invalid, or stale state.
+- Aggregate conservatively wherever one color stands for the whole widget, as the tray state row does: red, then yellow, then unknown, then green. Never turn missing or stale input green.
+- Keep each lamp static. A state change must not blink, pulse, resize a light, or raise a notification. Only two things move, and neither reports state: the carousel between pages, and an overlong label sliding to reveal its end.
+- Label a light with its session's leaf directory name when the user opted into session labels, otherwise with the provider name, disambiguated by the first four characters of the pseudonymous session key when one provider owns several sessions. The full text is always in the tooltip.
+- A label that fits is centred and still. One that does not slides between its two ends at 26 px/s, holding 1.4 s at each end, capped at 30 fps, and only while its light is on screen. Where the system asks for no animation or reports high contrast, the label is trimmed with an ellipsis and never moves.
+- Always pair color with the localized text status and an accessible name. Show the tool count only from two upward: red already means one tool is running, so a badge reading `1` repeats the color instead of adding to it.
+- It owns its position, visible, locked, click-through, and session-label settings.
+
 ### Rings
 
 - One connection: `146 × 178`.
@@ -220,12 +245,14 @@ The sidebar uses a neutral border and one selected surface. Do not add different
 
 ## 9. Tray menu and quick popup
 
-Right-click does not use the native `ContextMenuStrip`. It opens a `344 × 390` WPF popover that shares the widget background, shadow, typography, and radii.
+Right-click does not use the native `ContextMenuStrip`. It opens a 344 px wide WPF popover that shares the widget background, shadow, typography, and radii. Its height is `458`, plus `44` while the widget tab strip is shown and `94` while an update is waiting.
 
 - Header: activity rings, AI Vitals name, `LOCAL · TRAY` eyebrow, and dashboard access.
 - Keep all widget actions in one block.
-- Quick actions: show, lock, click-through, recover, and move.
-- Modes and themes use segmented controls; only the selected choice receives color.
+- One tab per widget, as a two-segment strip: usage, and the traffic light. The traffic-light tab appears only once a provider integration is enabled in settings, and the strip is hidden entirely while it is not, so a single-widget install keeps its original height.
+- Both tabs carry the same five-action row and the same block below it, so switching tabs never changes the popover height. Usage places its three layout modes there; the traffic light places a read-only state row with a colored dot, the localized state, and the live session count.
+- Quick actions: show, lock, click-through, recover, and move for the usage widget; show, lock, click-through, recover, and settings for the traffic light, which has no separate move action.
+- Modes, tabs, and themes use segmented controls; only the selected choice receives color.
 - Separate Settings and Exit in the footer.
 - Clicking outside or pressing `Esc` closes the popover.
 
@@ -283,6 +310,12 @@ Avoid:
 | Widget | `src/AIVitals.App/WidgetWindow.xaml` |
 | Widget geometry | `src/AIVitals.App/WidgetWindow.xaml.cs` |
 | Widget projection | `src/AIVitals.App/WidgetViewModel.cs` |
+| Activity state and IPC | `src/AIVitals.AgentActivity/` |
+| Activity hook helper | `src/AIVitals.AgentActivity.Hook/` |
+| Activity traffic light | `src/AIVitals.App/ActivityWidgetView.xaml` |
+| Activity widget geometry | `src/AIVitals.Application/ActivityWidgetGeometry.cs` |
+| Activity projection and carousel | `src/AIVitals.App/ActivityWidgetViewModel.cs` |
+| Sliding labels | `src/AIVitals.App/MarqueeText.cs` |
 | Tray menu | `src/AIVitals.App/TrayMenuWindow.xaml` |
 | Quick popup | `src/AIVitals.App/QuickPopupWindow.xaml` |
 | Bar/ring controls | `UsageMeter`, `UsageRing`, `ActivityRingsIcon` |
@@ -303,7 +336,8 @@ Before accepting a visual change:
 - [ ] Labels are short and units are human-readable.
 - [ ] No prompts, paths, private titles, or credentials are exposed.
 - [ ] Geometry changes are verified at 100%, 150%, and 200% scaling.
-- [ ] Dashboard, popup, tray, and all three widgets are visually captured.
+- [ ] Dashboard, popup, tray, all three quota layouts, and the activity traffic light at one, three, and five sessions are visually captured.
+- [ ] Motion is verified with animations disabled and in high contrast, where the carousel swaps instantly and long labels trim instead of sliding.
 - [ ] This document is updated when a design-system rule changes.
 
-The baseline automated check is `scripts/verify-windows-quality-matrix.ps1`. Supplement it with visual inspection of the tray and all three widget geometries because they are independent windows outside the dashboard.
+The baseline automated check is `scripts/verify-windows-quality-matrix.ps1`. Supplement it with visual inspection of the tray, all three quota geometries, and the activity traffic light at one, three, and five sessions, because they are independent windows outside the dashboard.

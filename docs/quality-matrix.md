@@ -18,6 +18,9 @@ The completed cell covered all six language/theme combinations (`es`/`en` × `Sy
 - localized accessible names for the summary, history, and provider filter;
 - localized history state;
 - PNG screenshots and JSON evidence.
+- activity traffic-light accessibility and unknown/red/yellow/green states when that opt-in integration is under test;
+- activity traffic-light layout at one, two, three, four, and five concurrent sessions, including the carousel pausing on hover and the leaf-directory label appearing only when session labels are enabled;
+- sliding labels: a long session name slides and a short one stays still, and both stop moving with Windows animations disabled or high contrast on.
 
 The review found and fixed residual Spanish strings in accessible names, dialogs, widget state, and history. Smoke tests set `AI_VITALS_SKIP_CLAUDE_INSTALLER=1`, so they never modify the real Claude Code configuration.
 

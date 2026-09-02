@@ -76,21 +76,53 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Text="{DynamicResource TrayWidgetControls}" FontSize="13" FontWeight="SemiBold" />
-                <TextBlock Margin="0,9,0,5" Text="{DynamicResource TrayWidgetActions}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
-                <UniformGrid Rows="1" Columns="5">
-                    <Button x:Name="ToggleWidgetButton" Margin="0,0,4,0" Style="{StaticResource IconAction}" Click="OnToggleWidget" ToolTip="{DynamicResource TrayToggleWidget}"><local:WidgetGlyph x:Name="WidgetVisibilityGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
-                    <Button x:Name="LockButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleLock" ToolTip="{DynamicResource TrayLock}"><local:WidgetGlyph x:Name="WidgetLockGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
-                    <Button x:Name="ClickThroughButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleClickThrough" ToolTip="{DynamicResource TrayClickThrough}"><local:WidgetGlyph x:Name="WidgetClickThroughGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
-                    <Button Margin="2,0" Style="{StaticResource IconAction}" Click="OnRecover" ToolTip="{DynamicResource TrayRecover}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE72C;" /></Button>
-                    <Button Margin="4,0,0,0" Style="{StaticResource IconAction}" Click="OnMoveHere" ToolTip="{DynamicResource TrayMoveWidgetHere}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE7C2;" /></Button>
+
+                <UniformGrid x:Name="WidgetTabStrip" Visibility="Collapsed" Margin="0,10,0,0" Rows="1" Columns="2">
+                    <Button x:Name="UsageTabButton" Margin="0,0,3,0" Style="{StaticResource Segment}" Click="OnUsageTab"
+                            Content="{DynamicResource TrayTabUsage}" />
+                    <Button x:Name="ActivityTabButton" Margin="3,0,0,0" Style="{StaticResource Segment}" Click="OnActivityTab"
+                            Content="{DynamicResource TrayTabActivity}" />
                 </UniformGrid>
 
-                <TextBlock Margin="0,12,0,5" Text="{DynamicResource TrayWidgetLayout}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
-                <UniformGrid Rows="1" Columns="3">
-                    <Button x:Name="RingsButton" Margin="0,0,3,0" Style="{StaticResource Segment}" Click="OnRings"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="Rings" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource Rings}" /></StackPanel></Button>
-                    <Button x:Name="HorizontalButton" Margin="2,0" Style="{StaticResource Segment}" Click="OnHorizontal"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="HorizontalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource HorizontalShort}" /></StackPanel></Button>
-                    <Button x:Name="VerticalButton" Margin="3,0,0,0" Style="{StaticResource Segment}" Click="OnVertical"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="VerticalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource VerticalShort}" /></StackPanel></Button>
-                </UniformGrid>
+                <StackPanel x:Name="UsageTabPanel">
+                    <TextBlock Margin="0,9,0,5" Text="{DynamicResource TrayWidgetActions}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                    <UniformGrid Rows="1" Columns="5">
+                        <Button x:Name="ToggleWidgetButton" Margin="0,0,4,0" Style="{StaticResource IconAction}" Click="OnToggleWidget" ToolTip="{DynamicResource TrayToggleWidget}"><local:WidgetGlyph x:Name="WidgetVisibilityGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button x:Name="LockButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleLock" ToolTip="{DynamicResource TrayLock}"><local:WidgetGlyph x:Name="WidgetLockGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button x:Name="ClickThroughButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleClickThrough" ToolTip="{DynamicResource TrayClickThrough}"><local:WidgetGlyph x:Name="WidgetClickThroughGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button Margin="2,0" Style="{StaticResource IconAction}" Click="OnRecover" ToolTip="{DynamicResource TrayRecover}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE72C;" /></Button>
+                        <Button Margin="4,0,0,0" Style="{StaticResource IconAction}" Click="OnMoveHere" ToolTip="{DynamicResource TrayMoveWidgetHere}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE7C2;" /></Button>
+                    </UniformGrid>
+
+                    <TextBlock Margin="0,12,0,5" Text="{DynamicResource TrayWidgetLayout}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                    <UniformGrid Rows="1" Columns="3">
+                        <Button x:Name="RingsButton" Margin="0,0,3,0" Style="{StaticResource Segment}" Click="OnRings"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="Rings" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource Rings}" /></StackPanel></Button>
+                        <Button x:Name="HorizontalButton" Margin="2,0" Style="{StaticResource Segment}" Click="OnHorizontal"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="HorizontalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource HorizontalShort}" /></StackPanel></Button>
+                        <Button x:Name="VerticalButton" Margin="3,0,0,0" Style="{StaticResource Segment}" Click="OnVertical"><StackPanel Orientation="Horizontal"><local:WidgetGlyph Width="15" Height="15" Kind="VerticalBars" StrokeBrush="{DynamicResource MutedTextBrush}" /><TextBlock Margin="6,0,0,0" Text="{DynamicResource VerticalShort}" /></StackPanel></Button>
+                    </UniformGrid>
+                </StackPanel>
+
+                <StackPanel x:Name="ActivityTabPanel" Visibility="Collapsed">
+                    <TextBlock Margin="0,9,0,5" Text="{DynamicResource TrayWidgetActions}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                    <UniformGrid Rows="1" Columns="5">
+                        <Button x:Name="ToggleActivityButton" Margin="0,0,4,0" Style="{StaticResource IconAction}" Click="OnToggleActivityWidget" ToolTip="{DynamicResource TrayToggleActivityWidget}"><local:WidgetGlyph x:Name="ActivityVisibilityGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button x:Name="ActivityLockButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleActivityLock" ToolTip="{DynamicResource TrayActivityLock}"><local:WidgetGlyph x:Name="ActivityLockGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button x:Name="ActivityClickThroughButton" Margin="2,0" Style="{StaticResource IconAction}" Click="OnToggleActivityClickThrough" ToolTip="{DynamicResource TrayActivityClickThrough}"><local:WidgetGlyph x:Name="ActivityClickThroughGlyph" Width="18" Height="18" StrokeBrush="{DynamicResource MutedTextBrush}" /></Button>
+                        <Button Margin="2,0" Style="{StaticResource IconAction}" Click="OnRecoverActivity" ToolTip="{DynamicResource TrayActivityRecover}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE72C;" /></Button>
+                        <Button Margin="4,0,0,0" Style="{StaticResource IconAction}" Click="OnSettings" ToolTip="{DynamicResource TraySettings}"><TextBlock Style="{StaticResource FluentIcon}" FontSize="16" Text="&#xE713;" /></Button>
+                    </UniformGrid>
+
+                    <TextBlock Margin="0,12,0,5" Text="{DynamicResource TrayActivityStateLabel}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                    <Border Height="34" Padding="9,0" CornerRadius="8" Background="{DynamicResource WidgetSurfaceBrush}"
+                            BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="ActivityStateDot" Width="9" Height="9" VerticalAlignment="Center" Fill="{DynamicResource ActivityGreyBrush}" />
+                            <TextBlock x:Name="ActivityStateText" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                            <TextBlock x:Name="ActivitySessionText" Margin="7,0,0,0" VerticalAlignment="Center"
+                                       FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
                 <Border Margin="0,14,0,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" />
                 <TextBlock Text="{DynamicResource TrayAppearance}" FontFamily="Cascadia Mono, Consolas" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" />

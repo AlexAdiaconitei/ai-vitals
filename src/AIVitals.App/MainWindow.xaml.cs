@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using AIVitals.AgentActivity;
 using AIVitals.Application;
 using Microsoft.Win32;
 using WpfSaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -13,9 +14,13 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private readonly WidgetViewModel _previewWidgetViewModel;
+    private readonly SampleAgentActivitySource _previewActivitySource = new();
+    private readonly ActivityWidgetViewModel _previewActivityViewModel;
     private readonly Func<WidgetPreferences, Task> _applyWidget;
     private readonly Func<Task> _recoverWidget;
     private readonly Func<Task> _moveWidgetToCurrentMonitor;
+    private readonly Func<ActivityWidgetPreferences, AgentActivityIntegrationPreferences, Task> _applyActivityWidget;
+    private readonly Func<Task> _recoverActivityWidget;
     private readonly IAppUpdateService _updateService;
     private readonly Func<Task> _checkForUpdates;
     private readonly Func<Task> _applyUpdate;
@@ -28,6 +33,8 @@ public partial class MainWindow : Window
         Func<WidgetPreferences, Task> applyWidget,
         Func<Task> recoverWidget,
         Func<Task> moveWidgetToCurrentMonitor,
+        Func<ActivityWidgetPreferences, AgentActivityIntegrationPreferences, Task> applyActivityWidget,
+        Func<Task> recoverActivityWidget,
         IAppUpdateService updateService,
         Func<Task> checkForUpdates,
         Func<Task> applyUpdate,
@@ -37,6 +44,8 @@ public partial class MainWindow : Window
         _applyWidget = applyWidget;
         _recoverWidget = recoverWidget;
         _moveWidgetToCurrentMonitor = moveWidgetToCurrentMonitor;
+        _applyActivityWidget = applyActivityWidget;
+        _recoverActivityWidget = recoverActivityWidget;
         _updateService = updateService;
         _checkForUpdates = checkForUpdates;
         _applyUpdate = applyUpdate;
@@ -45,12 +54,19 @@ public partial class MainWindow : Window
         DataContext = viewModel;
         _previewWidgetViewModel = new WidgetViewModel(monitor, viewModel.WidgetPreferences);
         WidgetPreview.DataContext = _previewWidgetViewModel;
+        _previewActivityViewModel = new ActivityWidgetViewModel(
+            _previewActivitySource,
+            viewModel.Preferences.EffectiveActivityWidget,
+            viewModel.Preferences.Language,
+            Dispatcher);
+        ActivityWidgetPreview.DataContext = _previewActivityViewModel;
         _updateService.StatusChanged += OnUpdateStatusChanged;
         Loaded += OnLoaded;
         Closed += (_, _) =>
         {
             _updateService.StatusChanged -= OnUpdateStatusChanged;
             _previewWidgetViewModel.Dispose();
+            _previewActivityViewModel.Dispose();
         };
     }
 
@@ -182,6 +198,73 @@ public partial class MainWindow : Window
         ActionStatus.Text = T("WidgetSaved");
     }
 
+    private async void OnSaveActivityWidget(object sender, RoutedEventArgs eventArgs)
+    {
+        var currentIntegrations = _viewModel.Preferences.EffectiveActivityIntegrations;
+        var integrations = new AgentActivityIntegrationPreferences(
+            ActivityClaudeEnabled.IsChecked == true,
+            ActivityCodexEnabled.IsChecked == true);
+        var enablingClaude = integrations.ClaudeCodeEnabled && !currentIntegrations.ClaudeCodeEnabled;
+        var enablingCodex = integrations.CodexEnabled && !currentIntegrations.CodexEnabled;
+        if (enablingClaude || enablingCodex)
+        {
+            var providers = string.Join(" / ", new[]
+            {
+                enablingClaude ? "Claude Code" : null,
+                enablingCodex ? "Codex" : null
+            }.Where(value => value is not null));
+            var consent = System.Windows.MessageBox.Show(
+                string.Format(T("ActivityHooksConsent"), providers),
+                T("ActivityHooksConsentTitle"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            if (consent != MessageBoxResult.Yes) return;
+        }
+
+        var includedProviders = new List<string>();
+        if (integrations.CodexEnabled) includedProviders.Add("codex");
+        if (integrations.ClaudeCodeEnabled) includedProviders.Add("claude-code");
+        var currentWidget = _viewModel.Preferences.EffectiveActivityWidget;
+        var widget = currentWidget with
+        {
+            IsVisible = ActivityWidgetVisible.IsChecked == true,
+            IsLocked = ActivityWidgetLocked.IsChecked == true,
+            IsClickThrough = ActivityWidgetClickThrough.IsChecked == true,
+            ShowSessionLabels = ActivityShowLabels.IsChecked == true,
+            IncludedProviderIds = includedProviders.Count > 0
+                ? includedProviders.ToArray()
+                : currentWidget.IncludedProviderIds
+        };
+
+        try
+        {
+            await _applyActivityWidget(widget, integrations);
+            SyncActivityWidgetControls();
+            ActionStatus.Text = T("ActivityWidgetSaved");
+            if (enablingCodex)
+                System.Windows.MessageBox.Show(
+                    T("ActivityCodexTrust"),
+                    T("ActivityHooksConsentTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            System.Windows.MessageBox.Show(
+                string.Format(T("ActivitySaveFailed"), exception.Message),
+                T("ActivityHooksConsentTitle"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private async void OnRecoverActivityWidget(object sender, RoutedEventArgs eventArgs)
+    {
+        await _recoverActivityWidget();
+        SyncActivityWidgetControls();
+        ActionStatus.Text = T("WidgetRecovered");
+    }
+
     private async void OnRecoverWidget(object sender, RoutedEventArgs eventArgs)
     {
         await _recoverWidget();
@@ -263,7 +346,58 @@ public partial class MainWindow : Window
             _ => 0
         };
         UpdateWidgetPreview();
+        SyncActivityWidgetControls();
     }
+
+    private void SyncActivityWidgetControls()
+    {
+        if (ActivityWidgetVisible is null) return;
+        var widget = _viewModel.Preferences.EffectiveActivityWidget;
+        var integrations = _viewModel.Preferences.EffectiveActivityIntegrations;
+        ActivityWidgetVisible.IsChecked = widget.IsVisible;
+        ActivityWidgetLocked.IsChecked = widget.IsLocked;
+        ActivityWidgetClickThrough.IsChecked = widget.IsClickThrough;
+        ActivityClaudeEnabled.IsChecked = integrations.ClaudeCodeEnabled;
+        ActivityCodexEnabled.IsChecked = integrations.CodexEnabled;
+        ActivityShowLabels.IsChecked = widget.ShowSessionLabels;
+        UpdateActivityWidgetPreview();
+    }
+
+    /// <summary>
+    /// Renders the sample scene with the settings currently on screen, so the traffic light can be
+    /// judged before it is saved. Three sessions show the two-then-one grid the widget falls into.
+    /// </summary>
+    private void UpdateActivityWidgetPreview()
+    {
+        if (ActivityWidgetPreview is null || _previewActivityViewModel is null) return;
+
+        var providers = new List<AgentActivityProvider>();
+        if (ActivityCodexEnabled.IsChecked == true) providers.Add(AgentActivityProvider.Codex);
+        if (ActivityClaudeEnabled.IsChecked == true) providers.Add(AgentActivityProvider.ClaudeCode);
+        var providerIds = providers
+            .Select(provider => provider == AgentActivityProvider.ClaudeCode ? "claude-code" : "codex")
+            .ToArray();
+
+        _previewActivitySource.Show(providers);
+        _previewActivityViewModel.ApplyPreferences(
+            _viewModel.Preferences.EffectiveActivityWidget with
+            {
+                IsVisible = ActivityWidgetVisible.IsChecked == true,
+                IsLocked = ActivityWidgetLocked.IsChecked == true,
+                IsClickThrough = ActivityWidgetClickThrough.IsChecked == true,
+                ShowSessionLabels = ActivityShowLabels.IsChecked == true,
+                IncludedProviderIds = providerIds.Length > 0 ? providerIds : null
+            },
+            _viewModel.Preferences.Language);
+        _previewActivityViewModel.SetActive(true);
+
+        var layout = ActivityWidgetGeometry.Calculate(_previewActivityViewModel.TileCount);
+        ActivityWidgetPreview.Width = layout.Width;
+        ActivityWidgetPreview.Height = layout.Height;
+    }
+
+    private void OnActivityPreviewInputChanged(object sender, RoutedEventArgs eventArgs) =>
+        UpdateActivityWidgetPreview();
 
     private void UpdateWidgetPreview()
     {

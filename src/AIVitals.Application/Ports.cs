@@ -14,12 +14,18 @@ public sealed record AppPreferences(
     WidgetPreferences? Widget = null,
     bool OnboardingCompleted = false,
     bool AutomaticUpdateCheckEnabled = true,
-    bool StartWithWindows = false)
+    bool StartWithWindows = false,
+    ActivityWidgetPreferences? ActivityWidget = null,
+    AgentActivityIntegrationPreferences? ActivityIntegrations = null)
 {
-    /// <summary>Version 2 added the update and startup preferences; version 1 files upgrade with their defaults.</summary>
-    public const int CurrentSchemaVersion = 2;
+    /// <summary>Version 3 adds the opt-in activity widget and hook integrations.</summary>
+    public const int CurrentSchemaVersion = 3;
 
     public WidgetPreferences EffectiveWidget => WidgetPreferenceRules.Normalize(Widget ?? new WidgetPreferences());
+    public ActivityWidgetPreferences EffectiveActivityWidget =>
+        ActivityWidgetPreferenceRules.Normalize(ActivityWidget ?? new ActivityWidgetPreferences());
+    public AgentActivityIntegrationPreferences EffectiveActivityIntegrations =>
+        ActivityIntegrations ?? new AgentActivityIntegrationPreferences();
 }
 
 public enum WidgetVisualMode
@@ -37,6 +43,42 @@ public sealed record WidgetPreferences(
     double? Left = null,
     double? Top = null,
     string[]? PinnedProviderIds = null);
+
+public sealed record ActivityWidgetPreferences(
+    bool IsVisible = false,
+    bool IsLocked = false,
+    bool IsClickThrough = false,
+    double? Left = null,
+    double? Top = null,
+    string[]? IncludedProviderIds = null,
+    // Opts into showing the leaf directory name of each agent session on its traffic light.
+    // Off by default: it is the only agent-supplied text AI Vitals ever displays.
+    bool ShowSessionLabels = false);
+
+public sealed record AgentActivityIntegrationPreferences(
+    bool ClaudeCodeEnabled = false,
+    bool CodexEnabled = false);
+
+public static class ActivityWidgetPreferenceRules
+{
+    private static readonly string[] SupportedProviders = ["codex", "claude-code"];
+
+    public static ActivityWidgetPreferences Normalize(ActivityWidgetPreferences preferences)
+    {
+        var providers = (preferences.IncludedProviderIds ?? SupportedProviders)
+            .Where(provider => SupportedProviders.Contains(provider, StringComparer.OrdinalIgnoreCase))
+            .Select(provider => provider.ToLowerInvariant())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (providers.Length == 0) providers = SupportedProviders;
+
+        return preferences with
+        {
+            IsLocked = preferences.IsLocked || preferences.IsClickThrough,
+            IncludedProviderIds = providers
+        };
+    }
+}
 
 public static class WidgetPreferenceRules
 {

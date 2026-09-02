@@ -9,6 +9,7 @@ namespace AIVitals.Adapters.ClaudeCode;
 public sealed class ClaudeCodeBridgeStaging
 {
     public const string HelperFileName = "AIVitals.ClaudeCode.StatusLine.exe";
+    public const string ActivityHelperFileName = "AIVitals.AgentActivity.Hook.exe";
     private const string StampFileName = ".staged-version";
 
     private readonly string _sourceDirectory;
@@ -22,7 +23,11 @@ public sealed class ClaudeCodeBridgeStaging
 
     public string HelperPath => Path.Combine(_targetDirectory, HelperFileName);
 
+    public string ActivityHelperPath => Path.Combine(_targetDirectory, ActivityHelperFileName);
+
     public bool IsStaged => File.Exists(HelperPath);
+
+    public bool IsActivityStaged => File.Exists(ActivityHelperPath);
 
     /// <summary>
     /// Brings the staged copy up to <paramref name="version"/>. Returns false when the copy could not
@@ -32,7 +37,8 @@ public sealed class ClaudeCodeBridgeStaging
     public bool TryStage(string version)
     {
         if (!File.Exists(Path.Combine(_sourceDirectory, HelperFileName))) return IsStaged;
-        if (IsStaged && ReadStamp() == version) return true;
+        var activityHelperIsBundled = File.Exists(Path.Combine(_sourceDirectory, ActivityHelperFileName));
+        if (IsStaged && (!activityHelperIsBundled || IsActivityStaged) && ReadStamp() == version) return true;
 
         var stagingDirectory = _targetDirectory + ".staging";
         var previousDirectory = _targetDirectory + ".previous";
