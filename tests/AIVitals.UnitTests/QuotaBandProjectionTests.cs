@@ -302,6 +302,20 @@ public sealed class QuotaBandProjectionTests
     }
 
     [Fact]
+    public void Base_model_inference_is_not_presented_as_a_codex_quota()
+    {
+        var internalLimit = Observation(
+            0m,
+            TimeSpan.FromDays(7),
+            Now.AddDays(7),
+            "codex:app-server:rate-limit:base_model_inference:primary");
+
+        var bands = QuotaBandProjection.Project([internalLimit], Now);
+
+        Assert.Empty(bands);
+    }
+
+    [Fact]
     public void An_unclassified_window_without_provider_period_is_not_presented_as_a_quota()
     {
         var internalMetadata = WindowlessObservation(

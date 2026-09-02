@@ -10,9 +10,19 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 - A waiting update is announced where the application is actually visible: the tray icon carries a dot, a system notification is raised once per version, the left-click quick view carries the same install entry as the right-click menu, and the dashboard's About tab shows a dot in its navigation entry.
+- A native C# activity traffic-light widget can be enabled independently for Claude Code and Codex. It tracks concurrent tools and sessions, starts and expires to a gray unknown state, and keeps its own position, lock, and click-through settings.
+- The traffic light shows one small light per agent session rather than a single large one. It stays within two rows by two columns at the width the vertical usage widget already occupies, centres a lone light on the second row, and pages through a carousel every five seconds past four sessions. Its frame, header, and interaction glyph now match the usage widget.
+- Sessions can be told apart by their folder. Enabling "Show session folder" makes the helper add the leaf directory name of the session, never the path, and that name is shown on the light and kept in memory only. The option is off by default and rewrites its hooks when toggled.
+- The Widget settings tab previews the traffic light beside the usage widget, using a fixed sample scene that never subscribes to the live activity pipe.
+- The traffic light's header carries only the rings icon and the interaction glyph, matching the vertical usage widget. The application name and the aggregate state dot are gone: the widget is narrow, and each light already reports its own state.
+- The tool badge on a light appears from two tools upward. A red light already means one tool is running, so a badge reading `1` only ever appeared where it added nothing.
+- A session label too wide for its light slides between its two ends instead of being cut off, holding at each end so it can be read, and only while the light is on screen. With Windows animations off or high contrast on it is trimmed with an ellipsis and stays still.
+- The tray menu splits its widget controls into one tab per widget. The traffic-light tab offers show, lock, click-through, and recover, a shortcut to its settings, and a read-only state row with the current color and session count. It appears only once a provider integration is enabled, so an install without one keeps the menu it had.
+- Activity hooks are explicit opt-in integrations. Their helper pseudonymizes session and tool identifiers before sending a minimal event over a current-user named pipe; prompts, responses, transcripts, paths, tool input, and tool output never enter the application state, SQLite, history, or exports.
 
 ### Fixed
 
+- A session whose agent stops without reporting an end no longer occupies the traffic light forever. Sessions are dropped once they outlive every freshness window, and each provider keeps at most 32 of them.
 - The pending-update banner in the tray menu follows the interface language. Its text was formatted once, when the update arrived, and kept the language of that moment for the rest of the session. The same applies to the version and update copy in the About tab, which is now rebuilt when the language is applied.
 - Claude Code no longer turns transient OAuth metadata into permanent quota columns. For example, Anthropic briefly returned an undocumented `nimbus_quill` object with `0%` utilization and no reset window; older builds stored it as an unknown `Q` quota and restored it after every restart. Unknown windowless OAuth fields now remain historical diagnostics instead of occupying the dashboard or widget, and new readings are accepted only for the published five-hour and seven-day quota families.
 

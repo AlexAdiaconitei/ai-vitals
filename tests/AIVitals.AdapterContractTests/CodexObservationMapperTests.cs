@@ -21,6 +21,7 @@ public sealed class CodexObservationMapperTests
         Assert.All(observations, item => Assert.NotNull(item.Window));
         Assert.Contains(observations, item => item.Source.EndsWith("codex:secondary", StringComparison.Ordinal));
         Assert.Contains(observations, item => item.Source.EndsWith("codex_other:primary", StringComparison.Ordinal));
+        Assert.DoesNotContain(observations, item => item.Source.Contains("base_model_inference", StringComparison.Ordinal));
 
         var repeated = CodexObservationMapper.MapRateLimits(fixture.RootElement, ObservedAt.AddMinutes(1));
         Assert.Equal(observations.Select(item => item.Id), repeated.Select(item => item.Id));

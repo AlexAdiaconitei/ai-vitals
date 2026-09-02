@@ -24,6 +24,19 @@ public sealed class ClaudeCodeBridgeStagingTests : IDisposable
     }
 
     [Fact]
+    public void Staging_copies_the_activity_helper_when_it_is_bundled()
+    {
+        var source = CreateSource("0.1.0");
+        File.WriteAllText(Path.Combine(source, ClaudeCodeBridgeStaging.ActivityHelperFileName), "activity");
+        var staging = new ClaudeCodeBridgeStaging(source, Path.Combine(_root, "bridge"));
+
+        Assert.True(staging.TryStage("0.1.0"));
+
+        Assert.True(staging.IsActivityStaged);
+        Assert.Equal("activity", File.ReadAllText(staging.ActivityHelperPath));
+    }
+
+    [Fact]
     public void Restaging_the_same_version_leaves_the_existing_copy_alone()
     {
         var source = CreateSource("0.1.0");

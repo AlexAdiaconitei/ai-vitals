@@ -27,6 +27,10 @@
         <SolidColorBrush x:Key="ClaudeBrandBrush" Color="#D97757" />
         <SolidColorBrush x:Key="ButtonBrush" Color="#14263C" />
         <SolidColorBrush x:Key="DangerBrush" Color="#FF9B9B" />
+        <SolidColorBrush x:Key="ActivityRedBrush" Color="#FF5D68" />
+        <SolidColorBrush x:Key="ActivityYellowBrush" Color="#FFC84A" />
+        <SolidColorBrush x:Key="ActivityGreenBrush" Color="#43D17B" />
+        <SolidColorBrush x:Key="ActivityGreyBrush" Color="#8C93A1" />
 
         <Style x:Key="FluentIcon" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />

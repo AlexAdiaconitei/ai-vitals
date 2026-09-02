@@ -42,6 +42,7 @@ public static class QuotaBandProjection
                 item.Capability == UsageCapability.QuotaWindow &&
                 item.Value is >= 0 and <= 100 &&
                 item.Unit.Equals("percent", StringComparison.OrdinalIgnoreCase))
+            .Where(item => !IsHiddenCodexQuota(item))
             // Older builds persisted any OAuth object carrying `utilization` as a quota. Keep those
             // observations in history, but do not give an unclassified, windowless field a live band.
             .Where(item => !IsOAuth(item) || DurationOf(item) is not null)
@@ -118,6 +119,14 @@ public static class QuotaBandProjection
 
     private static bool IsOAuth(UsageObservation observation) =>
         observation.Source.Contains(":oauth:rate-limit:", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsHiddenCodexQuota(UsageObservation observation)
+    {
+        if (!observation.ProviderId.Equals("codex", StringComparison.OrdinalIgnoreCase)) return false;
+        var suffix = QuotaSourceMetadata.Suffix(observation.Source);
+        return suffix?.Equals("base_model_inference", StringComparison.OrdinalIgnoreCase) == true ||
+               suffix?.StartsWith("base_model_inference:", StringComparison.OrdinalIgnoreCase) == true;
+    }
 
     private static string QuotaIdentity(UsageObservation observation) =>
         QuotaSourceMetadata.Suffix(observation.Source) is { } window

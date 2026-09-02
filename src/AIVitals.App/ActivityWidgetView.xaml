@@ -1,0 +1,124 @@
+<UserControl x:Class="AIVitals.App.ActivityWidgetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AIVitals.App"
+             Background="Transparent"
+             Foreground="{DynamicResource TextBrush}"
+             FontFamily="Segoe UI Variable Text, Segoe UI"
+             UseLayoutRounding="True" SnapsToDevicePixels="True"
+             AutomationProperties.Name="{Binding AccessibleStatus}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ActivityTileTemplate">
+            <Grid Width="{Binding DataContext.TileWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Height="{Binding DataContext.TileHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Margin="3,0" ToolTip="{Binding TooltipText}" AutomationProperties.Name="{Binding AccessibleName}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="4" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <local:SvgLogo Width="11" Height="11" VerticalAlignment="Center"
+                                   Source="{Binding LogoSource}" Tint="{Binding LogoBrush}" />
+                    <local:MarqueeText Grid.Column="1" Margin="4,0,0,0" VerticalAlignment="Center"
+                                       Text="{Binding DisplayLabel}"
+                                       FontFamily="Cascadia Mono, Consolas" FontSize="8" FontWeight="SemiBold" />
+                </Grid>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="26" CornerRadius="13"
+                            Padding="0,5" Background="{DynamicResource WidgetSurfaceBrush}"
+                            BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Center">
+                            <Ellipse Width="13" Height="13" Fill="{DynamicResource ActivityRedBrush}"
+                                     Opacity="{Binding RedOpacity}" />
+                            <Ellipse Width="13" Height="13" Margin="0,4" Fill="{DynamicResource ActivityYellowBrush}"
+                                     Opacity="{Binding YellowOpacity}" />
+                            <Ellipse Width="13" Height="13" Fill="{DynamicResource ActivityGreenBrush}"
+                                     Opacity="{Binding GreenOpacity}" />
+                        </StackPanel>
+                    </Border>
+                    <!-- Beside its own pill, not in the tile corner, where it read as belonging to the gap. -->
+                    <TextBlock VerticalAlignment="Bottom" Margin="3,0,0,4"
+                               Text="{Binding ToolCountText}" Visibility="{Binding ToolCountVisibility}"
+                               FontFamily="Cascadia Mono, Consolas" FontSize="8" FontWeight="Bold"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="ActivityRowPanel">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+
+    <Border Margin="7" Padding="11,8,11,10" CornerRadius="15"
+            Background="{DynamicResource WidgetGlassBrush}"
+            BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="17" ShadowDepth="4" Opacity="0.32" /></Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="19" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <local:ActivityRingsIcon Width="18" Height="18" OuterBrush="{DynamicResource SignalBrush}"
+                                         MiddleBrush="{DynamicResource CodexBrush}" InnerBrush="{DynamicResource WarmBrush}"
+                                         TrackBrush="{DynamicResource LineBrush}" />
+                <TextBlock Grid.Column="3" Style="{StaticResource FluentIcon}" VerticalAlignment="Center"
+                           Text="{Binding InteractionGlyph}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"
+                           ToolTip="{Binding InteractionText}" AutomationProperties.Name="{Binding InteractionText}" />
+            </Grid>
+
+            <StackPanel x:Name="TileHost" Grid.Row="2" VerticalAlignment="Center">
+                <ItemsControl ItemsSource="{Binding TopRow}"
+                              ItemsPanel="{StaticResource ActivityRowPanel}"
+                              ItemTemplate="{StaticResource ActivityTileTemplate}" />
+                <ItemsControl Margin="0,6,0,0" ItemsSource="{Binding BottomRow}"
+                              Visibility="{Binding BottomRowVisibility}"
+                              ItemsPanel="{StaticResource ActivityRowPanel}"
+                              ItemTemplate="{StaticResource ActivityTileTemplate}" />
+            </StackPanel>
+
+            <ItemsControl Grid.Row="3" Margin="0,6,0,0" HorizontalAlignment="Center"
+                          ItemsSource="{Binding PageDots}" Visibility="{Binding CarouselVisibility}"
+                          AutomationProperties.Name="{Binding PageText}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Ellipse Width="5" Height="5" Margin="2,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+                                    <Setter Property="Opacity" Value="0.35" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding}" Value="True">
+                                            <Setter Property="Opacity" Value="1" />
+                                            <Setter Property="Fill" Value="{DynamicResource TextBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Border>
+</UserControl>

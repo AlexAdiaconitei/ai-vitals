@@ -94,9 +94,9 @@ _Avoid:_ historical event.
 
 ## Presentation
 
-**Widget**
+**Quota widget**
 
-The single compact, always-on-top window that shows one to four pinned connections in a shared visual mode.
+The compact, always-on-top window that shows one to four pinned quota connections in a shared visual mode.
 
 _Avoid:_ dashboard, popup.
 
@@ -104,7 +104,31 @@ _Avoid:_ dashboard, popup.
 
 The widget representation: activity-ring grid, parallel horizontal bars, or parallel vertical bars.
 
-_Avoid:_ independent widget.
+_Avoid:_ semáforo, modo de actividad.
+
+**Activity traffic light**
+
+The independent, memory-only always-on-top widget that reduces opt-in Claude Code and Codex lifecycle hooks to unknown, idle, processing, or tool-running.
+
+_Avoid:_ quota widget, persisted observation, activity ring.
+
+**Session light**
+
+One traffic light inside the activity widget, standing for a single agent session, or for an enabled provider that has not reported yet.
+
+_Avoid:_ lamp, provider light.
+
+**Session label**
+
+The leaf directory name of an agent session, shown on its light only when the user opted in. Never a path, never persisted. A label wider than its light slides between its ends rather than being cut.
+
+_Avoid:_ working directory, project path, session name.
+
+**Activity carousel**
+
+The paging the activity widget falls back to past four session lights, so it never grows beyond two rows by two columns.
+
+_Avoid:_ scroll, animation, slideshow.
 
 **Quick popup**
 
@@ -120,6 +144,6 @@ _Avoid:_ popup, widget.
 
 **Visual state**
 
-A stable signal expressed through color, icon, and text or pattern, without system notifications, motion, or geometry changes.
+A stable signal expressed through color, icon, and text or pattern, without system notifications, motion, or geometry changes. Two motions are sanctioned exceptions, and neither carries state: the activity carousel between pages, and a sliding label revealing a name too long for its light.
 
 _Avoid:_ predictive alert, toast.

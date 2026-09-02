@@ -33,6 +33,16 @@
         "resetsAt": 1785909600
       },
       "secondary": null
+    },
+    "base_model_inference": {
+      "limitId": "base_model_inference",
+      "limitName": "Base model inference",
+      "primary": {
+        "usedPercent": 0,
+        "windowDurationMins": 10080,
+        "resetsAt": 1786406400
+      },
+      "secondary": null
     }
   },
   "rateLimitResetCredits": null

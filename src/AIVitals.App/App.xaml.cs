@@ -2,6 +2,7 @@ using System.Windows;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Threading;
+using AIVitals.AgentActivity;
 using AIVitals.Adapters.Abstractions;
 using AIVitals.Adapters.ClaudeCode;
 using AIVitals.Adapters.Codex;
@@ -25,12 +26,18 @@ public partial class App : System.Windows.Application
     private MainViewModel? _mainViewModel;
     private QuickPopupWindow? _quickPopup;
     private WidgetWindow? _widgetWindow;
+    private AgentActivityMonitor? _activityMonitor;
+    private ActivityWidgetWindow? _activityWidgetWindow;
+    private AgentActivityHookInstaller? _claudeActivityInstaller;
+    private AgentActivityHookInstaller? _codexActivityInstaller;
+    private string? _activityHelperPath;
     private GlobalHotkeyHost? _widgetHotkey;
     private ClaudeCodeStatusLineInstaller? _claudeInstaller;
     private DispatcherTimer? _freshnessTimer;
     private string? _appliedAppearance;
     private string? _trayPreferenceSignature;
     private string? _announcedUpdateVersion;
+    private string? _activityPreferenceSignature;
     private bool _isExiting;
 
     [STAThread]
@@ -62,14 +69,49 @@ public partial class App : System.Windows.Application
         try
         {
             new ClaudeCodeStatusLineInstaller(staging.HelperPath).UninstallAsync().GetAwaiter().GetResult();
+            new AgentActivityHookInstaller(
+                    staging.ActivityHelperPath,
+                    AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.ClaudeCode),
+                    AgentActivityProvider.ClaudeCode)
+                .UninstallAsync().GetAwaiter().GetResult();
+            new AgentActivityHookInstaller(
+                    staging.ActivityHelperPath,
+                    AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.Codex),
+                    AgentActivityProvider.Codex,
+                    includeWindowsCommand: true)
+                .UninstallAsync().GetAwaiter().GetResult();
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
             // Uninstalling continues even when Claude Code's settings cannot be rewritten.
         }
 
-        staging.Remove();
+        if (!SettingsReferenceHelper(staging.HelperPath) && !SettingsReferenceHelper(staging.ActivityHelperPath))
+            staging.Remove();
         WindowsStartupRegistration.RemoveAny();
+    }
+
+    private static bool SettingsReferenceHelper(string helperPath)
+    {
+        foreach (var path in new[]
+                 {
+                     AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.ClaudeCode),
+                     AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.Codex)
+                 })
+        {
+            try
+            {
+                if (File.Exists(path)
+                    && File.ReadAllText(path).Contains(helperPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -121,6 +163,16 @@ public partial class App : System.Windows.Application
             _appliedAppearance = AppearanceSignature(_monitor.State.Preferences);
             SystemParameters.StaticPropertyChanged += OnSystemParametersChanged;
 
+            var activityWidgetPreferences = _monitor.State.Preferences.EffectiveActivityWidget;
+            var activityHelperPath = _bridgeStaging.IsActivityStaged
+                ? _bridgeStaging.ActivityHelperPath
+                : Path.Combine(bridgeSourceDirectory, ClaudeCodeBridgeStaging.ActivityHelperFileName);
+            _activityHelperPath = activityHelperPath;
+            ConfigureActivityInstallers(activityWidgetPreferences.ShowSessionLabels);
+            _activityMonitor = new AgentActivityMonitor(ToActivityProviders(activityWidgetPreferences.IncludedProviderIds!));
+            _activityMonitor.Start();
+            await EnsureConfiguredActivityHooksAsync(_monitor.State.Preferences.EffectiveActivityIntegrations);
+
             ApplyStartupRegistration(_monitor.State.Preferences.StartWithWindows);
             _updateService.StatusChanged += OnUpdateStatusChanged;
 
@@ -131,6 +183,8 @@ public partial class App : System.Windows.Application
                 ApplyWidgetFromDashboardAsync,
                 RecoverWidgetAsync,
                 MoveWidgetToCurrentMonitorAsync,
+                ApplyActivityWidgetFromDashboardAsync,
+                RecoverActivityWidgetAsync,
                 _updateService,
                 CheckForUpdatesAsync,
                 ApplyUpdateAsync,
@@ -159,12 +213,22 @@ public partial class App : System.Windows.Application
                 ShowQuickView,
                 ShowDashboard);
             _widgetWindow.ApplyPreferences(widgetPreferences);
+            _activityWidgetWindow = new ActivityWidgetWindow(
+                _activityMonitor,
+                activityWidgetPreferences,
+                _monitor.State.Preferences.Language,
+                SaveActivityWidgetPreferencesAsync,
+                ShowDashboard);
+            _activityWidgetWindow.ApplyPreferences(
+                activityWidgetPreferences,
+                _monitor.State.Preferences.Language);
+            _activityPreferenceSignature = ActivityPreferenceSignature(_monitor.State.Preferences);
             try
             {
                 _widgetHotkey = new GlobalHotkeyHost(
                     HotkeyModifiers.Control | HotkeyModifiers.Shift,
                     System.Windows.Forms.Keys.U,
-                    () => _ = RecoverWidgetAsync());
+                    () => _ = RecoverAllWidgetsAsync());
             }
             catch (System.ComponentModel.Win32Exception)
             {
@@ -219,8 +283,20 @@ public partial class App : System.Windows.Application
         var trayPreferences = TrayPreferenceSignature(state.Preferences);
         if (_trayPreferenceSignature != trayPreferences)
         {
-            _trayMenu?.UpdateState(state.Preferences.EffectiveWidget, state.Preferences.Theme);
+            _trayMenu?.UpdateState(
+                state.Preferences.EffectiveWidget,
+                state.Preferences.Theme,
+                state.Preferences.EffectiveActivityWidget,
+                IsActivityWidgetAvailable(state.Preferences));
             _trayPreferenceSignature = trayPreferences;
+        }
+        var activityPreferences = ActivityPreferenceSignature(state.Preferences);
+        if (_activityPreferenceSignature != activityPreferences)
+        {
+            var widget = state.Preferences.EffectiveActivityWidget;
+            _activityMonitor?.SetIncludedProviders(ToActivityProviders(widget.IncludedProviderIds!));
+            _activityWidgetWindow?.ApplyPreferences(widget, state.Preferences.Language);
+            _activityPreferenceSignature = activityPreferences;
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -249,6 +325,8 @@ public partial class App : System.Windows.Application
         _ = language;
         var widget = _monitor?.State.Preferences.EffectiveWidget ?? new WidgetPreferences();
         var theme = _monitor?.State.Preferences.Theme ?? "System";
+        var activityWidget = _monitor?.State.Preferences.EffectiveActivityWidget ?? new ActivityWidgetPreferences();
+        var activityAvailable = _monitor is not null && IsActivityWidgetAvailable(_monitor.State.Preferences);
         _trayMenu ??= new TrayMenuWindow(
             ShowDashboard,
             OpenSettings,
@@ -258,10 +336,15 @@ public partial class App : System.Windows.Application
             ToggleWidgetClickThroughAsync,
             RecoverWidgetAsync,
             MoveWidgetToCurrentMonitorAsync,
+            ToggleActivityWidgetAsync,
+            ToggleActivityWidgetLockAsync,
+            ToggleActivityWidgetClickThroughAsync,
+            RecoverActivityWidgetAsync,
+            () => _activityMonitor?.Current,
             SetThemeAsync,
             ApplyUpdateAsync,
             ExitAsync);
-        _trayMenu.UpdateState(widget, theme);
+        _trayMenu.UpdateState(widget, theme, activityWidget, activityAvailable);
         _trayIcon ??= new TrayIconHost(ShowQuickView, ShowDashboard, ShowTrayMenu, ShowUpdateSection);
         RefreshUpdateSurfaces();
         if (_monitor is not null) _trayPreferenceSignature = TrayPreferenceSignature(_monitor.State.Preferences);
@@ -458,6 +541,68 @@ public partial class App : System.Windows.Application
 
     private Task RecoverWidgetAsync() => _widgetWindow?.RecoverAsync() ?? Task.CompletedTask;
 
+    /// <summary>
+    /// The traffic light earns its tray tab once a provider integration is switched on in settings.
+    /// Gating on the widget's own visibility instead would hide the tab that turns it back on.
+    /// </summary>
+    private static bool IsActivityWidgetAvailable(AppPreferences preferences)
+    {
+        var integrations = preferences.EffectiveActivityIntegrations;
+        return integrations.ClaudeCodeEnabled || integrations.CodexEnabled;
+    }
+
+    private async Task ToggleActivityWidgetAsync()
+    {
+        if (_activityWidgetWindow is null) return;
+        var preferences = _activityWidgetWindow.Preferences with
+        {
+            IsVisible = !_activityWidgetWindow.Preferences.IsVisible
+        };
+        ApplyActivityWidgetPreferences(preferences);
+        await SaveActivityWidgetPreferencesAsync(preferences);
+    }
+
+    private async Task ToggleActivityWidgetLockAsync()
+    {
+        if (_activityWidgetWindow is null) return;
+        var unlock = _activityWidgetWindow.Preferences.IsLocked;
+        var preferences = _activityWidgetWindow.Preferences with
+        {
+            IsLocked = !unlock,
+            IsClickThrough = unlock ? false : _activityWidgetWindow.Preferences.IsClickThrough
+        };
+        ApplyActivityWidgetPreferences(preferences);
+        await SaveActivityWidgetPreferencesAsync(preferences);
+    }
+
+    private async Task ToggleActivityWidgetClickThroughAsync()
+    {
+        if (_activityWidgetWindow is null) return;
+        var enabled = !_activityWidgetWindow.Preferences.IsClickThrough;
+        var preferences = _activityWidgetWindow.Preferences with
+        {
+            IsVisible = true,
+            IsLocked = enabled || _activityWidgetWindow.Preferences.IsLocked,
+            IsClickThrough = enabled
+        };
+        ApplyActivityWidgetPreferences(preferences);
+        await SaveActivityWidgetPreferencesAsync(preferences);
+    }
+
+    private void ApplyActivityWidgetPreferences(ActivityWidgetPreferences preferences) =>
+        _activityWidgetWindow?.ApplyPreferences(
+            preferences,
+            _monitor?.State.Preferences.Language ?? "en");
+
+    private Task RecoverActivityWidgetAsync() =>
+        _activityWidgetWindow?.RecoverAsync() ?? Task.CompletedTask;
+
+    private async Task RecoverAllWidgetsAsync()
+    {
+        await RecoverWidgetAsync();
+        await RecoverActivityWidgetAsync();
+    }
+
     private Task MoveWidgetToCurrentMonitorAsync() =>
         _widgetWindow?.MoveToCurrentMonitorAsync() ?? Task.CompletedTask;
 
@@ -466,6 +611,42 @@ public partial class App : System.Windows.Application
         if (_widgetWindow is null) return;
         _widgetWindow.ApplyPreferences(widgetPreferences);
         await SaveWidgetPreferencesAsync(widgetPreferences);
+    }
+
+    private async Task ApplyActivityWidgetFromDashboardAsync(
+        ActivityWidgetPreferences widgetPreferences,
+        AgentActivityIntegrationPreferences integrations)
+    {
+        if (_monitor is null || _activityWidgetWindow is null || _activityMonitor is null) return;
+        var previous = _monitor.State.Preferences.EffectiveActivityIntegrations;
+        var previousLabels = _monitor.State.Preferences.EffectiveActivityWidget.ShowSessionLabels;
+        ConfigureActivityInstallers(widgetPreferences.ShowSessionLabels);
+        try
+        {
+            await ReconcileActivityHooksAsync(integrations);
+        }
+        catch
+        {
+            try
+            {
+                ConfigureActivityInstallers(previousLabels);
+                await ReconcileActivityHooksAsync(previous);
+            }
+            catch
+            {
+                // The original exception is more useful; the next app start reconciles stored preferences.
+            }
+            throw;
+        }
+
+        var normalized = ActivityWidgetPreferenceRules.Normalize(widgetPreferences);
+        _activityMonitor.SetIncludedProviders(ToActivityProviders(normalized.IncludedProviderIds!));
+        _activityWidgetWindow.ApplyPreferences(normalized, _monitor.State.Preferences.Language);
+        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        {
+            ActivityWidget = normalized,
+            ActivityIntegrations = integrations
+        });
     }
 
     private async Task CompleteOnboardingAsync()
@@ -482,6 +663,62 @@ public partial class App : System.Windows.Application
         {
             Widget = WidgetPreferenceRules.Normalize(widgetPreferences)
         });
+    }
+
+    private async Task SaveActivityWidgetPreferencesAsync(ActivityWidgetPreferences widgetPreferences)
+    {
+        if (_monitor is null) return;
+        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        {
+            ActivityWidget = ActivityWidgetPreferenceRules.Normalize(widgetPreferences)
+        });
+    }
+
+    /// <summary>
+    /// The helper command line carries the session-label flag, so changing that preference has to
+    /// rebuild the installers before hooks are reconciled.
+    /// </summary>
+    private void ConfigureActivityInstallers(bool includeWorkspaceLabels)
+    {
+        if (_activityHelperPath is null) return;
+        _claudeActivityInstaller = new AgentActivityHookInstaller(
+            _activityHelperPath,
+            AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.ClaudeCode),
+            AgentActivityProvider.ClaudeCode,
+            includeWorkspaceLabels: includeWorkspaceLabels);
+        _codexActivityInstaller = new AgentActivityHookInstaller(
+            _activityHelperPath,
+            AgentActivityHookInstaller.DefaultSettingsPath(AgentActivityProvider.Codex),
+            AgentActivityProvider.Codex,
+            includeWindowsCommand: true,
+            includeWorkspaceLabels: includeWorkspaceLabels);
+    }
+
+    private async Task EnsureConfiguredActivityHooksAsync(AgentActivityIntegrationPreferences integrations)
+    {
+        if (integrations.ClaudeCodeEnabled && _claudeActivityInstaller is not null)
+            await _claudeActivityInstaller.InstallAsync();
+        if (integrations.CodexEnabled && _codexActivityInstaller is not null)
+            await _codexActivityInstaller.InstallAsync();
+    }
+
+    private async Task ReconcileActivityHooksAsync(AgentActivityIntegrationPreferences integrations)
+    {
+        if (_claudeActivityInstaller is not null)
+        {
+            if (integrations.ClaudeCodeEnabled)
+                await _claudeActivityInstaller.InstallAsync();
+            else
+                await _claudeActivityInstaller.UninstallAsync();
+        }
+
+        if (_codexActivityInstaller is not null)
+        {
+            if (integrations.CodexEnabled)
+                await _codexActivityInstaller.InstallAsync();
+            else
+                await _codexActivityInstaller.UninstallAsync();
+        }
     }
 
     private async Task ExitAsync()
@@ -508,6 +745,14 @@ public partial class App : System.Windows.Application
         _widgetWindow?.DisposeViewModel();
         _widgetWindow?.Close();
         _widgetWindow = null;
+        _activityWidgetWindow?.DisposeViewModel();
+        _activityWidgetWindow?.Close();
+        _activityWidgetWindow = null;
+        if (_activityMonitor is not null)
+        {
+            await _activityMonitor.DisposeAsync();
+            _activityMonitor = null;
+        }
         _quickPopup?.Close();
         _quickPopup = null;
         _mainViewModel?.Dispose();
@@ -547,7 +792,22 @@ public partial class App : System.Windows.Application
     private static string TrayPreferenceSignature(AppPreferences preferences)
     {
         var widget = preferences.EffectiveWidget;
-        return $"{preferences.Language}|{preferences.Theme}|{widget.IsVisible}|{widget.Mode}|{widget.IsLocked}|{widget.IsClickThrough}";
+        var activity = preferences.EffectiveActivityWidget;
+        var integrations = preferences.EffectiveActivityIntegrations;
+        return $"{preferences.Language}|{preferences.Theme}|{widget.IsVisible}|{widget.Mode}|{widget.IsLocked}|{widget.IsClickThrough}"
+               + $"|{activity.IsVisible}|{activity.IsLocked}|{activity.IsClickThrough}|{integrations.ClaudeCodeEnabled}|{integrations.CodexEnabled}";
     }
+
+    private static string ActivityPreferenceSignature(AppPreferences preferences)
+    {
+        var widget = preferences.EffectiveActivityWidget;
+        var integrations = preferences.EffectiveActivityIntegrations;
+        return $"{preferences.Language}|{widget.IsVisible}|{widget.IsLocked}|{widget.IsClickThrough}|{widget.Left}|{widget.Top}|{string.Join(',', widget.IncludedProviderIds!)}|{widget.ShowSessionLabels}|{integrations.ClaudeCodeEnabled}|{integrations.CodexEnabled}";
+    }
+
+    private static IEnumerable<AgentActivityProvider> ToActivityProviders(IEnumerable<string> providerIds) =>
+        providerIds.Select(providerId => providerId.Equals("claude-code", StringComparison.OrdinalIgnoreCase)
+            ? AgentActivityProvider.ClaudeCode
+            : AgentActivityProvider.Codex);
 
 }
