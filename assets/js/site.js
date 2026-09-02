@@ -11,6 +11,7 @@
       'nav.kofi': 'Support on Ko-fi',
       'nav.overview': 'Overview',
       'nav.layouts': 'Widget layouts',
+      'nav.activity': 'Traffic light',
       'nav.screens': 'Screens',
       'nav.features': 'Features',
       'nav.privacy': 'Privacy',
@@ -56,6 +57,19 @@
       'layouts.note.horizontal': 'Horizontal bars: fixed 420 px width, one row per provider and window.',
       'layouts.note.vertical': 'Vertical bars: a 420 px column for a screen edge, provider icons only.',
       'layouts.ctxnote': 'Real capture placed over an illustrated workspace, at the same scale.',
+      'activity.eyebrow': 'TRAFFIC LIGHT',
+      'activity.title': 'A second widget: what your agents are doing, right now.',
+      'activity.lede': 'Green is waiting, yellow is thinking, red is a tool running, grey is no signal. One light per session, so several agents at once stay legible. It is opt-in per provider, lives only in memory, and never sees a prompt or a path.',
+      'activity.tablist': 'Concurrent sessions',
+      'activity.tab.single': 'One session',
+      'activity.tab.grid': 'Three',
+      'activity.tab.carousel': 'Five or more',
+      'activity.alt.single': 'Traffic light with a single red light labelled AI Vitals',
+      'activity.alt.grid': 'Traffic light with three lights: two on the first row and one centred below',
+      'activity.alt.carousel': 'Traffic light with four lights in a two by two grid and page dots underneath',
+      'activity.note.single': 'One session: a single narrow light, as wide as the vertical quota widget.',
+      'activity.note.grid': 'Three sessions: two on top, the odd one centred below. The number beside a light counts tools running in parallel.',
+      'activity.note.carousel': 'Past four sessions the widget pages instead of growing: two by two, a new page every five seconds, held while the pointer rests on it.',
 
       'screens.eyebrow': 'TRAY AND DASHBOARD',
       'screens.title': 'One icon in the notification area does the whole job.',
@@ -134,6 +148,7 @@
       'nav.kofi': 'Apoyar en Ko-fi',
       'nav.overview': 'Resumen',
       'nav.layouts': 'Widgets',
+      'nav.activity': 'Semáforo',
       'nav.screens': 'Pantallas',
       'nav.features': 'Funciones',
       'nav.privacy': 'Privacidad',
@@ -179,6 +194,19 @@
       'layouts.note.horizontal': 'Barras horizontales: 420 px de ancho fijo, una fila por proveedor y ventana.',
       'layouts.note.vertical': 'Barras verticales: columna de 420 px para el borde de la pantalla, solo iconos.',
       'layouts.ctxnote': 'Captura real colocada sobre un escritorio ilustrado, a la misma escala.',
+      'activity.eyebrow': 'SEMÁFORO',
+      'activity.title': 'Un segundo widget: qué están haciendo tus agentes ahora mismo.',
+      'activity.lede': 'Verde es en espera, amarillo procesando, rojo una herramienta en marcha y gris sin señal. Un semáforo por sesión, para que varios agentes a la vez se sigan leyendo. Se activa por proveedor, vive solo en memoria y nunca ve un prompt ni una ruta.',
+      'activity.tablist': 'Sesiones simultáneas',
+      'activity.tab.single': 'Una sesión',
+      'activity.tab.grid': 'Tres',
+      'activity.tab.carousel': 'Cinco o más',
+      'activity.alt.single': 'Semáforo con una sola luz roja etiquetada AI Vitals',
+      'activity.alt.grid': 'Semáforo con tres luces: dos en la primera fila y una centrada debajo',
+      'activity.alt.carousel': 'Semáforo con cuatro luces en dos por dos y puntos de página debajo',
+      'activity.note.single': 'Una sesión: una sola luz estrecha, del ancho del widget de cuotas vertical.',
+      'activity.note.grid': 'Tres sesiones: dos arriba y la impar centrada debajo. El número junto a una luz cuenta las herramientas en paralelo.',
+      'activity.note.carousel': 'A partir de cuatro sesiones el widget pagina en vez de crecer: dos por dos, una página cada cinco segundos, y se detiene mientras el puntero está encima.',
 
       'screens.eyebrow': 'BANDEJA Y PANEL',
       'screens.title': 'Un icono en la bandeja hace todo el trabajo.',
@@ -456,6 +484,49 @@
   });
 
   if (ctxToggle) { ctxToggle.addEventListener('change', renderStage); }
+
+  /* ── activity traffic light switcher ────────────────────────────── */
+  var ACTIVITY = {
+    single: { shot: 'panel-single', dims: '108 × 147 px' },
+    grid: { shot: 'panel-grid', dims: '178 × 243 px' },
+    carousel: { shot: 'panel-carousel', dims: '178 × 259 px' }
+  };
+
+  var activityCurrent = 'single';
+  var activityDims = $('#activityDims');
+  var activityNote = $('#activityNote');
+
+  function renderActivity() {
+    Object.keys(ACTIVITY).forEach(function (key) {
+      var panel = document.getElementById(ACTIVITY[key].shot);
+      if (!panel) { return; }
+      var show = key === activityCurrent;
+      panel.hidden = !show;
+      panel.classList.toggle('is-hidden', !show);
+    });
+    if (activityDims) { activityDims.textContent = ACTIVITY[activityCurrent].dims; }
+    if (activityNote) {
+      var key = 'activity.note.' + activityCurrent;
+      activityNote.setAttribute('data-i18n', key);
+      activityNote.textContent = t(key);
+    }
+  }
+
+  var activityTabs = $$('[data-activity]');
+  function selectActivity(key, focus) {
+    activityCurrent = key;
+    activityTabs.forEach(function (tab) {
+      var on = tab.getAttribute('data-activity') === key;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) { tab.focus(); }
+    });
+    renderActivity();
+  }
+
+  activityTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { selectActivity(tab.getAttribute('data-activity'), false); });
+  });
 
   /* ── screen switcher ────────────────────────────────────────────── */
   var screenTabs = $$('[data-screen]');
