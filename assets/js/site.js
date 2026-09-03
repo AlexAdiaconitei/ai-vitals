@@ -59,15 +59,15 @@
       'layouts.ctxnote': 'Real capture placed over an illustrated workspace, at the same scale.',
       'activity.eyebrow': 'TRAFFIC LIGHT',
       'activity.title': 'A second widget: what your agents are doing, right now.',
-      'activity.lede': 'Green is waiting, yellow is thinking, red is a tool running, grey is no signal. One light per session, so several agents at once stay legible. It is opt-in per provider, lives only in memory, and never sees a prompt or a path.',
+      'activity.lede': 'Green is waiting, yellow is thinking, red is a tool running, grey is no signal. Each light counts how long its turn has been going. One light per session, so several agents at once stay legible. It is opt-in per provider, lives only in memory, and never sees a prompt or a path.',
       'activity.tablist': 'Concurrent sessions',
       'activity.tab.single': 'One session',
       'activity.tab.grid': 'Three',
       'activity.tab.carousel': 'Five or more',
-      'activity.alt.single': 'Traffic light with a single red light labelled AI Vitals',
+      'activity.alt.single': 'Traffic light with a single red light labelled AI Vitals, counting the running turn',
       'activity.alt.grid': 'Traffic light with three lights: two on the first row and one centred below',
       'activity.alt.carousel': 'Traffic light with four lights in a two by two grid and page dots underneath',
-      'activity.note.single': 'One session: a single narrow light, as wide as the vertical quota widget.',
+      'activity.note.single': 'One session: a single narrow light, as wide as the vertical quota widget. The time under it is the turn now running.',
       'activity.note.grid': 'Three sessions: two on top, the odd one centred below. The number beside a light counts tools running in parallel.',
       'activity.note.carousel': 'Past four sessions the widget pages instead of growing: two by two, a new page every five seconds, held while the pointer rests on it.',
 
@@ -196,15 +196,15 @@
       'layouts.ctxnote': 'Captura real colocada sobre un escritorio ilustrado, a la misma escala.',
       'activity.eyebrow': 'SEMÁFORO',
       'activity.title': 'Un segundo widget: qué están haciendo tus agentes ahora mismo.',
-      'activity.lede': 'Verde es en espera, amarillo procesando, rojo una herramienta en marcha y gris sin señal. Un semáforo por sesión, para que varios agentes a la vez se sigan leyendo. Se activa por proveedor, vive solo en memoria y nunca ve un prompt ni una ruta.',
+      'activity.lede': 'Verde es en espera, amarillo procesando, rojo una herramienta en marcha y gris sin señal. Cada semáforo cronometra lo que lleva su turno. Un semáforo por sesión, para que varios agentes a la vez se sigan leyendo. Se activa por proveedor, vive solo en memoria y nunca ve un prompt ni una ruta.',
       'activity.tablist': 'Sesiones simultáneas',
       'activity.tab.single': 'Una sesión',
       'activity.tab.grid': 'Tres',
       'activity.tab.carousel': 'Cinco o más',
-      'activity.alt.single': 'Semáforo con una sola luz roja etiquetada AI Vitals',
+      'activity.alt.single': 'Semáforo con una sola luz roja etiquetada AI Vitals, cronometrando el turno en curso',
       'activity.alt.grid': 'Semáforo con tres luces: dos en la primera fila y una centrada debajo',
       'activity.alt.carousel': 'Semáforo con cuatro luces en dos por dos y puntos de página debajo',
-      'activity.note.single': 'Una sesión: una sola luz estrecha, del ancho del widget de cuotas vertical.',
+      'activity.note.single': 'Una sesión: una sola luz estrecha, del ancho del widget de cuotas vertical. El tiempo de debajo es el turno en curso.',
       'activity.note.grid': 'Tres sesiones: dos arriba y la impar centrada debajo. El número junto a una luz cuenta las herramientas en paralelo.',
       'activity.note.carousel': 'A partir de cuatro sesiones el widget pagina en vez de crecer: dos por dos, una página cada cinco segundos, y se detiene mientras el puntero está encima.',
 
@@ -487,9 +487,9 @@
 
   /* ── activity traffic light switcher ────────────────────────────── */
   var ACTIVITY = {
-    single: { shot: 'panel-single', dims: '108 × 147 px' },
-    grid: { shot: 'panel-grid', dims: '178 × 243 px' },
-    carousel: { shot: 'panel-carousel', dims: '178 × 259 px' }
+    single: { shot: 'panel-single', dims: '108 × 161 px' },
+    grid: { shot: 'panel-grid', dims: '178 × 271 px' },
+    carousel: { shot: 'panel-carousel', dims: '178 × 287 px' }
   };
 
   var activityCurrent = 'single';
