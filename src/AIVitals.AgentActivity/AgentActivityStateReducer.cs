@@ -54,10 +54,10 @@ public sealed class AgentActivityStateReducer
                 session.Reset(turnActive: false);
                 break;
             case AgentActivityEvent.PromptSubmitted:
-                session.Reset(turnActive: true);
+                session.Reset(turnActive: true, turnStartedAt: signal.OccurredAt);
                 break;
             case AgentActivityEvent.ToolStarted:
-                session.TurnActive = true;
+                session.ObserveTurn(signal.OccurredAt);
                 session.StartTool(signal.ToolKey);
                 break;
             case AgentActivityEvent.ToolFinished:
@@ -115,7 +115,9 @@ public sealed class AgentActivityStateReducer
                     color,
                     pair.Value.ActiveToolCount,
                     pair.Value.FirstSeenAt,
-                    pair.Value.LastSignalAt);
+                    pair.Value.LastSignalAt,
+                    pair.Value.TurnStartedAt,
+                    pair.Value.TurnObservedFrom);
             })
             .ToArray();
     }
@@ -221,17 +223,32 @@ public sealed class AgentActivityStateReducer
 
         public bool TurnActive { get; set; }
         public string? WorkspaceLabel { get; set; }
+        public DateTimeOffset? TurnStartedAt { get; private set; }
+        public DateTimeOffset? TurnObservedFrom { get; private set; }
         public DateTimeOffset FirstSeenAt { get; set; } = DateTimeOffset.MinValue;
         public DateTimeOffset LastSignalAt { get; set; } = DateTimeOffset.MinValue;
         public DateTimeOffset LastTurnBoundaryAt { get; set; } = DateTimeOffset.MinValue;
         public int ActiveToolCount => _activeToolKeys.Count + _anonymousToolCount;
 
-        public void Reset(bool turnActive)
+        public void Reset(bool turnActive, DateTimeOffset? turnStartedAt = null)
         {
             TurnActive = turnActive;
+            TurnStartedAt = turnStartedAt;
+            TurnObservedFrom = null;
             _activeToolKeys.Clear();
             _finishedToolKeys.Clear();
             _anonymousToolCount = 0;
+        }
+
+        /// <summary>
+        /// Marks the turn active from a signal that is not its beginning. Only the first such signal
+        /// counts: later tools in the same turn must not push the lower bound forward.
+        /// </summary>
+        public void ObserveTurn(DateTimeOffset occurredAt)
+        {
+            if (!TurnActive && TurnStartedAt is null && TurnObservedFrom is null)
+                TurnObservedFrom = occurredAt;
+            TurnActive = true;
         }
 
         public void StartTool(string? toolKey)

@@ -197,22 +197,23 @@ The sidebar uses a neutral border and one selected surface. Do not add different
 
 - The activity traffic light is a second independent always-on-top window, not a quota visual mode.
 - It shares the usage widget's frame: 7 px margin, `11,8,11,10` padding, 15 px corner radius, the same drop shadow, and a 19 px header. The header carries the rings icon and the lock, unlock, or click-through glyph, and nothing else: the widget is too narrow to spend a row on its own name, and every light already reports its own state.
-- One light per agent session, plus one grey light for an enabled provider that has not reported yet. Each light is a 64 × 90 tile with a 26 px lamp column of three 13 px lamps.
+- One light per agent session, plus one grey light for an enabled provider that has not reported yet. Each light is a 64 × 104 tile with a 26 px lamp column of three 13 px lamps.
+- A light footer carries how long the current turn has run, as `m:ss` and `h:mm:ss` past an hour. It is measured from the `UserPromptSubmit` this application saw, so a turn already running at startup shows nothing rather than a guess, and a stale session stops counting instead of implying the agent is still working. The row is reserved even when empty: a row that appeared with each prompt would resize the window every few seconds.
 - The grid never exceeds two rows by two columns, and its width stays inside the range the vertical usage widget occupies:
 
   | Sessions | Grid | Window |
   | --- | --- | --- |
-  | 1 | one light | `108 × 147` |
-  | 2 | two columns | `178 × 147` |
-  | 3 | two, then one centred | `178 × 243` |
-  | 4 | two by two | `178 × 243` |
-  | 5 or more | two by two, paged | `178 × 259` |
+  | 1 | one light | `108 × 161` |
+  | 2 | two columns | `178 × 161` |
+  | 3 | two, then one centred | `178 × 271` |
+  | 4 | two by two | `178 × 271` |
+  | 5 or more | two by two, paged | `178 × 287` |
 
 - Past four sessions the widget pages rather than grows. One page every five seconds, held while the pointer is over the widget, with page dots and an accessible page position. The page turn is a 200 ms cross-fade, and an instant swap when the system asks for no animation or reports high contrast.
 - Order lights by the configured provider order, then by first sighting. A light must never change place because its own state changed.
 - Red means at least one tool is running, yellow means a turn is processing without a running tool, and green means a fresh idle event. All lamps dimmed plus “No signal” is the restart, missing, invalid, or stale state.
 - Aggregate conservatively wherever one color stands for the whole widget, as the tray state row does: red, then yellow, then unknown, then green. Never turn missing or stale input green.
-- Keep each lamp static. A state change must not blink, pulse, resize a light, or raise a notification. Only two things move, and neither reports state: the carousel between pages, and an overlong label sliding to reveal its end.
+- Keep each lamp static. A state change must not blink, pulse, resize a light, or raise a notification. Three things may change on their own, and none of them reports the traffic-light state: the carousel between pages, an overlong label sliding to reveal its end, and the turn timer counting seconds. One shared 1 Hz clock drives every timer, and it runs only while a turn is live and the widget is on screen.
 - Label a light with its session's leaf directory name when the user opted into session labels, otherwise with the provider name, disambiguated by the first four characters of the pseudonymous session key when one provider owns several sessions. The full text is always in the tooltip.
 - A label that fits is centred and still. One that does not slides between its two ends at 26 px/s, holding 1.4 s at each end, capped at 30 fps, and only while its light is on screen. Where the system asks for no animation or reports high contrast, the label is trimmed with an ellipsis and never moves.
 - Always pair color with the localized text status and an accessible name. Show the tool count only from two upward: red already means one tool is running, so a badge reading `1` repeats the color instead of adding to it.
