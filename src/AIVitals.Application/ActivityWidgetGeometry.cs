@@ -16,7 +16,7 @@ public static class ActivityWidgetGeometry
 {
     public const int MaximumVisibleTiles = 4;
     public const double TileWidth = 64;
-    public const double TileHeight = 90;
+    public const double TileHeight = 104;
     public const double TileGap = 6;
 
     /// <summary>Border margin, padding and border of the widget frame, plus the 3 px margin each tile carries.</summary>

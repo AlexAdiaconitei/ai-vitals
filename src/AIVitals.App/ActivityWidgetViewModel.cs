@@ -16,6 +16,9 @@ namespace AIVitals.App;
 public sealed class ActivityTileViewModel : INotifyPropertyChanged
 {
     private TrafficLightColor _color = TrafficLightColor.Unknown;
+    private DateTimeOffset? _turnSince;
+    private bool _turnSinceIsExact;
+    private string _elapsedText = string.Empty;
     private string _displayLabel = string.Empty;
     private string _tooltipText = string.Empty;
     private string _accessibleName = string.Empty;
@@ -48,6 +51,14 @@ public sealed class ActivityTileViewModel : INotifyPropertyChanged
     public string TooltipText { get => _tooltipText; private set => Set(ref _tooltipText, value); }
     public string AccessibleName { get => _accessibleName; private set => Set(ref _accessibleName, value); }
     public string ToolCountText { get => _toolCountText; private set => Set(ref _toolCountText, value); }
+    public string ElapsedText { get => _elapsedText; private set => Set(ref _elapsedText, value); }
+
+    /// <summary>
+    /// A turn is only being timed when it is running and we saw it start. A stale session keeps its
+    /// last known start, but showing a ticking clock for an agent we lost contact with would lie.
+    /// </summary>
+    public bool HasRunningTurn => _turnSince is not null
+                                  && _color is TrafficLightColor.Red or TrafficLightColor.Yellow;
     public Visibility ToolCountVisibility { get => _toolCountVisibility; private set => Set(ref _toolCountVisibility, value); }
 
     public void Apply(
@@ -57,6 +68,8 @@ public sealed class ActivityTileViewModel : INotifyPropertyChanged
         bool disambiguate)
     {
         _color = session?.Color ?? TrafficLightColor.Unknown;
+        _turnSince = session?.TurnStartedAt ?? session?.TurnObservedFrom;
+        _turnSinceIsExact = session?.TurnStartedAt is not null;
         var providerName = Provider == AgentActivityProvider.ClaudeCode ? "CLAUDE" : "CODEX";
         var workspace = showSessionLabels ? session?.WorkspaceLabel : null;
 
@@ -91,6 +104,27 @@ public sealed class ActivityTileViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(RedOpacity));
         OnPropertyChanged(nameof(YellowOpacity));
         OnPropertyChanged(nameof(GreenOpacity));
+        OnPropertyChanged(nameof(HasRunningTurn));
+    }
+
+    public void Tick(DateTimeOffset now)
+    {
+        if (!HasRunningTurn)
+        {
+            ElapsedText = string.Empty;
+            return;
+        }
+
+        var elapsed = now - _turnSince!.Value;
+        // A hook timestamp can sit a hair ahead of the app's own clock; clamp instead of showing
+        // a negative age.
+        if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
+        var clock = elapsed < TimeSpan.FromHours(1)
+            ? $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:00}"
+            : $"{(int)elapsed.TotalHours}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+        // A turn already under way when AI Vitals started has no known beginning, so the reading is
+        // a lower bound and says so rather than passing for an exact duration.
+        ElapsedText = _turnSinceIsExact ? clock : "~" + clock;
     }
 
     public static string StatusFor(string language, TrafficLightColor color) => Text(language, color switch
@@ -126,10 +160,14 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
     /// <summary>Bursts of parallel tool events would otherwise repaint the widget dozens of times a second.</summary>
     private static readonly TimeSpan CoalesceInterval = TimeSpan.FromMilliseconds(150);
 
+    /// <summary>One shared clock drives every turn timer, and only while a turn is actually running.</summary>
+    private static readonly TimeSpan ClockInterval = TimeSpan.FromSeconds(1);
+
     private readonly IAgentActivitySource _source;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _coalesceTimer;
     private readonly DispatcherTimer _carouselTimer;
+    private readonly DispatcherTimer _clockTimer;
     private readonly Dictionary<string, ActivityTileViewModel> _tiles = [];
     private IReadOnlyList<ActivityTileViewModel> _orderedTiles = [];
     private AgentActivitySnapshot _snapshot;
@@ -155,6 +193,8 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
         _coalesceTimer.Tick += OnCoalesceTick;
         _carouselTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher) { Interval = CarouselInterval };
         _carouselTimer.Tick += OnCarouselTick;
+        _clockTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher) { Interval = ClockInterval };
+        _clockTimer.Tick += OnClockTick;
         _source.SnapshotChanged += OnSnapshotChanged;
         Rebuild();
     }
@@ -205,6 +245,7 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
     {
         _isActive = isActive;
         UpdateCarouselTimer();
+        UpdateClockTimer();
     }
 
     /// <summary>Holds the current page while the pointer rests on the widget.</summary>
@@ -228,6 +269,8 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
         _coalesceTimer.Tick -= OnCoalesceTick;
         _carouselTimer.Stop();
         _carouselTimer.Tick -= OnCarouselTick;
+        _clockTimer.Stop();
+        _clockTimer.Tick -= OnClockTick;
     }
 
     private void OnSnapshotChanged(AgentActivitySnapshot snapshot)
@@ -249,6 +292,21 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
         _snapshot = _pendingSnapshot;
         _pendingSnapshot = null;
         Rebuild();
+    }
+
+    private void OnClockTick(object? sender, EventArgs eventArgs) => TickTimers();
+
+    private void TickTimers()
+    {
+        var now = DateTimeOffset.UtcNow;
+        foreach (var tile in _orderedTiles) tile.Tick(now);
+    }
+
+    private void UpdateClockTimer()
+    {
+        var shouldRun = _isActive && _orderedTiles.Any(tile => tile.HasRunningTurn);
+        if (shouldRun && !_clockTimer.IsEnabled) _clockTimer.Start();
+        else if (!shouldRun && _clockTimer.IsEnabled) _clockTimer.Stop();
     }
 
     private void OnCarouselTick(object? sender, EventArgs eventArgs)
@@ -292,8 +350,11 @@ public sealed class ActivityWidgetViewModel : INotifyPropertyChanged, IDisposabl
         _orderedTiles = ordered;
 
         if (_page >= PageCount) _page = 0;
+        // Tick before rendering so a tile never appears with a blank or stale duration.
+        TickTimers();
         RenderPage();
         UpdateCarouselTimer();
+        UpdateClockTimer();
 
         OnPropertyChanged(nameof(TileCount));
         OnPropertyChanged(nameof(StatusText));

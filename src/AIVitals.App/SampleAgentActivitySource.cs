@@ -11,6 +11,9 @@ public sealed class SampleAgentActivitySource : IAgentActivitySource
 {
     private static readonly DateTimeOffset CapturedAt = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
+    /// <summary>Sample turn ages, so the preview shows the timer the real widget would run.</summary>
+    private static readonly TimeSpan[] SampleTurnAges = [TimeSpan.FromSeconds(127), TimeSpan.FromSeconds(8)];
+
     public AgentActivitySnapshot Current { get; private set; } = Build([AgentActivityProvider.ClaudeCode, AgentActivityProvider.Codex]);
 
     public event Action<AgentActivitySnapshot>? SnapshotChanged;
@@ -33,6 +36,7 @@ public sealed class SampleAgentActivitySource : IAgentActivitySource
             for (var index = 0; index < scenes.Length; index++)
             {
                 var (label, color, tools) = scenes[index];
+                var running = color is TrafficLightColor.Red or TrafficLightColor.Yellow;
                 sessions.Add(new AgentActivitySessionSnapshot(
                     provider,
                     $"{provider}-sample-{index}",
@@ -41,7 +45,11 @@ public sealed class SampleAgentActivitySource : IAgentActivitySource
                     color,
                     tools,
                     CapturedAt,
-                    CapturedAt));
+                    CapturedAt,
+                    running
+                        ? DateTimeOffset.UtcNow - SampleTurnAges[index % SampleTurnAges.Length]
+                        : null,
+                    null));
             }
         }
 

@@ -167,6 +167,8 @@ AI Vitals starts in the notification area. Left-click the tray icon for quick st
 
 Use the tray menu to show or hide the widget, change its layout, lock its position, or enable click-through. Drag any free area to move it; the widget snaps to the current monitor's work area and restores its last position at startup.
 
+Each light also shows how long its current turn has been running, counted from the prompt AI Vitals saw. A turn already under way when the application starts shows no time rather than a guess, and a session that goes quiet stops counting instead of implying the agent is still working.
+
 A session name wider than its light slides gently between its two ends so the whole name can be read, and stops at an ellipsis when Windows animations are off or high contrast is on. The full name is always in the tooltip.
 
 Once an activity integration is enabled, the tray menu shows two tabs: one for the usage widget and one for the traffic light. The traffic-light tab carries the same show, lock, click-through, and recover actions, plus a shortcut to its settings and a read-only row with the current state and session count. Without an enabled integration the tab strip is not shown at all.

@@ -52,7 +52,12 @@ public sealed record AgentActivitySessionSnapshot(
     TrafficLightColor Color,
     int ActiveToolCount,
     DateTimeOffset FirstSeenAt,
-    DateTimeOffset LastSignalAt);
+    DateTimeOffset LastSignalAt,
+    // When the turn now running began, or null when no prompt was seen.
+    DateTimeOffset? TurnStartedAt,
+    // When this application first saw the running turn, for a turn that was already under way
+    // before it started listening. It is a lower bound, never the real beginning.
+    DateTimeOffset? TurnObservedFrom);
 
 public sealed record AgentActivityProviderSnapshot(
     AgentActivityProvider Provider,

@@ -216,6 +216,111 @@ public sealed class AgentActivityStateReducerTests
         Assert.Equal("beta", Assert.Single(snapshot.Sessions).WorkspaceLabel);
     }
 
+    [Fact]
+    public void A_prompt_starts_the_turn_clock_and_a_stop_clears_it()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 5));
+
+        Assert.Equal(
+            Now.AddSeconds(5),
+            Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(6)).Sessions).TurnStartedAt);
+
+        reducer.Apply(Signal(AgentActivityEvent.TurnStopped, seconds: 9));
+
+        Assert.Null(Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(10)).Sessions).TurnStartedAt);
+    }
+
+    [Fact]
+    public void Tools_within_a_turn_do_not_restart_its_clock()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 1));
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-1", seconds: 4));
+        reducer.Apply(Signal(AgentActivityEvent.ToolFinished, "tool-1", seconds: 8));
+
+        Assert.Equal(
+            Now.AddSeconds(1),
+            Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(9)).Sessions).TurnStartedAt);
+    }
+
+    [Fact]
+    public void A_turn_already_running_when_the_app_starts_is_timed_from_first_sight_as_a_lower_bound()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-1", seconds: 2));
+
+        var session = Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(3)).Sessions);
+
+        Assert.Equal(TrafficLightColor.Red, session.Color);
+        Assert.Null(session.TurnStartedAt);
+        Assert.Equal(Now.AddSeconds(2), session.TurnObservedFrom);
+    }
+
+    [Fact]
+    public void Later_tools_do_not_push_the_lower_bound_forward()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-1", seconds: 2));
+        reducer.Apply(Signal(AgentActivityEvent.ToolFinished, "tool-1", seconds: 5));
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-2", seconds: 7));
+
+        Assert.Equal(
+            Now.AddSeconds(2),
+            Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(8)).Sessions).TurnObservedFrom);
+    }
+
+    [Fact]
+    public void A_prompt_supersedes_the_lower_bound_with_a_real_beginning()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-1", seconds: 2));
+        reducer.Apply(Signal(AgentActivityEvent.TurnStopped, seconds: 6));
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 9));
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-2", seconds: 11));
+
+        var session = Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(12)).Sessions);
+
+        Assert.Equal(Now.AddSeconds(9), session.TurnStartedAt);
+        Assert.Null(session.TurnObservedFrom);
+    }
+
+    [Fact]
+    public void Stopping_a_turn_clears_the_lower_bound_too()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.ToolStarted, "tool-1", seconds: 2));
+        reducer.Apply(Signal(AgentActivityEvent.TurnStopped, seconds: 5));
+
+        var session = Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(6)).Sessions);
+
+        Assert.Null(session.TurnStartedAt);
+        Assert.Null(session.TurnObservedFrom);
+    }
+
+    [Fact]
+    public void A_new_session_event_clears_a_turn_left_over_from_the_previous_one()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 1));
+        reducer.Apply(Signal(AgentActivityEvent.SessionStarted, seconds: 6));
+
+        Assert.Null(Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(7)).Sessions).TurnStartedAt);
+    }
+
+    [Fact]
+    public void A_second_prompt_restarts_the_turn_clock()
+    {
+        var reducer = new AgentActivityStateReducer();
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 1));
+        reducer.Apply(Signal(AgentActivityEvent.TurnStopped, seconds: 4));
+        reducer.Apply(Signal(AgentActivityEvent.PromptSubmitted, seconds: 20));
+
+        Assert.Equal(
+            Now.AddSeconds(20),
+            Assert.Single(SnapshotClaude(reducer, Now.AddSeconds(21)).Sessions).TurnStartedAt);
+    }
+
     private static AgentActivitySignal Signal(
         AgentActivityEvent activityEvent,
         string? tool = null,

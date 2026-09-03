@@ -16,6 +16,8 @@
                     <RowDefinition Height="14" />
                     <RowDefinition Height="4" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="3" />
+                    <RowDefinition Height="11" />
                 </Grid.RowDefinitions>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -49,6 +51,13 @@
                                FontFamily="Cascadia Mono, Consolas" FontSize="8" FontWeight="Bold"
                                Foreground="{DynamicResource MutedTextBrush}" />
                 </StackPanel>
+
+                <!-- Reserved even when empty: a row that appeared with each prompt would resize the
+                     window every few seconds. -->
+                <TextBlock Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Text="{Binding ElapsedText}"
+                           FontFamily="Cascadia Mono, Consolas" FontSize="8"
+                           Foreground="{DynamicResource MutedTextBrush}" />
             </Grid>
         </DataTemplate>
 

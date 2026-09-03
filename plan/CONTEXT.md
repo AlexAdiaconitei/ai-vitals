@@ -124,6 +124,12 @@ The leaf directory name of an agent session, shown on its light only when the us
 
 _Avoid:_ working directory, project path, session name.
 
+**Turn timer**
+
+How long the turn now running has taken, measured from the prompt this application saw. Absent when no prompt was seen, and stopped when the session goes stale.
+
+_Avoid:_ session duration, response time, latency.
+
 **Activity carousel**
 
 The paging the activity widget falls back to past four session lights, so it never grows beyond two rows by two columns.
@@ -144,6 +150,6 @@ _Avoid:_ popup, widget.
 
 **Visual state**
 
-A stable signal expressed through color, icon, and text or pattern, without system notifications, motion, or geometry changes. Two motions are sanctioned exceptions, and neither carries state: the activity carousel between pages, and a sliding label revealing a name too long for its light.
+A stable signal expressed through color, icon, and text or pattern, without system notifications, motion, or geometry changes. Three exceptions are sanctioned, and none of them carries the state itself: the activity carousel between pages, a sliding label revealing a name too long for its light, and the turn timer counting seconds.
 
 _Avoid:_ predictive alert, toast.
