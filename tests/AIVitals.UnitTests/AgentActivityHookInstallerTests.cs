@@ -185,6 +185,54 @@ public sealed class AgentActivityHookInstallerTests : IDisposable
         Assert.DoesNotContain("AgentActivity.Hook", await File.ReadAllTextAsync(settings));
     }
 
+    [Fact]
+    public async Task A_handler_whose_windows_command_is_stale_gets_repaired()
+    {
+        Directory.CreateDirectory(_directory);
+        var helper = Path.Combine(_directory, "AIVitals.AgentActivity.Hook.exe");
+        await File.WriteAllTextAsync(helper, "test");
+        var settings = Path.Combine(_directory, "hooks.json");
+        var installer = new AgentActivityHookInstaller(helper, settings, AgentActivityProvider.Codex, includeWindowsCommand: true);
+        await installer.InstallAsync();
+
+        // Reproduces what an earlier build wrote: the right command, but a Windows command that
+        // PowerShell cannot run. Only the command used to be compared, so this survived forever.
+        var root = JsonNode.Parse(await File.ReadAllTextAsync(settings))!.AsObject();
+        var handler = root["hooks"]!["Stop"]!.AsArray()[0]!["hooks"]!.AsArray()[0]!.AsObject();
+        handler["commandWindows"] = handler["command"]!.GetValue<string>();
+        await File.WriteAllTextAsync(settings, root.ToJsonString());
+
+        Assert.False(await installer.IsInstalledAsync());
+        Assert.Equal(AgentActivityHookInstallationResult.Installed, await installer.InstallAsync());
+
+        var repaired = JsonNode.Parse(await File.ReadAllTextAsync(settings))!
+            ["hooks"]!["Stop"]!.AsArray();
+        var commands = repaired
+            .SelectMany(group => group!["hooks"]!.AsArray())
+            .Select(entry => entry!["commandWindows"]!.GetValue<string>())
+            .ToArray();
+
+        Assert.Single(commands);
+        Assert.StartsWith("& \"", commands[0]);
+        Assert.True(await installer.IsInstalledAsync());
+    }
+
+    [Fact]
+    public async Task A_handler_that_is_already_exactly_right_is_left_alone()
+    {
+        Directory.CreateDirectory(_directory);
+        var helper = Path.Combine(_directory, "AIVitals.AgentActivity.Hook.exe");
+        await File.WriteAllTextAsync(helper, "test");
+        var settings = Path.Combine(_directory, "hooks.json");
+        var installer = new AgentActivityHookInstaller(helper, settings, AgentActivityProvider.Codex, includeWindowsCommand: true);
+
+        await installer.InstallAsync();
+        var first = await File.ReadAllTextAsync(settings);
+
+        Assert.Equal(AgentActivityHookInstallationResult.AlreadyInstalled, await installer.InstallAsync());
+        Assert.Equal(first, await File.ReadAllTextAsync(settings));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true);
