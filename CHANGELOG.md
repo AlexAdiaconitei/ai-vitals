@@ -5,27 +5,27 @@ All notable changes to AI Vitals are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.2.0 - 2026-09-05
 
 ### Added
 
+- An activity traffic light, a second always-on-top widget that shows what your agents are doing right now. Green is a turn that ended, yellow a turn being processed, red at least one tool running, and grey no reliable signal. It starts grey after every restart and returns to grey when a session goes quiet, because a stale reading must never pass for an idle agent. It keeps its own position, lock and click-through settings, and `Ctrl+Shift+U` recovers it alongside the quota widget.
+- The traffic light shows one light per agent session, so several agents at once stay legible. It holds at most two rows by two columns at the width the vertical quota widget already occupies: one session is a single narrow light, three place the odd one centred on the second row, and past four the widget pages through them every five seconds instead of growing, pausing while the pointer rests on it. Lights keep their place when their state changes, and a session that ends without saying so disappears once it outlives every freshness window.
+- Each light times the turn it is running, under the lamps. The duration is measured from the prompt AI Vitals saw, so a turn already under way when the application starts reads as a lower bound with a leading `~` rather than passing for an exact time, and a session that goes quiet stops counting. A count beside a light appears from two tools upward, where it reports work happening in parallel that the colour alone cannot.
+- Sessions can be told apart by their folder. **Show session folder** is off by default; enabling it labels each light with the last directory name of its session, never the path. A label too wide for its light slides between its two ends so the whole name can be read, and trims to an ellipsis instead when Windows animations are off or high contrast is on.
+- Claude Code and Codex feed the traffic light through opt-in lifecycle hooks, enabled independently and only after explicit confirmation. Codex additionally requires the new hooks to be reviewed in its `/hooks` screen. Installation is additive and reversible: hooks written by anything else are left untouched, and uninstalling AI Vitals removes only its own.
+- The tray menu splits its widget controls into one tab per widget. The traffic-light tab carries show, lock, click-through and recover, a shortcut to its settings, and a read-only row with the current state and session count. It appears only once a provider integration is enabled, so an installation without one keeps the menu it had.
+- The Widget settings tab previews the traffic light beside the quota widget, using a fixed sample scene that never subscribes to live activity.
 - A waiting update is announced where the application is actually visible: the tray icon carries a dot, a system notification is raised once per version, the left-click quick view carries the same install entry as the right-click menu, and the dashboard's About tab shows a dot in its navigation entry.
-- A native C# activity traffic-light widget can be enabled independently for Claude Code and Codex. It tracks concurrent tools and sessions, starts and expires to a gray unknown state, and keeps its own position, lock, and click-through settings.
-- The traffic light shows one small light per agent session rather than a single large one. It stays within two rows by two columns at the width the vertical usage widget already occupies, centres a lone light on the second row, and pages through a carousel every five seconds past four sessions. Its frame, header, and interaction glyph now match the usage widget.
-- Sessions can be told apart by their folder. Enabling "Show session folder" makes the helper add the leaf directory name of the session, never the path, and that name is shown on the light and kept in memory only. The option is off by default and rewrites its hooks when toggled.
-- The Widget settings tab previews the traffic light beside the usage widget, using a fixed sample scene that never subscribes to the live activity pipe.
-- Each light counts how long its current turn has been running, under the lamps. The duration is derived from the prompt timestamp already crossing the pipe, so it needs no new data from either agent: a turn already running at startup shows nothing rather than a guess, and a stale session stops counting. One shared clock ticks only while a turn is live and the widget is visible.
-- The traffic light's header carries only the rings icon and the interaction glyph, matching the vertical usage widget. The application name and the aggregate state dot are gone: the widget is narrow, and each light already reports its own state.
-- The tool badge on a light appears from two tools upward. A red light already means one tool is running, so a badge reading `1` only ever appeared where it added nothing.
-- A session label too wide for its light slides between its two ends instead of being cut off, holding at each end so it can be read, and only while the light is on screen. With Windows animations off or high contrast on it is trimmed with an ellipsis and stays still.
-- The tray menu splits its widget controls into one tab per widget. The traffic-light tab offers show, lock, click-through, and recover, a shortcut to its settings, and a read-only state row with the current color and session count. It appears only once a provider integration is enabled, so an install without one keeps the menu it had.
-- Activity hooks are explicit opt-in integrations. Their helper pseudonymizes session and tool identifiers before sending a minimal event over a current-user named pipe; prompts, responses, transcripts, paths, tool input, and tool output never enter the application state, SQLite, history, or exports.
 
 ### Fixed
 
-- A session whose agent stops without reporting an end no longer occupies the traffic light forever. Sessions are dropped once they outlive every freshness window, and each provider keeps at most 32 of them.
 - The pending-update banner in the tray menu follows the interface language. Its text was formatted once, when the update arrived, and kept the language of that moment for the rest of the session. The same applies to the version and update copy in the About tab, which is now rebuilt when the language is applied.
 - Claude Code no longer turns transient OAuth metadata into permanent quota columns. For example, Anthropic briefly returned an undocumented `nimbus_quill` object with `0%` utilization and no reset window; older builds stored it as an unknown `Q` quota and restored it after every restart. Unknown windowless OAuth fields now remain historical diagnostics instead of occupying the dashboard or widget, and new readings are accepted only for the published five-hour and seven-day quota families.
+
+### Security
+
+- Activity never leaves the machine and never reaches storage. The local hook helper reads only a session identifier, a tool identifier and the event type, pseudonymises both identifiers with HMAC before they cross a named pipe restricted to the current user, and discards prompts, responses, transcripts, paths, tool input and tool output. Traffic-light state lives in memory alone: it is never written to SQLite, history or exports, and it is gone when the application closes. The optional session folder is the only agent-supplied text that is ever displayed, is reduced to a single directory name, and is rejected at the pipe if it carries a path separator or a control character.
 
 ## 0.1.1 - 2026-08-08
 
