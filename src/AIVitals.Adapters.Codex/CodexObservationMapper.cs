@@ -79,6 +79,7 @@ internal static class CodexObservationMapper
         var limitId = snapshot.TryGetProperty("limitId", out var limitIdElement)
             ? limitIdElement.GetString() ?? fallbackLimitId
             : fallbackLimitId;
+        if (limitId.Equals("base_model_inference", StringComparison.OrdinalIgnoreCase)) return;
 
         // Keep primary last so the minimal single-row phase-01 UI favors the main quota.
         MapWindow(snapshot, "secondary", limitId, observedAtUtc, observations);

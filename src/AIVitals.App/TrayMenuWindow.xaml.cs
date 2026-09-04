@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using AIVitals.AgentActivity;
 using AIVitals.Application;
 using Forms = System.Windows.Forms;
 using InputKeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -18,15 +20,26 @@ public partial class TrayMenuWindow : Window
     private readonly Func<Task> _toggleClickThrough;
     private readonly Func<Task> _recover;
     private readonly Func<Task> _moveHere;
+    private readonly Func<Task> _toggleActivityWidget;
+    private readonly Func<Task> _toggleActivityLock;
+    private readonly Func<Task> _toggleActivityClickThrough;
+    private readonly Func<Task> _recoverActivity;
+    private readonly Func<AgentActivitySnapshot?> _activitySnapshot;
     private readonly Func<string, Task> _setTheme;
     private readonly Func<Task> _applyUpdate;
     private readonly Func<Task> _exit;
     private WidgetPreferences _widget = new();
+    private ActivityWidgetPreferences _activityWidget = new();
+    private bool _activityAvailable;
+    private bool _activityTabSelected;
     private string _theme = "System";
     private AppUpdateStatus? _pendingUpdate;
 
     private const double CollapsedHeight = 458;
     private const double HeightWithUpdateBanner = 552;
+
+    /// <summary>The tab strip only exists once a second widget does, so its height is conditional too.</summary>
+    private const double TabStripHeight = 44;
 
     public TrayMenuWindow(
         Action openDashboard,
@@ -37,6 +50,11 @@ public partial class TrayMenuWindow : Window
         Func<Task> toggleClickThrough,
         Func<Task> recover,
         Func<Task> moveHere,
+        Func<Task> toggleActivityWidget,
+        Func<Task> toggleActivityLock,
+        Func<Task> toggleActivityClickThrough,
+        Func<Task> recoverActivity,
+        Func<AgentActivitySnapshot?> activitySnapshot,
         Func<string, Task> setTheme,
         Func<Task> applyUpdate,
         Func<Task> exit)
@@ -49,6 +67,11 @@ public partial class TrayMenuWindow : Window
         _toggleClickThrough = toggleClickThrough;
         _recover = recover;
         _moveHere = moveHere;
+        _toggleActivityWidget = toggleActivityWidget;
+        _toggleActivityLock = toggleActivityLock;
+        _toggleActivityClickThrough = toggleActivityClickThrough;
+        _recoverActivity = recoverActivity;
+        _activitySnapshot = activitySnapshot;
         _setTheme = setTheme;
         _applyUpdate = applyUpdate;
         _exit = exit;
@@ -56,9 +79,20 @@ public partial class TrayMenuWindow : Window
         Deactivated += (_, _) => Hide();
     }
 
-    public void UpdateState(WidgetPreferences widget, string theme)
+    /// <param name="activityAvailable">
+    /// Whether the traffic light is switched on in settings. Its tab is hidden otherwise, because
+    /// with no provider integration enabled the widget has nothing to report.
+    /// </param>
+    public void UpdateState(
+        WidgetPreferences widget,
+        string theme,
+        ActivityWidgetPreferences activityWidget,
+        bool activityAvailable)
     {
         _widget = WidgetPreferenceRules.Normalize(widget);
+        _activityWidget = ActivityWidgetPreferenceRules.Normalize(activityWidget);
+        _activityAvailable = activityAvailable;
+        if (!activityAvailable) _activityTabSelected = false;
         _theme = theme;
         ApplySelectionStates();
         // The banner text is formatted, not bound, so a language change has to reformat it here.
@@ -79,7 +113,8 @@ public partial class TrayMenuWindow : Window
     {
         var pending = _pendingUpdate is { IsPending: true };
         UpdateBanner.Visibility = pending ? Visibility.Visible : Visibility.Collapsed;
-        Height = pending ? HeightWithUpdateBanner : CollapsedHeight;
+        Height = (pending ? HeightWithUpdateBanner : CollapsedHeight)
+                 + (_activityAvailable ? TabStripHeight : 0);
         if (!pending) return;
 
         var format = System.Windows.Application.Current?.TryFindResource("UpdateReadyBanner") as string;
@@ -102,6 +137,8 @@ public partial class TrayMenuWindow : Window
 
     private void ApplySelectionStates()
     {
+        ApplyTabSelection();
+        ApplyActivityState();
         WidgetVisibilityGlyph.Kind = _widget.IsVisible ? WidgetGlyphKind.Visible : WidgetGlyphKind.Hidden;
         WidgetLockGlyph.Kind = _widget.IsLocked ? WidgetGlyphKind.Locked : WidgetGlyphKind.Unlocked;
         WidgetClickThroughGlyph.Kind = _widget.IsClickThrough ? WidgetGlyphKind.ClickThroughOn : WidgetGlyphKind.ClickThroughOff;
@@ -116,6 +153,56 @@ public partial class TrayMenuWindow : Window
         Select(SystemButton, _theme.Equals("System", StringComparison.OrdinalIgnoreCase), "WarmBrush");
     }
 
+    private void ApplyTabSelection()
+    {
+        WidgetTabStrip.Visibility = _activityAvailable ? Visibility.Visible : Visibility.Collapsed;
+        var activity = _activityAvailable && _activityTabSelected;
+        UsageTabPanel.Visibility = activity ? Visibility.Collapsed : Visibility.Visible;
+        ActivityTabPanel.Visibility = activity ? Visibility.Visible : Visibility.Collapsed;
+        Select(UsageTabButton, !activity, "SignalBrush");
+        Select(ActivityTabButton, activity, "SignalBrush");
+    }
+
+    private void ApplyActivityState()
+    {
+        ActivityVisibilityGlyph.Kind = _activityWidget.IsVisible ? WidgetGlyphKind.Visible : WidgetGlyphKind.Hidden;
+        ActivityLockGlyph.Kind = _activityWidget.IsLocked ? WidgetGlyphKind.Locked : WidgetGlyphKind.Unlocked;
+        ActivityClickThroughGlyph.Kind = _activityWidget.IsClickThrough
+            ? WidgetGlyphKind.ClickThroughOn
+            : WidgetGlyphKind.ClickThroughOff;
+        Select(ToggleActivityButton, _activityWidget.IsVisible, "SignalBrush");
+        Select(ActivityLockButton, _activityWidget.IsLocked, "SignalBrush");
+        Select(ActivityClickThroughButton, _activityWidget.IsClickThrough, "SignalBrush");
+
+        var snapshot = _activitySnapshot();
+        var color = snapshot?.Color ?? TrafficLightColor.Unknown;
+        ActivityStateDot.SetResourceReference(Shape.FillProperty, color switch
+        {
+            TrafficLightColor.Red => "ActivityRedBrush",
+            TrafficLightColor.Yellow => "ActivityYellowBrush",
+            TrafficLightColor.Green => "ActivityGreenBrush",
+            _ => "ActivityGreyBrush"
+        });
+        ActivityStateText.Text = Text(color switch
+        {
+            TrafficLightColor.Red => "ActivityToolRunning",
+            TrafficLightColor.Yellow => "ActivityThinking",
+            TrafficLightColor.Green => "ActivityIdle",
+            _ => "ActivityUnknown"
+        });
+
+        var sessions = snapshot?.Sessions.Count ?? 0;
+        ActivitySessionText.Text = sessions switch
+        {
+            0 => string.Empty,
+            1 => Text("TrayActivitySession"),
+            _ => string.Format(Text("TrayActivitySessions"), sessions)
+        };
+    }
+
+    private static string Text(string key) =>
+        System.Windows.Application.Current?.TryFindResource(key) as string ?? string.Empty;
+
     private static void Select(WpfButton button, bool selected, string accent)
     {
         button.SetResourceReference(BackgroundProperty, selected ? "SelectionBrush" : "WidgetSurfaceBrush");
@@ -129,6 +216,12 @@ public partial class TrayMenuWindow : Window
     private async void OnToggleClickThrough(object sender, RoutedEventArgs e) { await _toggleClickThrough(); }
     private async void OnRecover(object sender, RoutedEventArgs e) { await _recover(); }
     private async void OnMoveHere(object sender, RoutedEventArgs e) { await _moveHere(); }
+    private async void OnToggleActivityWidget(object sender, RoutedEventArgs e) { await _toggleActivityWidget(); }
+    private async void OnToggleActivityLock(object sender, RoutedEventArgs e) { await _toggleActivityLock(); }
+    private async void OnToggleActivityClickThrough(object sender, RoutedEventArgs e) { await _toggleActivityClickThrough(); }
+    private async void OnRecoverActivity(object sender, RoutedEventArgs e) { await _recoverActivity(); }
+    private void OnUsageTab(object sender, RoutedEventArgs e) { _activityTabSelected = false; ApplySelectionStates(); }
+    private void OnActivityTab(object sender, RoutedEventArgs e) { _activityTabSelected = true; ApplySelectionStates(); }
     private async void OnRings(object sender, RoutedEventArgs e) { await _setMode(WidgetVisualMode.Rings); }
     private async void OnHorizontal(object sender, RoutedEventArgs e) { await _setMode(WidgetVisualMode.HorizontalBars); }
     private async void OnVertical(object sender, RoutedEventArgs e) { await _setMode(WidgetVisualMode.VerticalBars); }

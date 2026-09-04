@@ -12,3 +12,4 @@ TestResults/
 preferences.json
 preferences.json.bak
 preferences.json.tmp
+.qa-aivitals/
