@@ -15,6 +15,28 @@ public sealed class WidgetPreferenceTests
     }
 
     [Fact]
+    public void Activity_widget_and_hooks_are_opt_in_and_start_without_a_false_green_state()
+    {
+        var preferences = new AppPreferences();
+
+        Assert.False(preferences.EffectiveActivityWidget.IsVisible);
+        Assert.Equal(["codex", "claude-code"], preferences.EffectiveActivityWidget.IncludedProviderIds!);
+        Assert.False(preferences.EffectiveActivityIntegrations.ClaudeCodeEnabled);
+        Assert.False(preferences.EffectiveActivityIntegrations.CodexEnabled);
+    }
+
+    [Fact]
+    public void Activity_widget_normalization_rejects_unknown_providers_and_locks_click_through()
+    {
+        var normalized = ActivityWidgetPreferenceRules.Normalize(new ActivityWidgetPreferences(
+            IsClickThrough: true,
+            IncludedProviderIds: ["Claude-Code", "private-agent", "CODEX", "codex"]));
+
+        Assert.True(normalized.IsLocked);
+        Assert.Equal(["claude-code", "codex"], normalized.IncludedProviderIds!);
+    }
+
+    [Fact]
     public void Normalization_limits_connections_and_makes_click_through_recoverable()
     {
         var normalized = WidgetPreferenceRules.Normalize(new WidgetPreferences(

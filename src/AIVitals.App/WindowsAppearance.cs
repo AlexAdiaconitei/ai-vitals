@@ -46,6 +46,9 @@ internal static class WindowsAppearance
             Set(resources, "ClaudeBrandBrush", WpfSystemColors.HotTrackColor);
             Set(resources, "ButtonBrush", WpfSystemColors.ControlColor);
             Set(resources, "DangerBrush", WpfSystemColors.HighlightColor);
+            Set(resources, "ActivityRedBrush", WpfSystemColors.WindowTextColor);
+            Set(resources, "ActivityYellowBrush", WpfSystemColors.HotTrackColor);
+            Set(resources, "ActivityGreenBrush", WpfSystemColors.HighlightColor);
         }
         else if (light)
         {
@@ -73,6 +76,9 @@ internal static class WindowsAppearance
             Set(resources, "ClaudeBrandBrush", "#A94F36");
             Set(resources, "ButtonBrush", "#DDE7F1");
             Set(resources, "DangerBrush", "#A33141");
+            Set(resources, "ActivityRedBrush", "#B42334");
+            Set(resources, "ActivityYellowBrush", "#9A6700");
+            Set(resources, "ActivityGreenBrush", "#087F5B");
         }
         else
         {
@@ -100,6 +106,9 @@ internal static class WindowsAppearance
             Set(resources, "ClaudeBrandBrush", "#D97757");
             Set(resources, "ButtonBrush", "#14263C");
             Set(resources, "DangerBrush", "#FF9B9B");
+            Set(resources, "ActivityRedBrush", "#FF5D68");
+            Set(resources, "ActivityYellowBrush", "#FFC84A");
+            Set(resources, "ActivityGreenBrush", "#43D17B");
         }
 
         MotionEnabled = !highContrast && SystemParameters.ClientAreaAnimation;

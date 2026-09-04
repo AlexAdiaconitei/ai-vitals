@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\AIVitals.AgentActivity\AIVitals.AgentActivity.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Application\AIVitals.Application.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Domain\AIVitals.Domain.csproj" />
   </ItemGroup>

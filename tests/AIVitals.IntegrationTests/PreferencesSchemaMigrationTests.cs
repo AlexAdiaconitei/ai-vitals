@@ -33,6 +33,9 @@ public sealed class PreferencesSchemaMigrationTests : IDisposable
         Assert.True(preferences.OnboardingCompleted);
         Assert.True(preferences.AutomaticUpdateCheckEnabled);
         Assert.False(preferences.StartWithWindows);
+        Assert.False(preferences.EffectiveActivityWidget.IsVisible);
+        Assert.False(preferences.EffectiveActivityIntegrations.ClaudeCodeEnabled);
+        Assert.False(preferences.EffectiveActivityIntegrations.CodexEnabled);
     }
 
     [Fact]

@@ -683,7 +683,8 @@
 
             <TabItem>
                 <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xECA5;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource WidgetTab}" /></StackPanel></TabItem.Header>
-                <Grid MaxWidth="1060" HorizontalAlignment="Left">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid MaxWidth="1060" Margin="0,0,12,18" HorizontalAlignment="Left">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="18" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock Text="{DynamicResource WidgetEditor}" FontSize="28" FontWeight="SemiBold" />
@@ -708,22 +709,39 @@
                                 </Border>
                             </Grid>
                             <WrapPanel Margin="0,18,0,0"><Button Style="{StaticResource PrimaryButton}" Content="{DynamicResource SaveWidget}" Click="OnSaveWidget" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource MoveToCurrentDisplay}" Click="OnMoveWidgetHere" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource RecoverPosition}" Click="OnRecoverWidget" /></WrapPanel>
+                            <Border Margin="0,22,0,18" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" />
+                            <TextBlock Text="{DynamicResource ActivityWidgetTitle}" FontSize="18" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,5,0,12" Text="{DynamicResource ActivityWidgetDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                            <WrapPanel><CheckBox x:Name="ActivityWidgetVisible" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource ShowActivityWidget}" Click="OnActivityPreviewInputChanged" /><CheckBox x:Name="ActivityWidgetLocked" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource LockPosition}" Click="OnActivityPreviewInputChanged" /><CheckBox x:Name="ActivityWidgetClickThrough" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource ClickThrough}" Click="OnActivityPreviewInputChanged" /></WrapPanel>
+                            <TextBlock Margin="0,12,0,5" Text="{DynamicResource ActivityProviders}" FontWeight="SemiBold" />
+                            <WrapPanel><CheckBox x:Name="ActivityClaudeEnabled" Style="{StaticResource WidgetSwitch}" Content="Claude Code" Click="OnActivityPreviewInputChanged" /><CheckBox x:Name="ActivityCodexEnabled" Style="{StaticResource WidgetSwitch}" Content="Codex" Click="OnActivityPreviewInputChanged" /></WrapPanel>
+                            <TextBlock Margin="0,9,0,0" Text="{DynamicResource ActivityPrivacyNotice}" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                            <WrapPanel Margin="0,10,0,0"><CheckBox x:Name="ActivityShowLabels" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource ShowSessionLabels}" Click="OnActivityPreviewInputChanged" /></WrapPanel>
+                            <TextBlock Margin="0,7,0,0" Text="{DynamicResource SessionLabelsNotice}" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                            <WrapPanel Margin="0,14,0,0"><Button Style="{StaticResource PrimaryButton}" Content="{DynamicResource SaveActivityWidget}" Click="OnSaveActivityWidget" /><Button Style="{StaticResource ActionButton}" Content="{DynamicResource RecoverActivityWidget}" Click="OnRecoverActivityWidget" /></WrapPanel>
                         </StackPanel>
                         </Border>
 
                         <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="14">
                             <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="10" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="10" /><RowDefinition Height="*" /><RowDefinition Height="18" /><RowDefinition Height="Auto" /><RowDefinition Height="10" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                 <TextBlock Text="{DynamicResource WidgetLivePreview}" FontWeight="SemiBold" />
                                 <Border Grid.Row="2" CornerRadius="14" Background="{DynamicResource CanvasBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Padding="8" ClipToBounds="True">
                                     <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
                                         <local:WidgetView x:Name="WidgetPreview" />
                                     </Viewbox>
                                 </Border>
+                                <TextBlock Grid.Row="4" Text="{DynamicResource ActivityWidgetPreview}" FontWeight="SemiBold" />
+                                <Border Grid.Row="6" MinHeight="180" CornerRadius="14" Background="{DynamicResource CanvasBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Padding="8" ClipToBounds="True">
+                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                        <local:ActivityWidgetView x:Name="ActivityWidgetPreview" />
+                                    </Viewbox>
+                                </Border>
                             </Grid>
                         </Border>
                     </Grid>
                 </Grid>
+                </ScrollViewer>
             </TabItem>
 
             <TabItem>
