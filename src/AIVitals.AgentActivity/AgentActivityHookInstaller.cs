@@ -45,7 +45,7 @@ public sealed class AgentActivityHookInstaller
     public async Task<bool> IsInstalledAsync(CancellationToken cancellationToken = default)
     {
         var root = await ReadAsync(cancellationToken).ConfigureAwait(false);
-        return _bindings.All(binding => ContainsCommand(root, binding.HookName, CommandFor(binding.Event)));
+        return _bindings.All(binding => ContainsHandler(root, binding.HookName, DesiredHandler(binding.Event)));
     }
 
     public async Task<AgentActivityHookInstallationResult> InstallAsync(CancellationToken cancellationToken = default)
@@ -58,24 +58,17 @@ public sealed class AgentActivityHookInstaller
         var changed = false;
         foreach (var binding in _bindings)
         {
-            var command = CommandFor(binding.Event);
+            var desired = DesiredHandler(binding.Event);
 
-            // Toggling session labels changes the command line, so an entry written by an earlier
-            // preference has to go before the current one is added.
-            changed |= RemoveOwnCommands(root, binding, keepCommand: command);
-            if (ContainsCommand(root, binding.HookName, command)) continue;
-
-            var handler = new JsonObject
-            {
-                ["type"] = "command",
-                ["command"] = command,
-                ["timeout"] = 1
-            };
-            if (_includeWindowsCommand) handler["commandWindows"] = WindowsCommand(command);
+            // Anything of ours that is not exactly the handler we want goes, whatever differs:
+            // a stale path, a changed label flag, or a Windows command written before it was
+            // made runnable. Comparing only the command once left the latter unrepairable.
+            changed |= RemoveOwnCommands(root, binding, desired);
+            if (ContainsHandler(root, binding.HookName, desired)) continue;
 
             var group = new JsonObject
             {
-                ["hooks"] = new JsonArray(handler)
+                ["hooks"] = new JsonArray(desired)
             };
             EnsureArray(hooks, binding.HookName).Add(group);
             changed = true;
@@ -93,12 +86,26 @@ public sealed class AgentActivityHookInstaller
         var root = await ReadAsync(cancellationToken).ConfigureAwait(false);
         if (root["hooks"] is not JsonObject hooks) return AgentActivityHookInstallationResult.NotInstalled;
         var changed = false;
-        foreach (var binding in _bindings) changed |= RemoveOwnCommands(root, binding, keepCommand: null);
+        foreach (var binding in _bindings) changed |= RemoveOwnCommands(root, binding, desired: null);
 
         if (!changed) return AgentActivityHookInstallationResult.NotInstalled;
         if (hooks.Count == 0) root.Remove("hooks");
         await WriteAtomicallyAsync(root, cancellationToken).ConfigureAwait(false);
         return AgentActivityHookInstallationResult.Removed;
+    }
+
+    /// <summary>The exact handler this installer wants written for one event.</summary>
+    private JsonObject DesiredHandler(AgentActivityEvent activityEvent)
+    {
+        var command = CommandFor(activityEvent);
+        var handler = new JsonObject
+        {
+            ["type"] = "command",
+            ["command"] = command,
+            ["timeout"] = 1
+        };
+        if (_includeWindowsCommand) handler["commandWindows"] = WindowsCommand(command);
+        return handler;
     }
 
     private string CommandFor(AgentActivityEvent activityEvent) => _includeWorkspaceLabels
@@ -133,7 +140,7 @@ public sealed class AgentActivityHookInstaller
     /// written with, optionally keeping the command that is wanted right now. Handlers written by
     /// anyone else stay.
     /// </summary>
-    private bool RemoveOwnCommands(JsonObject root, HookBinding binding, string? keepCommand)
+    private bool RemoveOwnCommands(JsonObject root, HookBinding binding, JsonObject? desired)
     {
         if (root["hooks"] is not JsonObject hooks || hooks[binding.HookName] is not JsonArray groups) return false;
 
@@ -143,8 +150,10 @@ public sealed class AgentActivityHookInstaller
             if (groups[groupIndex] is not JsonObject group || group["hooks"] is not JsonArray handlers) continue;
             for (var handlerIndex = handlers.Count - 1; handlerIndex >= 0; handlerIndex--)
             {
-                var command = GetCommand(handlers[handlerIndex]);
-                if (command is null || command == keepCommand) continue;
+                var handler = handlers[handlerIndex];
+                var command = GetCommand(handler);
+                if (command is null) continue;
+                if (desired is not null && JsonNode.DeepEquals(handler, desired)) continue;
                 if (!IsOwnCommand(command, binding.Event)) continue;
                 handlers.RemoveAt(handlerIndex);
                 changed = true;
@@ -184,12 +193,16 @@ public sealed class AgentActivityHookInstaller
         File.Move(temporaryPath, _settingsPath, overwrite: true);
     }
 
-    private static bool ContainsCommand(JsonObject root, string hookName, string command) =>
+    /// <summary>
+    /// True when the file already holds exactly the handler wanted, every field included. A weaker
+    /// test on the command alone would leave a handler whose other fields drifted in place forever.
+    /// </summary>
+    private static bool ContainsHandler(JsonObject root, string hookName, JsonObject desired) =>
         root["hooks"] is JsonObject hooks
         && hooks[hookName] is JsonArray groups
         && groups.OfType<JsonObject>()
             .SelectMany(group => (group["hooks"] as JsonArray)?.OfType<JsonNode>() ?? [])
-            .Any(handler => GetCommand(handler) == command);
+            .Any(handler => JsonNode.DeepEquals(handler, desired));
 
     private static string? GetCommand(JsonNode? handler) =>
         handler is JsonObject handlerObject
