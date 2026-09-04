@@ -14,6 +14,7 @@ public enum AgentActivityHookInstallationResult
 public sealed class AgentActivityHookInstaller
 {
     private readonly string _helperExecutablePath;
+    private readonly string _helperFileName;
     private readonly string _settingsPath;
     private readonly AgentActivityProvider _provider;
     private readonly bool _includeWindowsCommand;
@@ -28,6 +29,7 @@ public sealed class AgentActivityHookInstaller
         bool includeWorkspaceLabels = false)
     {
         _helperExecutablePath = Path.GetFullPath(helperExecutablePath);
+        _helperFileName = Path.GetFileName(_helperExecutablePath);
         _settingsPath = Path.GetFullPath(settingsPath);
         _provider = provider;
         _includeWindowsCommand = includeWindowsCommand;
@@ -69,7 +71,7 @@ public sealed class AgentActivityHookInstaller
                 ["command"] = command,
                 ["timeout"] = 1
             };
-            if (_includeWindowsCommand) handler["commandWindows"] = command;
+            if (_includeWindowsCommand) handler["commandWindows"] = WindowsCommand(command);
 
             var group = new JsonObject
             {
@@ -103,6 +105,13 @@ public sealed class AgentActivityHookInstaller
         ? $"{OwnCommandPrefix(activityEvent)} --labels"
         : OwnCommandPrefix(activityEvent);
 
+    /// <summary>
+    /// Codex runs the Windows override through PowerShell, where a quoted path on its own is a
+    /// string expression and the arguments after it are a parse error. The call operator is what
+    /// turns it back into an invocation, and without it every hook exits 1.
+    /// </summary>
+    private static string WindowsCommand(string command) => "& " + command;
+
     private string OwnCommandPrefix(AgentActivityEvent activityEvent)
     {
         var portablePath = _helperExecutablePath.Replace('\\', '/').Replace("\"", "\\\"");
@@ -110,14 +119,24 @@ public sealed class AgentActivityHookInstaller
     }
 
     /// <summary>
-    /// Removes every handler this installer owns for one binding, whatever flags it was written with,
-    /// optionally keeping the command that is wanted right now. Handlers written by anyone else stay.
+    /// Recognises a handler as this installer's own by the helper it runs and the arguments it
+    /// passes, not by where that helper happens to live. An entry written by an earlier install, a
+    /// moved installation or a sandboxed run would otherwise survive every uninstall, leaving the
+    /// agent with a duplicate hook and a second trust prompt for the same event.
+    /// </summary>
+    private bool IsOwnCommand(string command, AgentActivityEvent activityEvent) =>
+        command.Contains(_helperFileName, StringComparison.OrdinalIgnoreCase)
+        && command.Contains($"--provider {_provider} --event {activityEvent}", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Removes every handler this installer owns for one binding, whatever flags or path it was
+    /// written with, optionally keeping the command that is wanted right now. Handlers written by
+    /// anyone else stay.
     /// </summary>
     private bool RemoveOwnCommands(JsonObject root, HookBinding binding, string? keepCommand)
     {
         if (root["hooks"] is not JsonObject hooks || hooks[binding.HookName] is not JsonArray groups) return false;
 
-        var prefix = OwnCommandPrefix(binding.Event);
         var changed = false;
         for (var groupIndex = groups.Count - 1; groupIndex >= 0; groupIndex--)
         {
@@ -126,7 +145,7 @@ public sealed class AgentActivityHookInstaller
             {
                 var command = GetCommand(handlers[handlerIndex]);
                 if (command is null || command == keepCommand) continue;
-                if (command != prefix && !command.StartsWith(prefix + " ", StringComparison.Ordinal)) continue;
+                if (!IsOwnCommand(command, binding.Event)) continue;
                 handlers.RemoveAt(handlerIndex);
                 changed = true;
             }
