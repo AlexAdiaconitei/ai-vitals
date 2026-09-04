@@ -171,7 +171,10 @@ public partial class App : System.Windows.Application
             ConfigureActivityInstallers(activityWidgetPreferences.ShowSessionLabels);
             _activityMonitor = new AgentActivityMonitor(ToActivityProviders(activityWidgetPreferences.IncludedProviderIds!));
             _activityMonitor.Start();
-            await EnsureConfiguredActivityHooksAsync(_monitor.State.Preferences.EffectiveActivityIntegrations);
+            // The same switch that spares the real statusLine spares the real hook files: a sandboxed
+            // run must leave both agents' configuration exactly as it found it.
+            if (!skipClaudeInstaller)
+                await EnsureConfiguredActivityHooksAsync(_monitor.State.Preferences.EffectiveActivityIntegrations);
 
             ApplyStartupRegistration(_monitor.State.Preferences.StartWithWindows);
             _updateService.StatusChanged += OnUpdateStatusChanged;

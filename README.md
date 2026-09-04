@@ -27,7 +27,7 @@ The application has no account system, cloud backend, or telemetry. Usage observ
 
 ## Screenshots
 
-AI Vitals provides three compact widget layouts for different workspaces. For every layout below, the left image is an unedited capture of the real application window; the right image places that same capture over an AI-generated, privacy-safe cartoon editor to demonstrate its on-screen footprint.
+AI Vitals has two widgets: a quota widget with three compact layouts, and an optional activity traffic light. For every quota layout below, the left image is an unedited capture of the real application window; the right image places that same capture over an AI-generated, privacy-safe cartoon editor to demonstrate its on-screen footprint. Every capture on this page comes from the running application.
 
 ### Activity rings
 
@@ -74,6 +74,29 @@ AI Vitals provides three compact widget layouts for different workspaces. For ev
   </tr>
 </table>
 
+### Activity traffic light
+
+The second widget answers a different question: not how much quota is left, but what the agents are doing right now. Green is a turn that ended, yellow a turn being processed, red at least one tool running, and grey no reliable signal. It shows one light per agent session and never grows past two rows by two columns.
+
+<table>
+  <tr>
+    <td width="24%" align="center">
+      <img src="./docs/images/widget-activity-single.png" alt="AI Vitals traffic light with a single session" width="108" /><br />
+      <sub>One session</sub>
+    </td>
+    <td width="38%" align="center">
+      <img src="./docs/images/widget-activity-grid.png" alt="AI Vitals traffic light with three sessions, the odd one centred on the second row" width="178" /><br />
+      <sub>Three sessions: the odd one centres</sub>
+    </td>
+    <td width="38%" align="center">
+      <img src="./docs/images/widget-activity-carousel.png" alt="AI Vitals traffic light with four sessions and page dots for the rest" width="178" /><br />
+      <sub>Five or more: pages every five seconds</sub>
+    </td>
+  </tr>
+</table>
+
+Each light carries the folder of its session when session labels are enabled, the duration of the turn it is running, and a count of tools working in parallel once there is more than one. The captures above were produced by feeding the local pipe a scripted set of sessions, so no real project name appears.
+
 ### Full dashboard
 
 ![AI Vitals dashboard showing Codex and Claude Code quota status](./docs/images/dashboard.png)
@@ -84,24 +107,28 @@ This is a direct capture of the running application with active, non-zero Claude
 
 <table>
   <tr>
-    <td width="56%" align="center">
+    <td width="40%" align="center">
       <img src="./docs/images/tray-quick-status.png" alt="AI Vitals quick status opened with a left click on the tray icon" width="440" /><br />
       <sub>Left click: live quota status and widget shortcuts</sub>
     </td>
-    <td width="44%" align="center">
-      <img src="./docs/images/tray-menu.png" alt="AI Vitals context menu opened with a right click on the tray icon" width="344" /><br />
-      <sub>Right click: widget, appearance, and application controls</sub>
+    <td width="30%" align="center">
+      <img src="./docs/images/tray-menu.png" alt="AI Vitals context menu showing the quota widget tab" width="344" /><br />
+      <sub>Right click: quota widget tab</sub>
+    </td>
+    <td width="30%" align="center">
+      <img src="./docs/images/tray-menu-activity.png" alt="AI Vitals context menu showing the traffic light tab with its live state" width="344" /><br />
+      <sub>Traffic light tab, with its live state</sub>
     </td>
   </tr>
 </table>
 
-Both images are direct captures of the running application, cropped to their exact window boundaries.
+The right-click menu carries one tab per widget. The traffic-light tab appears only once a provider integration is enabled, so an installation that uses the quota widget alone keeps the single-tab menu it always had. All three images are direct captures of the running application, cropped to their exact window boundaries.
 
 ## Features
 
 - **Live provider monitoring** for Codex and Claude Code through local integrations.
 - **Three widget layouts**: activity rings, horizontal bars, and vertical bars.
-- **Optional activity traffic light** for Claude Code and Codex, implemented natively in C# as a second independent widget.
+- **Optional activity traffic light** for Claude Code and Codex, implemented natively in C# as a second independent widget: one light per agent session, the running turn timed under each, and a carousel past four sessions.
 - **Tray-first workflow** with quick status, dashboard access, and widget controls.
 - **Usage history** with provider and date filters, backed by SQLite.
 - **CSV and JSON export** for the exact data currently in view.
@@ -163,21 +190,23 @@ dotnet run --project src/AIVitals.App/AIVitals.App.csproj
 
 AI Vitals starts in the notification area. Left-click the tray icon for quick status, or open the context menu for the dashboard and widget controls. Choosing **Exit** stops the adapters and closes the resident process.
 
-### Widget controls
+### Quota widget controls
 
-Use the tray menu to show or hide the widget, change its layout, lock its position, or enable click-through. Drag any free area to move it; the widget snaps to the current monitor's work area and restores its last position at startup.
+Use the tray menu to show or hide the quota widget, change its layout, lock its position, or enable click-through. Drag any free area to move it; the widget snaps to the current monitor's work area and restores its last position at startup.
 
-Each light also shows how long its current turn has been running, counted from the prompt AI Vitals saw. A turn already under way when the application starts shows no time rather than a guess, and a session that goes quiet stops counting instead of implying the agent is still working.
+Press `Ctrl+Shift+U` to recover both widgets. This makes them visible, disables click-through, unlocks them, and moves them to the monitor containing the pointer.
 
-A session name wider than its light slides gently between its two ends so the whole name can be read, and stops at an ellipsis when Windows animations are off or high contrast is on. The full name is always in the tooltip.
+### Activity traffic light
 
-Once an activity integration is enabled, the tray menu shows two tabs: one for the usage widget and one for the traffic light. The traffic-light tab carries the same show, lock, click-through, and recover actions, plus a shortcut to its settings and a read-only row with the current state and session count. Without an enabled integration the tab strip is not shown at all.
+The Widget section of the dashboard also enables the traffic light. Claude Code and Codex are switched on independently and only after explicit confirmation, and Codex needs one additional review in its `/hooks` screen before a newly installed hook can run. The light starts grey after every application restart, turns yellow while the agent is processing, red while one or more tools are running, and green only after a fresh stop or session-start event. It never turns green on a signal it no longer trusts: a session that goes quiet returns to grey.
 
-Press `Ctrl+Shift+U` to recover the widget. This makes it visible, disables click-through, unlocks it, and moves it to the monitor containing the pointer.
+There is one light per agent session. The widget holds at most two rows by two columns, at the width of the vertical quota widget: one session is a single narrow light, two sit side by side, three place the odd one centred on the second row, and past four the widget pages through them every five seconds, pausing while the pointer rests on it.
 
-The Widget section also contains an optional activity traffic light. Claude Code and Codex are enabled independently and only after explicit confirmation. Codex requires one additional review in its `/hooks` screen before a newly installed hook can run. The traffic light starts gray after every application restart, becomes yellow while the agent is processing, red while one or more tools are running, and green only after a fresh stop or session-start event.
+Under each light is the duration of the turn it is running, counted from the prompt AI Vitals saw. A turn already under way when the application starts is shown as a lower bound with a leading `~`, because its real beginning cannot be recovered, and a session that goes quiet stops counting instead of implying the agent is still working. A number beside a light counts tools running in parallel, and appears only from two upward, where the colour alone cannot tell you.
 
-The widget shows one light per agent session. It holds at most two rows by two columns at the width of the vertical usage widget: one session is a single narrow light, two sit side by side, three place the odd one centred on the second row, and past four the widget pages through them every five seconds, pausing while the pointer rests on it. **Show session folder** is off by default; enabling it labels each light with the leaf directory name of its session so concurrent sessions can be told apart. The Widget settings tab previews the traffic light next to the usage widget.
+**Show session folder** is off by default. Enabling it labels each light with the last directory name of its session, so concurrent sessions can be told apart. A name too wide for its light slides between its two ends and trims to an ellipsis instead when Windows animations are off or high contrast is on; the full name is always in the tooltip.
+
+Once either integration is enabled, the tray menu carries one tab per widget. The traffic-light tab has the same show, lock, click-through and recover actions, a shortcut to its settings, and a read-only row with the current state and session count. Without an enabled integration the tab strip is not shown at all. The Widget settings tab previews the traffic light next to the quota widget.
 
 ## Privacy
 
@@ -228,7 +257,7 @@ Publishing is driven by tags: pushing `v0.1.0` runs [.github/workflows/release.y
 
 ## Project status
 
-The domain model, local persistence, live Codex and Claude Code adapters, widget, quick popup, dashboard, history, export, localization, themes, accessibility support, and the installer and update channel are implemented. The remaining release gates are the full Windows 10/11, x64/ARM64, and 100/150/200% DPI matrix documented in [docs/quality-matrix.md](docs/quality-matrix.md), and the clean-machine checks in [docs/release-checklist.md](docs/release-checklist.md).
+The domain model, local persistence, live Codex and Claude Code adapters, both widgets, quick popup, dashboard, history, export, localization, themes, accessibility support, and the installer and update channel are implemented. The remaining release gates are the full Windows 10/11, x64/ARM64, and 100/150/200% DPI matrix documented in [docs/quality-matrix.md](docs/quality-matrix.md), and the clean-machine checks in [docs/release-checklist.md](docs/release-checklist.md).
 
 ## AI-assisted development
 
