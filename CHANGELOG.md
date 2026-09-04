@@ -20,6 +20,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
+- Codex hooks run instead of failing on Windows. Codex executes the Windows command through PowerShell, where a quoted executable path is a string expression and the arguments after it are a parse error, so every hook exited 1 and the traffic light never lit. The Windows command now begins with the call operator.
+- A hook entry whose helper lives somewhere else is recognised and removed. Entries were matched by their full path, so one written by an earlier installation, a moved installation or an isolated run survived every uninstall. Codex then held two hooks per event, asked to trust each separately, and left the pair half enabled.
 - The pending-update banner in the tray menu follows the interface language. Its text was formatted once, when the update arrived, and kept the language of that moment for the rest of the session. The same applies to the version and update copy in the About tab, which is now rebuilt when the language is applied.
 - Claude Code no longer turns transient OAuth metadata into permanent quota columns. For example, Anthropic briefly returned an undocumented `nimbus_quill` object with `0%` utilization and no reset window; older builds stored it as an unknown `Q` quota and restored it after every restart. Unknown windowless OAuth fields now remain historical diagnostics instead of occupying the dashboard or widget, and new readings are accepted only for the published five-hour and seven-day quota families.
 

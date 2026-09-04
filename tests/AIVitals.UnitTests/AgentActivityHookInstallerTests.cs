@@ -107,6 +107,84 @@ public sealed class AgentActivityHookInstallerTests : IDisposable
         Assert.DoesNotContain("--provider ClaudeCode", await File.ReadAllTextAsync(settings));
     }
 
+    [Fact]
+    public async Task The_windows_command_is_callable_by_powershell()
+    {
+        Directory.CreateDirectory(_directory);
+        var helper = Path.Combine(_directory, "AIVitals.AgentActivity.Hook.exe");
+        await File.WriteAllTextAsync(helper, "test");
+        var settings = Path.Combine(_directory, "hooks.json");
+        await new AgentActivityHookInstaller(helper, settings, AgentActivityProvider.Codex, includeWindowsCommand: true)
+            .InstallAsync();
+
+        var handler = JsonNode.Parse(await File.ReadAllTextAsync(settings))!
+            ["hooks"]!["UserPromptSubmit"]!.AsArray()[0]!["hooks"]!.AsArray()[0]!;
+        var windows = handler["commandWindows"]!.GetValue<string>();
+
+        // Without the call operator PowerShell reads the quoted path as a string and fails on the
+        // first argument, which is what made every Codex hook exit 1.
+        Assert.StartsWith("& \"", windows);
+        Assert.EndsWith(handler["command"]!.GetValue<string>(), windows);
+    }
+
+    [Fact]
+    public async Task An_entry_left_by_a_helper_at_another_path_is_cleaned_up()
+    {
+        Directory.CreateDirectory(_directory);
+        var helper = Path.Combine(_directory, "AIVitals.AgentActivity.Hook.exe");
+        await File.WriteAllTextAsync(helper, "test");
+        var settings = Path.Combine(_directory, "hooks.json");
+        await File.WriteAllTextAsync(settings, """
+            {
+              "hooks": {
+                "UserPromptSubmit": [
+                  { "hooks": [{ "type": "command", "command": "\"D:/somewhere/else/AIVitals.AgentActivity.Hook.exe\" --provider Codex --event PromptSubmitted" }] },
+                  { "hooks": [{ "type": "command", "command": "unrelated-user-hook" }] }
+                ]
+              }
+            }
+            """);
+        var installer = new AgentActivityHookInstaller(helper, settings, AgentActivityProvider.Codex, includeWindowsCommand: true);
+
+        Assert.Equal(AgentActivityHookInstallationResult.Installed, await installer.InstallAsync());
+        var written = await File.ReadAllTextAsync(settings);
+
+        var groups = JsonNode.Parse(written)!["hooks"]!["UserPromptSubmit"]!.AsArray();
+        var commands = groups
+            .SelectMany(group => group!["hooks"]!.AsArray())
+            .Select(handler => handler!["command"]!.GetValue<string>())
+            .ToArray();
+
+        Assert.DoesNotContain("somewhere/else", written);
+        Assert.Equal(2, commands.Length);
+        Assert.Contains("unrelated-user-hook", commands);
+        Assert.Single(commands, command => command.Contains("--event PromptSubmitted"));
+        Assert.True(await installer.IsInstalledAsync());
+    }
+
+    [Fact]
+    public async Task Uninstall_reaches_an_entry_whose_helper_has_moved()
+    {
+        Directory.CreateDirectory(_directory);
+        var helper = Path.Combine(_directory, "AIVitals.AgentActivity.Hook.exe");
+        await File.WriteAllTextAsync(helper, "test");
+        var settings = Path.Combine(_directory, "hooks.json");
+        await File.WriteAllTextAsync(settings, """
+            {
+              "hooks": {
+                "Stop": [
+                  { "hooks": [{ "type": "command", "command": "\"C:/old/install/AIVitals.AgentActivity.Hook.exe\" --provider Codex --event TurnStopped --labels" }] }
+                ]
+              }
+            }
+            """);
+
+        var installer = new AgentActivityHookInstaller(helper, settings, AgentActivityProvider.Codex, includeWindowsCommand: true);
+
+        Assert.Equal(AgentActivityHookInstallationResult.Removed, await installer.UninstallAsync());
+        Assert.DoesNotContain("AgentActivity.Hook", await File.ReadAllTextAsync(settings));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true);
