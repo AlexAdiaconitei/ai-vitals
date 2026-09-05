@@ -1,6 +1,9 @@
 # Release Checklist
 
-Status on 2026-08-06: **0 of 8 clean-machine checks executed**. The release workflow runs the build,
+Status on 2026-09-05: **2 of 8 checks executed on x64, 0 on ARM64, none on a clean machine**.
+Checks 5 and 8 were run against `0.2.0-beta.1` on a development machine that had carried earlier
+builds. That is weaker evidence than the clean virtual machine this list asks for, and it is
+recorded as such rather than counted as a clean-machine pass. The release workflow runs the build,
 the Claude Code bridge verification, and the automated test suite before it publishes anything. It
 does not install, update, roll back, or uninstall AI Vitals. Those remain human checks, and this
 document is where their outcome is recorded.
@@ -32,10 +35,14 @@ unchecked: it builds both installers and attaches them to the workflow run.
 | 2 | Checksum | `Get-FileHash` of the downloaded installer matches the release notes and `SHA256SUMS.txt`. | Pending | Pending |
 | 3 | First run | Onboarding appears, both providers connect, and the About section shows the installed version and the `win-<arch>` channel. | Pending | Pending |
 | 4 | Start with Windows | Enabling the option adds a `HKCU\...\Run\AIVitals` entry pointing at `%LOCALAPPDATA%\AIVitalsApp\AIVitals.App.exe`, and AI Vitals starts after signing out and back in. | Pending | Pending |
-| 5 | Update | Installing the previous version, then checking for updates, offers the new one, downloads it, and installs it only after **Install and restart**. Usage history and preferences survive. | Pending | Pending |
-| 6 | Update while the bridge is live | Applying an update with Claude Code open leaves the `statusLine` working and still pointing at `%LOCALAPPDATA%\AIVitals\bridge`. | Pending | Pending |
+| 5 | Update | Installing the previous version, then checking for updates, offers the new one, downloads it, and installs it only after **Install and restart**. Usage history and preferences survive. | 2026-09-05 · 0.2.0-beta.1 (dev machine) | Pending |
+| 6 | Update while the bridge is live | Applying an update with Claude Code open leaves the `statusLine` working and still pointing at `%LOCALAPPDATA%\AIVitals\bridge`, and leaves the activity hooks in both agents pointing at a helper that still exists. | Pending | Pending |
 | 7 | Rollback | Reinstalling the previous version over the new one opens the existing database without data loss. | Pending | Pending |
-| 8 | Uninstall | Uninstalling restores the previous `statusLine` in `~/.claude/settings.json`, removes the Run entry and `%LOCALAPPDATA%\AIVitalsApp`, and keeps `%LOCALAPPDATA%\AIVitals`. | Pending | Pending |
+| 8 | Uninstall | Uninstalling restores the previous `statusLine` in `~/.claude/settings.json`, removes every AI Vitals activity hook from `~/.claude/settings.json` and `~/.codex/hooks.json` while leaving hooks owned by anything else untouched, removes the Run entry and `%LOCALAPPDATA%\AIVitalsApp`, and keeps `%LOCALAPPDATA%\AIVitals`. | 2026-09-05 · 0.2.0-beta.1 (dev machine) | Pending |
+
+The traffic light itself was exercised on `0.2.0-beta.1`: hooks accepted in the Codex CLI, and the
+lights reacting to live Claude Code and Codex sessions. That is not one of the eight checks, but it
+is the first end-to-end confirmation that the feature works outside a development build.
 
 Record the date and build for every cell that passes, the same way
 [quality-matrix.md](quality-matrix.md) does. A cell that was not executed stays `Pending`; a
