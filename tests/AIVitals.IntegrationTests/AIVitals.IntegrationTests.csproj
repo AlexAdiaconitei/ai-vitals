@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AIVitals.AgentActivity\AIVitals.AgentActivity.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Adapters.ClaudeCode\AIVitals.Adapters.ClaudeCode.csproj" />
+    <ProjectReference Include="..\..\src\AIVitals.Adapters.Codex\AIVitals.Adapters.Codex.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Adapters.Fake\AIVitals.Adapters.Fake.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Application\AIVitals.Application.csproj" />
     <ProjectReference Include="..\..\src\AIVitals.Infrastructure\AIVitals.Infrastructure.csproj" />

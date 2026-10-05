@@ -30,6 +30,7 @@ public sealed class UsageMonitorService : IAsyncDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private readonly List<Task> _watchers = [];
     private readonly object _stateLock = new();
+    private readonly SemaphoreSlim _preferencesWrites = new(1, 1);
     private UsageMonitorState _state = new(
         new AppPreferences(),
         new Dictionary<string, UsageObservation>(),
@@ -79,10 +80,19 @@ public sealed class UsageMonitorService : IAsyncDisposable
         }
     }
 
-    public async Task SavePreferencesAsync(AppPreferences preferences, CancellationToken cancellationToken = default)
+    public Task SavePreferencesAsync(AppPreferences preferences, CancellationToken cancellationToken = default) =>
+        UpdatePreferencesAsync(_ => preferences, cancellationToken);
+
+    public async Task UpdatePreferencesAsync(Func<AppPreferences, AppPreferences> update, CancellationToken cancellationToken = default)
     {
-        await _preferencesStore.SaveAsync(preferences, cancellationToken).ConfigureAwait(false);
-        UpdateState(current => current with { Preferences = preferences });
+        await _preferencesWrites.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var preferences = update(State.Preferences);
+            await _preferencesStore.SaveAsync(preferences, cancellationToken).ConfigureAwait(false);
+            UpdateState(current => current with { Preferences = preferences });
+        }
+        finally { _preferencesWrites.Release(); }
     }
 
     public async Task<IReadOnlyList<UsageObservation>> QueryObservationsAsync(

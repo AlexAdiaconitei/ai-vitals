@@ -200,6 +200,11 @@ Press `Ctrl+Shift+U` to recover both widgets. This makes them visible, disables 
 
 The Widget section of the dashboard also enables the traffic light. Claude Code and Codex are switched on independently and only after explicit confirmation, and Codex needs one additional review in its `/hooks` screen before a newly installed hook can run. The light starts grey after every application restart, turns yellow while the agent is processing, red while one or more tools are running, and green only after a fresh stop or session-start event. It never turns green on a signal it no longer trusts: a session that goes quiet returns to grey.
 
+Connections also lists Codex threads whose last turn failed at a usage limit. Enable automatic continuation for pending tasks, arm a task separately, or use **Continue in CLI** manually. The global option includes tasks already blocked and can recover them after restart, sleep or an unobserved reset. Individual switches exclude tasks, and exclusions and execution reservations survive restarts. A new quota failure can continue again while automation remains enabled; an unconfirmed send cannot. AI Vitals checks quota before every execution, spaces starts two minutes apart and continues in the original local Orca Codex panel when its session mapping and idle input are verified, through the shared CLI daemon, or in a new terminal when the thread is free. Orca runtime histories replace stale copies in the default Codex home. Threads held by ChatGPT Desktop wait until it is fully closed. Unsupported permission constraints require using the original app. Private titles are hidden until explicitly enabled.
+
+While automatic continuation is enabled, AI Vitals checks every three minutes. Starting during an existing five-hour block can still associate that failure with its current window. The card shows the last successful check and any threads that could not be read; one unsupported history does not hide other failures. Continuation requires a fresh quota reading and explicit backend authorization. The shared daemon connection uses WebSocket over its local control socket, while private metadata readers use JSONL over stdio. Only one AI Vitals instance can own a data directory. A bounded `codex-resume.jsonl` file in the app data directory records scan failures and continuation decisions without prompts, titles or project paths. See the [Codex architecture verification](docs/codex-resume-architecture-audit.md) for tested behavior and remaining release checks.
+
+
 There is one light per agent session. The widget holds at most two rows by two columns, at the width of the vertical quota widget: one session is a single narrow light, two sit side by side, three place the odd one centred on the second row, and past four the widget pages through them every five seconds, pausing while the pointer rests on it.
 
 Under each light is the duration of the turn it is running, counted from the prompt AI Vitals saw. A turn already under way when the application starts is shown as a lower bound with a leading `~`, because its real beginning cannot be recovered, and a session that goes quiet stops counting instead of implying the agent is still working. A number beside a light counts tools running in parallel, and appears only from two upward, where the colour alone cannot tell you.
@@ -268,6 +273,7 @@ The AI Vitals codebase was created with AI assistance through **Codex, powered b
 - [Changelog](CHANGELOG.md)
 - [Design system](DESIGN.md)
 - [Provider adapter guide](docs/future-adapters.md)
+- [Codex continuation architecture verification](docs/codex-resume-architecture-audit.md)
 - [Windows quality matrix](docs/quality-matrix.md)
 - [Release checklist](docs/release-checklist.md)
 - [Claude Code `statusLine` research](docs/research/claude-code-statusline.md)

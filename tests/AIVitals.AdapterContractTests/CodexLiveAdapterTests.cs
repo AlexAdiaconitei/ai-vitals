@@ -7,6 +7,20 @@ public sealed class CodexLiveAdapterTests
 {
     [Fact]
     [Trait("Category", "Live")]
+    public async Task Installed_codex_can_scan_paused_metadata_without_starting_turns_when_opted_in()
+    {
+        if (Environment.GetEnvironmentVariable("AI_VITALS_LIVE_CODEX") != "1") return;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
+        var threads = await new CodexPausedThreadScanner().ScanAsync(timeout.Token);
+        Assert.All(threads, thread =>
+        {
+            Assert.True(Guid.TryParse(thread.ThreadId, out _));
+            Assert.StartsWith("Codex ", thread.Name);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
     public async Task Installed_codex_completes_handshake_when_opted_in()
     {
         if (Environment.GetEnvironmentVariable("AI_VITALS_LIVE_CODEX") != "1") return;
