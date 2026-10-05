@@ -1,4 +1,4 @@
-# Release Checklist
+# Release checklist
 
 Status on 2026-09-05: **2 of 8 checks executed on x64, 0 on ARM64, none on a clean machine**.
 Checks 5 and 8 were run against `0.2.0-beta.1` on a development machine that had carried earlier
@@ -11,6 +11,36 @@ document is where their outcome is recorded.
 Run the whole list on a clean Windows virtual machine before tagging a stable version. A pre-release
 tag (`v0.1.1-beta.1`) exists precisely so the pipeline and these checks can be rehearsed without
 offering anything to stable installations.
+
+## 0.3.0 preparation
+
+Revalidated on 2026-10-05 after consolidating `feat/codex-resume-after-limit` and the
+`megamouth` worktree. Their 44 pending files were byte-for-byte identical. After fetching
+`origin`, the feature branch already included `origin/main` and the earlier update feature.
+
+- Release solution build: no warnings or errors. The Claude Code bridge output check passed.
+- Automated tests: 257 passed, comprising 135 unit, 29 integration and 93 adapter-contract
+  tests. The nine tests tagged `Live` or `Native` were excluded from this run. Prior live
+  evidence and its limits are recorded in the [architecture audit](codex-resume-architecture-audit.md).
+- NuGet audit, including transitive dependencies: no known vulnerabilities reported.
+- Resident startup: the existing self-contained x64 build stayed running with a temporary
+  data directory and integration installation disabled, then was stopped by the smoke script.
+- Existing local installers and full packages for x64 and ARM64: all four SHA256 values
+  matched `artifacts/0.3.0/verification.json`. The app and both helper executables have the
+  expected PE architecture; the published application reports version `0.3.0`.
+- Release notes are present under `## 0.3.0 - 2026-10-05`. Stable and `0.3.0-beta.1`
+  extraction produce the same notes. Local development builds deliberately retain
+  `0.0.0-dev`; the packaging workflow supplies the version from the tag.
+
+Test results are in `artifacts/validation/worktree-consolidation-full_*.trx`. Artifacts
+are ignored by Git. The existing packages predate the consolidation commits; the tag
+workflow must rebuild them to include the release commit in assembly metadata.
+
+The table below retains the results of the older release. None of its clean-machine
+checks has been completed for 0.3.0. A real quota reset with a blocked Orca task also
+remains to be observed with this build. Use `v0.3.0-beta.1` to rehearse the release and
+record those results before publishing `v0.3.0` as stable. No tag or release was published
+during consolidation.
 
 ## Publish a version
 

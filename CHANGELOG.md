@@ -5,6 +5,40 @@ All notable changes to AI Vitals are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## 0.3.0 - 2026-10-05
+
+### Added
+
+- Paused Codex threads on the Connections page, with reset time, project and permission summary. Each thread can be opened in Codex, continued manually, armed for automatic continuation or dismissed. Private titles are hidden until the user enables them.
+- Automatic continuation of pending tasks when Codex confirms quota recovery, including tasks discovered after their reset and tasks restored after restart or sleep. Individual tasks can be excluded; a later quota failure can continue again while automation remains enabled. Authorizations, exclusions, announcements and execution reservations survive restarts.
+- Continuation in the original local Orca Codex terminal, using its runtime home and exact session-to-pane metadata. Busy panes, user drafts, changed terminal incarnations and unconfirmed submissions are held without a duplicate prompt.
+- Continuation in an open Codex CLI through WebSocket over the shared daemon's local control socket. Threads not loaded in the shared daemon get a visible `codex resume --no-daemon` terminal. Threads held elsewhere wait and retry. Automatic starts are spaced two minutes apart and quota is checked before each one.
+
+### Fixed
+
+- Release notes extraction works in Windows PowerShell 5.1 without an explicit changelog path. The repository-relative default is resolved after parameter binding.
+- Orca sessions are scanned in their own `CODEX_HOME`; validation, daemon sockets, writer locks and new CLI processes use the detected thread's home. A current Orca history replaces stale copies in the default Codex home, including copies whose latest quota failure has already been resolved.
+- Pending tasks no longer remain disarmed with no recorded reset after quota has recovered. Enabling automatic continuation includes existing pending tasks, and their switches remain usable without a known reset. The former thirty-minute startup deadline, two-hour retry expiry and fixed three-task cap no longer leave authorized work stranded.
+- Explicit per-task exclusions are persisted separately from automatic state changes. Legacy unarmed entries with a known reset preserve their exclusion; windowless entries disarmed by the old recovery rule can be recovered. Ambiguous submissions still cannot be retried automatically.
+- The control socket now performs the required HTTP Upgrade and exchanges WebSocket frames. The CLI byte proxy does not convert JSONL into WebSocket; sending JSONL through it left initialization waiting indefinitely. Connection setup has a separate five-second deadline so an unavailable daemon leaves time for the terminal fallback.
+- An unsupported or unreadable thread no longer aborts the scan of every other thread. Partial scans preserve pending authorizations and show how many threads could not be checked.
+- Continuation requires the backend's explicit `ordinaryUsageAllowed` permission, followed by another quota check on the selected execution route. A denied or unavailable permission waits without consuming an execution attempt.
+- A second AI Vitals process using the same data directory cannot start. New turns that immediately fail or are interrupted are reported as failures rather than successful continuations.
+- Starting during an existing five-hour block still binds its window, even if the failure occurred more than thirty minutes earlier. Automatic scanning stays at three-minute intervals while enabled, independently of quota freshness.
+- Loaded Codex threads in `systemError` can continue after their last turn is verified as the same usage-limit failure. The Connections page shows the last successful scan; a bounded `codex-resume.jsonl` diagnostic log records scans, decisions, quota rejection and attempt outcomes without conversation content.
+- Expired, missing or partially refreshed quota windows cannot authorize continuation. AI Vitals requires the reset plus sixty seconds, a complete fresh quota reading and a reread of the exact failed turn immediately before execution.
+- All recent thread pages are scanned. A weekly quota is not assigned to an unrelated older five-hour failure. Fresh available quota and backend authorization can recover pending tasks even when the original reset was not observed.
+- Waking or restarting preserves pending authorization. Daemon timeouts cannot escape to the WPF dispatcher or trigger a second launch after an ambiguous send.
+- A new terminal is reported as continuing only after a new turn is observed. Lost replies and interrupted startup checks are shown as unconfirmed and are never retried automatically.
+
+### Security
+
+- New CLI launches reproduce the recorded model, effort, approvals, working directory and supported sandbox settings, including workspace writable roots, network access and temporary-directory exclusions. Restricted read policies, custom permission profiles, granular approvals and unknown constraints that cannot be represented faithfully are refused; those threads can be continued in their original app.
+- npm and pnpm shims are resolved to Node directly. Resume arguments do not pass through `cmd.exe`.
+- Resume state stores only identifiers, timestamps, quota sources and decisions. No conversation messages, private titles, paths or credentials are persisted. Reading the rollout tail temporarily exposes surrounding records in memory; only the latest supported turn context is parsed and retained. The v4 global switch migrates to off rather than authorizing new executions under changed rules.
+
 ## 0.2.0 - 2026-09-05
 
 ### Added
