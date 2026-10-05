@@ -651,7 +651,8 @@
 
             <TabItem>
                 <TabItem.Header><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE968;" /><TextBlock VerticalAlignment="Center" Text="{DynamicResource ConnectionsTab}" /></StackPanel></TabItem.Header>
-                <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel MaxWidth="900" Margin="0,0,12,18" HorizontalAlignment="Left">
                     <TextBlock Text="{DynamicResource LocalConnections}" FontSize="28" FontWeight="SemiBold" />
                     <TextBlock Margin="0,5,0,20" Text="{DynamicResource ConnectionsDescription}" Foreground="{DynamicResource MutedTextBrush}" />
                     <Border Style="{StaticResource PanelCard}">
@@ -678,7 +679,52 @@
                             <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{DynamicResource AutomaticDetection}" Foreground="{DynamicResource SignalBrush}" />
                         </Grid>
                     </Border>
+                    <Border x:Name="PausedThreadsCard" Margin="0,14,0,0" Style="{StaticResource PanelCard}">
+                        <Border.Resources><BooleanToVisibilityConverter x:Key="BoolToVisibility" /></Border.Resources>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource PausedThreadsTitle}" FontSize="18" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,4,0,0" Text="{DynamicResource PausedThreadsDescription}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                            <TextBlock Margin="0,4,0,0" Text="{Binding ScanStatus}" Foreground="{DynamicResource MutedTextBrush}" />
+                            <CheckBox x:Name="CodexAutoResume" Margin="0,12,0,0" Style="{StaticResource WidgetSwitch}" Content="{DynamicResource CodexAutoResume}" IsChecked="{Binding AutoResumeEnabled, Mode=OneWay}" Click="OnCodexAutoResumeClicked" />
+                            <TextBlock Margin="0,2,0,0" Text="{DynamicResource CodexAutoResumeHelp}" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                            <CheckBox Margin="0,10,0,0" Content="{DynamicResource CodexShowThreadNames}" IsChecked="{Binding ShowThreadNames, Mode=OneWay}" Click="OnShowCodexThreadNames" />
+                            <Border Margin="0,12,0,0" Padding="10,8" CornerRadius="7" Background="{DynamicResource WarmSurfaceBrush}" Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                            </Border>
+                            <TextBlock Margin="0,14,0,0" Text="{DynamicResource PausedThreadsEmpty}" Foreground="{DynamicResource MutedTextBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers><DataTrigger Binding="{Binding HasThreads}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Threads}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,6,0,0" Padding="12,10" CornerRadius="8" Background="{DynamicResource WidgetSurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <StackPanel Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Margin="0,3,0,0" Text="{Binding Project}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                                                    <TextBlock Margin="0,5,0,0" Text="{Binding StatusText}" FontSize="12" Foreground="{DynamicResource CodexBrush}" TextWrapping="Wrap" />
+                                                    <TextBlock Margin="0,3,0,0" Text="{Binding PermissionsText}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                                                    <CheckBox Margin="0,8,0,0" Content="{DynamicResource CodexArmThread}" Tag="{Binding BlockedTurnId}" IsChecked="{Binding IsArmed, Mode=OneWay}" IsEnabled="{Binding CanArm}" Click="OnArmPausedThread" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                                                    <Button Style="{StaticResource ActionButton}" Content="{DynamicResource OpenInCodex}" Tag="{Binding ThreadId}" Click="OnOpenPausedThreadInCodex" />
+                                                    <Button Margin="8,0,0,0" Style="{StaticResource ActionButton}" Content="{DynamicResource ContinueInCli}" Tag="{Binding BlockedTurnId}" IsEnabled="{Binding CanContinue}" Click="OnContinuePausedThread" />
+                                                    <Button Margin="8,0,0,0" Style="{StaticResource ActionButton}" Content="{DynamicResource DismissPausedThread}" Tag="{Binding BlockedTurnId}" Click="OnDismissPausedThread" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
             <TabItem>
