@@ -113,9 +113,13 @@ jobs:
         shell: pwsh
         run: |
           $releases = Join-Path (Get-Location) 'artifacts/releases'
+          $version = '${{ steps.release.outputs.version }}'
           $installers = Get-ChildItem -Path $releases -Filter '*Setup.exe' | Sort-Object Name
           $assets = Get-ChildItem -Path $releases -File |
-            Where-Object { $_.Extension -in '.exe', '.nupkg' } | Sort-Object Name
+            Where-Object {
+              $_.Name -like '*Setup.exe' -or
+              ($_.Extension -eq '.nupkg' -and $_.Name -like "AIVitalsApp-$version-*.nupkg")
+            } | Sort-Object Name
 
           $lines = @('## Install', '')
           foreach ($installer in $installers) {
