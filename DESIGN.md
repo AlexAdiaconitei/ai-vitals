@@ -266,7 +266,7 @@ Left-click opens the quick-status popup. The popup can control the widget withou
 - The Widget section previews the selected mode with current data.
 - The history table shows `Time`, `Provider`, `Capability`, `Value`, and `Context`. Technical quality remains in storage/export and is not a visual column.
 - Format units for people: `45.7 s`, `3 min 05 s`, `40%`, `1,180 tokens`, `1.6628 USD`; never expose `45678 milliseconds`.
-- Context may show the model, `Account`, or a short pseudonymous session identifier. Never show prompts, paths, or private session titles.
+- Context may show the model, `Account`, or a short pseudonymous session identifier. Never show prompts or full paths. The paused Codex card may show a leaf project name; private thread titles require its separate, off-by-default opt-in and are never persisted.
 - The header places **Recover widget** next to the shortcut and explains it in a tooltip.
 - The sidebar footer links GitHub and Ko-fi; it is not a theme-status panel.
 
