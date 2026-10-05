@@ -27,4 +27,20 @@ public sealed class CodexExecutableLocatorTests : IDisposable
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
     }
+
+    [Fact]
+    public void Pnpm_shim_is_resolved_without_cmd_and_preserves_literal_arguments()
+    {
+        Directory.CreateDirectory(_root);
+        var script = Path.Combine(_root, "package", "bin", "codex.js");
+        Directory.CreateDirectory(Path.GetDirectoryName(script)!);
+        File.WriteAllText(script, string.Empty);
+        File.WriteAllBytes(Path.Combine(_root, "node.exe"), []);
+        var shim = Path.Combine(_root, "codex.cmd");
+        File.WriteAllText(shim, "node \"%~dp0\\package\\bin\\codex.js\" %*");
+        var arguments = new[] { "resume", "id", "literal & %PATH% \" text" };
+        var command = CodexExecutableLocator.CreateCliCommand(shim, arguments);
+        Assert.Equal(Path.Combine(_root, "node.exe"), command.FileName);
+        Assert.Equal(new[] { script }.Concat(arguments), command.Arguments);
+    }
 }

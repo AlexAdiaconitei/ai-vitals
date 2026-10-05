@@ -28,6 +28,7 @@ public partial class App : System.Windows.Application
     private WidgetWindow? _widgetWindow;
     private AgentActivityMonitor? _activityMonitor;
     private ActivityWidgetWindow? _activityWidgetWindow;
+    private CodexResumeController? _codexResume;
     private AgentActivityHookInstaller? _claudeActivityInstaller;
     private AgentActivityHookInstaller? _codexActivityInstaller;
     private string? _activityHelperPath;
@@ -51,6 +52,14 @@ public partial class App : System.Windows.Application
             .OnBeforeUninstallFastCallback(_ => RevertLocalIntegrations())
             .Run();
 
+        using var instanceLease = AppInstanceLease.TryAcquire(AppDataPaths.ForCurrentUser().RootDirectory);
+        if (instanceLease is null)
+        {
+            var preferences = new JsonPreferencesStore(AppDataPaths.ForCurrentUser().PreferencesPath)
+                .LoadAsync().GetAwaiter().GetResult();
+            System.Windows.MessageBox.Show(UiLanguageCatalog.Get(preferences.Language, "AppAlreadyRunning"), "AI Vitals");
+            return;
+        }
         var application = new App();
         application.InitializeComponent();
         application.Run();
@@ -239,6 +248,13 @@ public partial class App : System.Windows.Application
             }
 
             CreateTrayIcon(_monitor.State.Preferences.Language);
+            _codexResume = new CodexResumeController(
+                _monitor,
+                (title, body) => _trayIcon?.ShowNotification(title, body, ShowPausedThreads),
+                new CodexResumeDiagnosticLog(Path.Combine(AppDataPaths.ForCurrentUser().RootDirectory,
+                    "codex-resume.jsonl")).Write);
+            _mainWindow.AttachCodexResume(_codexResume);
+            _codexResume.Start();
             if (string.Equals(
                     Environment.GetEnvironmentVariable("AI_VITALS_SHOW_TRAY_MENU"),
                     "1",
@@ -282,6 +298,7 @@ public partial class App : System.Windows.Application
             _appliedAppearance = appearance;
             // A language change swaps the string resources; formatted update copy has to be rebuilt.
             RefreshUpdateSurfaces();
+            _codexResume?.RefreshLanguage();
         }
         var trayPreferences = TrayPreferenceSignature(state.Preferences);
         if (_trayPreferenceSignature != trayPreferences)
@@ -353,6 +370,12 @@ public partial class App : System.Windows.Application
         if (_monitor is not null) _trayPreferenceSignature = TrayPreferenceSignature(_monitor.State.Preferences);
     }
 
+    private void ShowPausedThreads()
+    {
+        ShowDashboard();
+        _mainWindow?.ShowSection(2);
+    }
+
     private void ShowUpdateSection()
     {
         ShowDashboard();
@@ -407,7 +430,7 @@ public partial class App : System.Windows.Application
     {
         if (_monitor is null) return;
         ApplyStartupRegistration(startWithWindows);
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        await _monitor.UpdatePreferencesAsync(current => current with
         {
             AutomaticUpdateCheckEnabled = automaticCheckEnabled,
             StartWithWindows = startWithWindows
@@ -472,7 +495,7 @@ public partial class App : System.Windows.Application
     private async Task SetThemeAsync(string theme)
     {
         if (_monitor is null) return;
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with { Theme = theme });
+        await _monitor.UpdatePreferencesAsync(current => current with { Theme = theme });
     }
 
     private void OpenSettings()
@@ -645,7 +668,7 @@ public partial class App : System.Windows.Application
         var normalized = ActivityWidgetPreferenceRules.Normalize(widgetPreferences);
         _activityMonitor.SetIncludedProviders(ToActivityProviders(normalized.IncludedProviderIds!));
         _activityWidgetWindow.ApplyPreferences(normalized, _monitor.State.Preferences.Language);
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        await _monitor.UpdatePreferencesAsync(current => current with
         {
             ActivityWidget = normalized,
             ActivityIntegrations = integrations
@@ -655,14 +678,14 @@ public partial class App : System.Windows.Application
     private async Task CompleteOnboardingAsync()
     {
         if (_monitor is null) return;
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with { OnboardingCompleted = true });
+        await _monitor.UpdatePreferencesAsync(current => current with { OnboardingCompleted = true });
         ShowDashboard();
     }
 
     private async Task SaveWidgetPreferencesAsync(WidgetPreferences widgetPreferences)
     {
         if (_monitor is null) return;
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        await _monitor.UpdatePreferencesAsync(current => current with
         {
             Widget = WidgetPreferenceRules.Normalize(widgetPreferences)
         });
@@ -671,7 +694,7 @@ public partial class App : System.Windows.Application
     private async Task SaveActivityWidgetPreferencesAsync(ActivityWidgetPreferences widgetPreferences)
     {
         if (_monitor is null) return;
-        await _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        await _monitor.UpdatePreferencesAsync(current => current with
         {
             ActivityWidget = ActivityWidgetPreferenceRules.Normalize(widgetPreferences)
         });
@@ -738,6 +761,8 @@ public partial class App : System.Windows.Application
 
         _updateTimer?.Stop();
         _updateTimer = null;
+        _codexResume?.Dispose();
+        _codexResume = null;
         if (_updateService is not null) _updateService.StatusChanged -= OnUpdateStatusChanged;
         _trayIcon?.Dispose();
         _trayIcon = null;

@@ -63,6 +63,8 @@ public sealed class JsonPreferencesStore : IAppPreferencesStore
             if (preferences is null) return null;
             // Older schemas upgrade in place: fields added later arrive with their record defaults.
             if (preferences.SchemaVersion is < 1 or > AppPreferences.CurrentSchemaVersion) return null;
+            if (preferences.SchemaVersion < 5 && preferences.CodexResume is { } legacyResume)
+                preferences = preferences with { CodexResume = legacyResume with { AutoResumeEnabled = false, State = null } };
             return preferences with { SchemaVersion = AppPreferences.CurrentSchemaVersion };
         }
         catch (JsonException)

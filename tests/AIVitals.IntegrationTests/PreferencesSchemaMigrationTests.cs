@@ -55,6 +55,68 @@ public sealed class PreferencesSchemaMigrationTests : IDisposable
     }
 
     [Fact]
+    public async Task Legacy_global_resume_is_not_migrated_into_unbounded_authorization()
+    {
+        var path = Path.Combine(_root, "preferences.json");
+        Directory.CreateDirectory(_root);
+        await File.WriteAllTextAsync(path,
+            """{"schemaVersion":4,"codexResume":{"autoResumeEnabled":true,"dismissedTurnIds":["dismissed"]}}""");
+        var loaded = await new JsonPreferencesStore(path).LoadAsync();
+        Assert.False(loaded.EffectiveCodexResume.AutoResumeEnabled);
+        Assert.Contains("dismissed", loaded.EffectiveCodexResume.EffectiveDismissedTurnIds);
+        Assert.Null(loaded.EffectiveCodexResume.State);
+    }
+
+    [Fact]
+    public async Task Pending_reset_arming_and_launch_counts_survive_preferences_round_trip()
+    {
+        var path = Path.Combine(_root, "preferences.json");
+        var reset = DateTimeOffset.UtcNow.AddHours(1);
+        var state = new CodexResumeState(
+            [new("thread", "turn", reset.AddMinutes(-30), [new("codex:primary", reset)], Armed: true)],
+            [new(reset, 2)]);
+        var store = new JsonPreferencesStore(path);
+        await store.SaveAsync(new AppPreferences(CodexResume: new(State: state)));
+        var loaded = await store.LoadAsync();
+        Assert.True(Assert.Single(loaded.EffectiveCodexResume.State!.Entries).Armed);
+        Assert.Equal(reset, Assert.Single(Assert.Single(loaded.EffectiveCodexResume.State.Entries).Windows).ResetsAtUtc);
+        Assert.Equal(2, Assert.Single(loaded.EffectiveCodexResume.State.LaunchCounts).Count);
+    }
+
+    [Fact]
+    public async Task Appearance_save_cannot_overwrite_an_in_flight_resume_reservation()
+    {
+        var store = new DelayedPreferencesStore();
+        await using var monitor = new UsageMonitorService([], new SqliteObservationRepository(Path.Combine(_root, "unused.db")), store);
+        var state = new CodexResumeState([new("thread", "turn", DateTimeOffset.UtcNow, [],
+            Phase: PausedThreadPhase.Starting)], []);
+        var reserve = monitor.UpdatePreferencesAsync(current => current with { CodexResume = new(State: state) });
+        await store.FirstWriteStarted.Task;
+        var appearance = monitor.UpdatePreferencesAsync(current => current with { Theme = "Dark" });
+        store.ReleaseFirstWrite.SetResult();
+        await Task.WhenAll(reserve, appearance);
+        Assert.Equal("Dark", monitor.State.Preferences.Theme);
+        Assert.Equal(PausedThreadPhase.Starting, Assert.Single(store.Saved!.EffectiveCodexResume.State!.Entries).Phase);
+    }
+
+    private sealed class DelayedPreferencesStore : IAppPreferencesStore
+    {
+        public TaskCompletionSource FirstWriteStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseFirstWrite { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public AppPreferences? Saved { get; private set; }
+        public Task<AppPreferences> LoadAsync(CancellationToken token = default) => Task.FromResult(new AppPreferences());
+        public async Task SaveAsync(AppPreferences preferences, CancellationToken token = default)
+        {
+            if (!FirstWriteStarted.Task.IsCompleted)
+            {
+                FirstWriteStarted.SetResult();
+                await ReleaseFirstWrite.Task.WaitAsync(token);
+            }
+            Saved = preferences;
+        }
+    }
+
+    [Fact]
     public async Task Update_preferences_survive_a_save_and_load_round_trip()
     {
         var path = Path.Combine(_root, "preferences.json");

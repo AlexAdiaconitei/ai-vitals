@@ -34,6 +34,9 @@ public sealed class TrayIconHost : IDisposable
     private readonly SynchronizationContext _uiContext;
     private readonly System.Windows.Forms.Timer _leftClickTimer;
     private bool _updateAvailable;
+    private Action? _balloonClicked;
+
+    private readonly Action _showUpdateDetails;
 
     public TrayIconHost(
         Action showQuickView,
@@ -41,6 +44,7 @@ public sealed class TrayIconHost : IDisposable
         Action showContextMenu,
         Action showUpdateDetails)
     {
+        _showUpdateDetails = showUpdateDetails;
         _uiContext = SynchronizationContext.Current
             ?? throw new InvalidOperationException("TrayIconHost must be created on the UI thread.");
 
@@ -50,7 +54,10 @@ public sealed class TrayIconHost : IDisposable
             Text = "AI Vitals",
             Visible = true
         };
-        _notifyIcon.BalloonTipClicked += (_, _) => OnUi(showUpdateDetails);
+        _notifyIcon.BalloonTipClicked += (_, _) =>
+        {
+            if (_balloonClicked is { } clicked) OnUi(clicked);
+        };
         _leftClickTimer = new System.Windows.Forms.Timer
         {
             Interval = SystemInformation.DoubleClickTime
@@ -104,7 +111,15 @@ public sealed class TrayIconHost : IDisposable
     }
 
     public void ShowUpdateNotification(string title, string message) =>
-        OnUi(() => _notifyIcon.ShowBalloonTip(10000, title, message, ToolTipIcon.Info));
+        ShowNotification(title, message, _showUpdateDetails);
+
+    /// <summary>Windows shows one balloon at a time, so the click goes to whichever was shown last.</summary>
+    public void ShowNotification(string title, string message, Action onClick) =>
+        OnUi(() =>
+        {
+            _balloonClicked = onClick;
+            _notifyIcon.ShowBalloonTip(10000, title, message, ToolTipIcon.Info);
+        });
 
     public void Dispose()
     {
