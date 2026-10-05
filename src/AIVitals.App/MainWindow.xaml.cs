@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly Func<Task> _applyUpdate;
     private readonly Func<bool, bool, Task> _saveUpdatePreferences;
     private readonly List<string> _widgetProviderOrder = ["codex", "claude-code"];
+    private CodexResumeController? _codexResume;
 
     public MainWindow(
         UsageMonitorService monitor,
@@ -71,6 +72,47 @@ public partial class MainWindow : Window
     }
 
     public void ShowSection(int index) => DashboardTabs.SelectedIndex = Math.Clamp(index, 0, DashboardTabs.Items.Count - 1);
+
+    public void AttachCodexResume(CodexResumeController controller)
+    {
+        _codexResume = controller;
+        PausedThreadsCard.DataContext = controller.ViewModel;
+    }
+
+    private async void OnCodexAutoResumeClicked(object sender, RoutedEventArgs eventArgs)
+    {
+        if (_codexResume is null) return;
+        await _codexResume.SetAutoResumeAsync(CodexAutoResume.IsChecked == true);
+    }
+
+    private async void OnArmPausedThread(object sender, RoutedEventArgs eventArgs)
+    {
+        if (_codexResume is not null && sender is System.Windows.Controls.CheckBox { Tag: string turnId } toggle)
+            await _codexResume.SetThreadArmedAsync(turnId, toggle.IsChecked == true);
+    }
+
+    private async void OnShowCodexThreadNames(object sender, RoutedEventArgs eventArgs)
+    {
+        if (_codexResume is not null && sender is System.Windows.Controls.CheckBox toggle)
+            await _codexResume.SetShowThreadNamesAsync(toggle.IsChecked == true);
+    }
+
+    private void OnOpenPausedThreadInCodex(object sender, RoutedEventArgs eventArgs)
+    {
+        if (sender is FrameworkElement { Tag: string threadId }) _codexResume?.OpenInDesktop(threadId);
+    }
+
+    private async void OnContinuePausedThread(object sender, RoutedEventArgs eventArgs)
+    {
+        if (_codexResume is not null && sender is FrameworkElement { Tag: string blockedTurnId })
+            await _codexResume.ContinueNowAsync(blockedTurnId);
+    }
+
+    private async void OnDismissPausedThread(object sender, RoutedEventArgs eventArgs)
+    {
+        if (_codexResume is not null && sender is FrameworkElement { Tag: string blockedTurnId })
+            await _codexResume.DismissAsync(blockedTurnId);
+    }
 
     private async void OnLoaded(object sender, RoutedEventArgs eventArgs)
     {

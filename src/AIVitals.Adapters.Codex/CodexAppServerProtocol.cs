@@ -16,7 +16,7 @@ internal interface ICodexAppServerClientFactory
     ICodexAppServerClient Create();
 }
 
-internal sealed class CodexRpcException(int code, string message) : Exception(message)
+public sealed class CodexRpcException(int code, string message) : Exception(message)
 {
     public int Code { get; } = code;
 }

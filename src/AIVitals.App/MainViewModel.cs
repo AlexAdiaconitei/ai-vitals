@@ -207,7 +207,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     public Task SaveAppearanceAsync(string language, string theme) =>
-        _monitor.SavePreferencesAsync(_monitor.State.Preferences with
+        _monitor.UpdatePreferencesAsync(current => current with
         {
             Language = language,
             Theme = theme

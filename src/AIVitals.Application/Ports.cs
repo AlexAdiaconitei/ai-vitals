@@ -16,16 +16,18 @@ public sealed record AppPreferences(
     bool AutomaticUpdateCheckEnabled = true,
     bool StartWithWindows = false,
     ActivityWidgetPreferences? ActivityWidget = null,
-    AgentActivityIntegrationPreferences? ActivityIntegrations = null)
+    AgentActivityIntegrationPreferences? ActivityIntegrations = null,
+    CodexResumePreferences? CodexResume = null)
 {
-    /// <summary>Version 3 adds the opt-in activity widget and hook integrations.</summary>
-    public const int CurrentSchemaVersion = 3;
+    /// <summary>Version 5 persists per-turn authorization and continuation outcomes.</summary>
+    public const int CurrentSchemaVersion = 5;
 
     public WidgetPreferences EffectiveWidget => WidgetPreferenceRules.Normalize(Widget ?? new WidgetPreferences());
     public ActivityWidgetPreferences EffectiveActivityWidget =>
         ActivityWidgetPreferenceRules.Normalize(ActivityWidget ?? new ActivityWidgetPreferences());
     public AgentActivityIntegrationPreferences EffectiveActivityIntegrations =>
         ActivityIntegrations ?? new AgentActivityIntegrationPreferences();
+    public CodexResumePreferences EffectiveCodexResume => CodexResume ?? new CodexResumePreferences();
 }
 
 public enum WidgetVisualMode
@@ -54,6 +56,31 @@ public sealed record ActivityWidgetPreferences(
     // Opts into showing the leaf directory name of each agent session on its traffic light.
     // Off by default: it is the only agent-supplied text AI Vitals ever displays.
     bool ShowSessionLabels = false);
+
+/// <summary>
+/// Automatic continuation runs an agent with nobody watching, so it is off until the user turns it
+/// on. Dismissal is keyed by the blocked turn: the same thread blocked again later shows up again.
+/// </summary>
+public sealed record CodexResumePreferences(
+    bool AutoResumeEnabled = false,
+    string[]? DismissedTurnIds = null,
+    CodexResumeState? State = null,
+    bool ShowThreadNames = false)
+{
+    public const int MaxDismissedTurns = 50;
+
+    public IReadOnlySet<string> EffectiveDismissedTurnIds =>
+        (DismissedTurnIds ?? []).ToHashSet(StringComparer.Ordinal);
+
+    public CodexResumePreferences Dismiss(string turnId) => this with
+    {
+        DismissedTurnIds = (DismissedTurnIds ?? [])
+            .Where(id => id != turnId)
+            .Append(turnId)
+            .TakeLast(MaxDismissedTurns)
+            .ToArray()
+    };
+}
 
 public sealed record AgentActivityIntegrationPreferences(
     bool ClaudeCodeEnabled = false,
