@@ -11,12 +11,16 @@ param(
     [Parameter(Mandatory)]
     [string]$Version,
 
-    [string]$ChangelogPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'CHANGELOG.md'),
+    [string]$ChangelogPath,
 
     [string]$OutputPath
 )
 
 $ErrorActionPreference = 'Stop'
+
+if (-not $ChangelogPath) {
+    $ChangelogPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'CHANGELOG.md'
+}
 
 $resolvedChangelog = (Resolve-Path -LiteralPath $ChangelogPath).Path
 $normalizedVersion = $Version.TrimStart('v', 'V').Trim()
