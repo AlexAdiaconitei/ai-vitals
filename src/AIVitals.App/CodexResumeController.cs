@@ -288,6 +288,7 @@ public sealed class CodexResumeController : IDisposable
             timeout.Token.ThrowIfCancellationRequested();
             mayHaveSubmitted = true;
             var viaOrca = await _orca.TryContinueAsync(validation.Thread, Text("CodexResumePrompt"), timeout.Token);
+            var route = $"orca={_orca.LastDetail ?? viaOrca.ToString()}";
             if (viaOrca != OrcaCodexContinueResult.NotOwned)
             {
                 Finish(info, viaOrca switch
@@ -304,17 +305,19 @@ public sealed class CodexResumeController : IDisposable
                     OrcaCodexContinueResult.NoLongerPaused => "CodexResumeMsgAlreadyContinued",
                     OrcaCodexContinueResult.QuotaUnavailable => "CodexResumeMsgQuotaUnknown",
                     _ => "CodexResumeMsgOutcomeUnknown"
-                });
+                }, route);
                 await SaveStateAsync();
                 return;
             }
             var viaDaemon = await CodexDaemonContinuation.TryContinueAsync(thread.ThreadId, thread.BlockedTurnId,
                 Text("CodexResumePrompt"), timeout.Token,
                 CodexDaemonContinuation.DefaultSocketPath(thread.HomeDirectory));
+            route += $";daemon={viaDaemon}";
             if (viaDaemon is CodexDaemonContinueResult.NotLoaded or CodexDaemonContinueResult.DaemonUnavailable)
             {
                 timeout.Token.ThrowIfCancellationRequested();
                 var result = await CodexResumeLauncher.LaunchAsync(validation.Thread, Text("CodexResumePrompt"), timeout.Token);
+                route += $";launch={result}";
                 Finish(info, result switch
                 {
                     CodexResumeLaunchResult.Launched => PausedThreadLaunchOutcome.Launched,
@@ -332,7 +335,7 @@ public sealed class CodexResumeController : IDisposable
                     CodexResumeLaunchResult.NoLongerPaused => "CodexResumeMsgAlreadyContinued",
                     CodexResumeLaunchResult.QuotaUnavailable => "CodexResumeMsgQuotaUnknown",
                     _ => "CodexResumeMsgFailed"
-                });
+                }, route);
             }
             else
                 Finish(info, viaDaemon switch
@@ -350,7 +353,7 @@ public sealed class CodexResumeController : IDisposable
                     CodexDaemonContinueResult.OutcomeUnknown => "CodexResumeMsgOutcomeUnknown",
                     CodexDaemonContinueResult.QuotaUnavailable => "CodexResumeMsgQuotaUnknown",
                     _ => "CodexResumeMsgFailed"
-                });
+                }, route);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -367,13 +370,13 @@ public sealed class CodexResumeController : IDisposable
         await SaveStateAsync();
     }
 
-    private void Finish(PausedThreadInfo thread, PausedThreadLaunchOutcome outcome, string message)
+    private void Finish(PausedThreadInfo thread, PausedThreadLaunchOutcome outcome, string message, string? route = null)
     {
         _tracker.ReportLaunch(thread, outcome, DateTimeOffset.UtcNow);
         var entry = _tracker.State.Entries.FirstOrDefault(item => item.BlockedTurnId == thread.BlockedTurnId);
         _diagnostic(new(DateTimeOffset.UtcNow, CodexResumeDiagnosticEvent.Decision,
             ThreadId: thread.ThreadId, BlockedTurnId: thread.BlockedTurnId,
-            Phase: entry?.Phase, Armed: entry?.Armed ?? false));
+            Phase: entry?.Phase, Armed: entry?.Armed ?? false, Detail: route));
         ViewModel.Message = string.Format(Text(message), thread.Name);
         if (outcome == PausedThreadLaunchOutcome.NoLongerPaused)
             _paused = _paused.Where(item => item.BlockedTurnId != thread.BlockedTurnId).ToArray();

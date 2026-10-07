@@ -36,6 +36,31 @@ public sealed class OrcaCodexContinuationTests : IDisposable
         Assert.Null(OrcaCodexContinuation.Match(Thread, status, listing));
     }
 
+    [Fact]
+    public void Hard_linked_transcript_in_the_Orca_runtime_home_proves_ownership()
+    {
+        // Orca mirrors default-home rollouts into its runtime home as hard links. The scanner may
+        // report the mirror while Orca's hook status names the default-home path.
+        var reported = Path.Combine(_root, "default", "a.jsonl");
+        var mirror = Path.Combine(_root, "mirror", "a.jsonl");
+        Directory.CreateDirectory(Path.GetDirectoryName(reported)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(mirror)!);
+        File.WriteAllText(reported, "{}");
+        Assert.True(CreateHardLink(mirror, reported, IntPtr.Zero));
+        var thread = Thread with { RolloutPath = mirror };
+        var status = Status().Replace(JsonSerializer.Serialize(Thread.RolloutPath).Trim('"'), JsonSerializer.Serialize(reported).Trim('"'));
+
+        Assert.Equal(new OrcaCodexTerminal("term-a", "instance-a"), OrcaCodexContinuation.Match(thread, status, Listing()));
+
+        var copy = Path.Combine(_root, "copy", "a.jsonl");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.Copy(reported, copy);
+        Assert.Null(OrcaCodexContinuation.Match(Thread with { RolloutPath = copy }, status, Listing()));
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern bool CreateHardLink(string fileName, string existingFileName, IntPtr securityAttributes);
+
     [Theory]
     [InlineData("› Ask Codex to do anything", true)]
     [InlineData("›", true)]
@@ -57,15 +82,17 @@ public sealed class OrcaCodexContinuationTests : IDisposable
     }
 
     [Theory]
-    [InlineData("busy", OrcaCodexContinueResult.Held)]
-    [InlineData("draft", OrcaCodexContinueResult.Held)]
-    [InlineData("restarted", OrcaCodexContinueResult.Held)]
-    [InlineData("quota", OrcaCodexContinueResult.QuotaUnavailable)]
-    [InlineData("completed", OrcaCodexContinueResult.NoLongerPaused)]
-    public async Task Preflight_never_sends_to_busy_replaced_or_already_completed_tasks(string change, OrcaCodexContinueResult expected)
+    [InlineData("busy", OrcaCodexContinueResult.Held, "not-idle")]
+    [InlineData("draft", OrcaCodexContinueResult.Held, "composer-not-empty")]
+    [InlineData("restarted", OrcaCodexContinueResult.Held, "terminal-changed")]
+    [InlineData("quota", OrcaCodexContinueResult.QuotaUnavailable, "quota")]
+    [InlineData("completed", OrcaCodexContinueResult.NoLongerPaused, "no-longer-paused")]
+    public async Task Preflight_never_sends_to_busy_replaced_or_already_completed_tasks(string change,
+        OrcaCodexContinueResult expected, string detail)
     {
         var fixture = CreateFixture(change);
         Assert.Equal(expected, await fixture.Adapter.TryContinueAsync(Thread, "continue", CancellationToken.None));
+        Assert.Equal(detail, fixture.Adapter.LastDetail);
         Assert.DoesNotContain(fixture.Calls, args => args[1] == "send");
     }
 
