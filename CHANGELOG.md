@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## Unreleased
 
+## 0.3.1 - 2026-10-08
+
+### Fixed
+
+- Orca terminals are recognised when the scanner reports the Orca runtime-home mirror of a default-home rollout. Orca hard-links those transcripts, so ownership now compares file identity instead of requiring the same path. Previously these threads fell through to `codex resume`, found the writer lock held by the Orca pane and never continued.
+- The continuation diagnostic log records which route handled each attempt (Orca, shared daemon, new terminal) and why it was held, such as a busy pane, a changed terminal or a composer that was not empty. It records no terminal text.
+
 ## 0.3.0 - 2026-10-05
 
 ### Added
