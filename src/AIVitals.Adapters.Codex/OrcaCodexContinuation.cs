@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
+using Microsoft.Win32.SafeHandles;
 
 namespace AIVitals.Adapters.Codex;
 
@@ -19,6 +21,9 @@ public sealed class OrcaCodexContinuation
         Func<IReadOnlyList<string>, CancellationToken, Task<JsonElement>> run,
         ICodexAppServerClientFactory? clientFactory = null)
     { _orcaDirectory = orcaDirectory; _run = run; _clientFactory = clientFactory; }
+
+    /// <summary>Why the last <see cref="TryContinueAsync"/> ended as it did. Contains no terminal text.</summary>
+    public string? LastDetail { get; private set; }
 
     public async Task<OrcaCodexTerminal?> FindAsync(CodexPausedThread thread, CancellationToken cancellationToken)
     {
@@ -50,7 +55,7 @@ public sealed class OrcaCodexContinuation
                 Text(entry, "worktreeId") != Text(terminal, "worktreeId") ||
                 entry.TryGetProperty("connectionId", out var connection) && connection.ValueKind != JsonValueKind.Null ||
                 !entry.TryGetProperty("providerSession", out var session) || Text(session, "key") != "session_id" ||
-                Text(session, "id") != thread.ThreadId || !SamePath(Text(session, "transcriptPath"), thread.RolloutPath)) continue;
+                Text(session, "id") != thread.ThreadId || !SameFile(Text(session, "transcriptPath"), thread.RolloutPath)) continue;
             if (Text(terminal, "handle") is { Length: > 0 } handle && Text(terminal, "incarnationId") is { Length: > 0 } incarnation)
                 matches.Add(new(handle, incarnation));
         }
@@ -60,38 +65,45 @@ public sealed class OrcaCodexContinuation
     public async Task<OrcaCodexContinueResult> TryContinueAsync(CodexPausedThread thread, string prompt,
         CancellationToken cancellationToken)
     {
+        LastDetail = null;
         try { return await ContinueCoreAsync(thread, prompt, cancellationToken).ConfigureAwait(false); }
         catch (Exception exception) when (exception is IOException or JsonException or CodexRpcException or
             OperationCanceledException or System.ComponentModel.Win32Exception or InvalidOperationException)
-        { return OrcaCodexContinueResult.Held; }
+        {
+            LastDetail = "error:" + exception.GetType().Name;
+            return OrcaCodexContinueResult.Held;
+        }
     }
 
     private async Task<OrcaCodexContinueResult> ContinueCoreAsync(CodexPausedThread thread, string prompt,
         CancellationToken cancellationToken)
     {
         var terminal = await FindAsync(thread, cancellationToken).ConfigureAwait(false);
-        if (terminal is null) return OrcaCodexContinueResult.NotOwned;
+        if (terminal is null) return Detail("not-owned", OrcaCodexContinueResult.NotOwned);
         var wait = await _run(["terminal", "wait", "--terminal", terminal.Handle, "--for", "tui-idle",
             "--timeout-ms", "1000", "--json"], cancellationToken).ConfigureAwait(false);
         if (!wait.TryGetProperty("result", out var waitResult) || !waitResult.TryGetProperty("wait", out var waiting) ||
-            !True(waiting, "satisfied")) return OrcaCodexContinueResult.Held;
+            !True(waiting, "satisfied")) return Detail("not-idle", OrcaCodexContinueResult.Held);
         var shown = await _run(["terminal", "show", "--terminal", terminal.Handle, "--json"], cancellationToken).ConfigureAwait(false);
         if (!shown.TryGetProperty("result", out var showResult) || !showResult.TryGetProperty("terminal", out var current) ||
             !EligibleTerminal(current) || Text(current, "incarnationId") != terminal.IncarnationId ||
             await FindAsync(thread, cancellationToken).ConfigureAwait(false) != terminal)
-            return OrcaCodexContinueResult.Held;
+            return Detail("terminal-changed", OrcaCodexContinueResult.Held);
         var screen = await _run(["terminal", "read", "--terminal", terminal.Handle, "--limit", "100", "--json"], cancellationToken).ConfigureAwait(false);
         if (!screen.TryGetProperty("result", out var screenResult) || !screenResult.TryGetProperty("terminal", out var surface) ||
-            !surface.TryGetProperty("tail", out var tail) || tail.ValueKind != JsonValueKind.Array ||
-            !EmptyComposer(string.Join('\n', tail.EnumerateArray().Where(line => line.ValueKind == JsonValueKind.String).Select(line => line.GetString()))))
-            return OrcaCodexContinueResult.Held;
+            !surface.TryGetProperty("tail", out var tail) || tail.ValueKind != JsonValueKind.Array)
+            return Detail("screen-unreadable", OrcaCodexContinueResult.Held);
+        var preview = string.Join('\n', tail.EnumerateArray().Where(line => line.ValueKind == JsonValueKind.String).Select(line => line.GetString()));
+        if (!EmptyComposer(preview))
+            return Detail(ComposerLine(preview) is null ? "composer-missing" : "composer-not-empty", OrcaCodexContinueResult.Held);
 
         await using var client = (_clientFactory ?? new CodexAppServerClientFactory(codexHome: thread.HomeDirectory)).Create();
         await client.StartAsync(cancellationToken).ConfigureAwait(false);
         var turns = await LatestTurnAsync(client, thread, cancellationToken).ConfigureAwait(false);
-        if (!CodexPausedThreadScanner.IsSameBlockedTurn(turns, thread.BlockedTurnId)) return OrcaCodexContinueResult.NoLongerPaused;
+        if (!CodexPausedThreadScanner.IsSameBlockedTurn(turns, thread.BlockedTurnId))
+            return Detail("no-longer-paused", OrcaCodexContinueResult.NoLongerPaused);
         var limits = await client.RequestAsync("account/rateLimits/read", null, cancellationToken).ConfigureAwait(false);
-        if (!CodexResumeQuota.IsAllowed(limits, DateTimeOffset.UtcNow)) return OrcaCodexContinueResult.QuotaUnavailable;
+        if (!CodexResumeQuota.IsAllowed(limits, DateTimeOffset.UtcNow)) return Detail("quota", OrcaCodexContinueResult.QuotaUnavailable);
 
         // Once input is attempted, every uncertain result is terminal. Never repeat the prompt on silence.
         try
@@ -101,15 +113,24 @@ public sealed class OrcaCodexContinuation
             while (true)
             {
                 turns = await LatestTurnAsync(client, thread, cancellationToken).ConfigureAwait(false);
-                if (StartedNewTurn(turns, thread.BlockedTurnId)) return OrcaCodexContinueResult.Continued;
+                if (StartedNewTurn(turns, thread.BlockedTurnId)) return Detail("sent", OrcaCodexContinueResult.Continued);
                 if (!CodexPausedThreadScanner.IsSameBlockedTurn(turns, thread.BlockedTurnId))
-                    return OrcaCodexContinueResult.OutcomeUnknown;
+                    return Detail("sent-unconfirmed", OrcaCodexContinueResult.OutcomeUnknown);
                 await Task.Delay(500, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (Exception exception) when (exception is IOException or JsonException or CodexRpcException or
             OperationCanceledException or System.ComponentModel.Win32Exception or InvalidOperationException)
-        { return OrcaCodexContinueResult.OutcomeUnknown; }
+        {
+            LastDetail = "send-error:" + exception.GetType().Name;
+            return OrcaCodexContinueResult.OutcomeUnknown;
+        }
+    }
+
+    private OrcaCodexContinueResult Detail(string detail, OrcaCodexContinueResult result)
+    {
+        LastDetail = detail;
+        return result;
     }
 
     internal static bool StartedNewTurn(JsonElement turns, string blockedTurnId) =>
@@ -117,8 +138,10 @@ public sealed class OrcaCodexContinuation
         data.EnumerateArray().FirstOrDefault() is { ValueKind: JsonValueKind.Object } last &&
         Text(last, "id") is { Length: > 0 } id && id != blockedTurnId && Text(last, "status") is "inProgress" or "completed";
 
-    internal static bool EmptyComposer(string? preview) => preview is not null && preview.Split('\n')
-        .Select(line => line.Trim()).LastOrDefault(line => line.StartsWith('›')) is "›" or "› Ask Codex to do anything";
+    internal static bool EmptyComposer(string? preview) => ComposerLine(preview) is "›" or "› Ask Codex to do anything";
+
+    private static string? ComposerLine(string? preview) => preview?.Split('\n')
+        .Select(line => line.Trim()).LastOrDefault(line => line.StartsWith('›'));
 
     private static Task<JsonElement> LatestTurnAsync(ICodexAppServerClient client, CodexPausedThread thread,
         CancellationToken token) => client.RequestAsync("thread/turns/list",
@@ -132,6 +155,33 @@ public sealed class OrcaCodexContinuation
         element.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     private static bool SamePath(string? left, string? right) => left is not null && right is not null &&
         string.Equals(left.Replace('/', '\\').TrimEnd('\\'), right.Replace('/', '\\').TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+
+    // Orca mirrors default-home rollouts into its runtime home as hard links, so the scanner and
+    // Orca's hook status can name the same transcript by different paths.
+    internal static bool SameFile(string? left, string? right)
+    {
+        if (SamePath(left, right)) return true;
+        if (left is null || right is null || !OperatingSystem.IsWindows()) return false;
+        try
+        {
+            using var a = File.OpenHandle(left, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var b = File.OpenHandle(right, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return GetFileInformationByHandle(a, out var x) && GetFileInformationByHandle(b, out var y) &&
+                x.VolumeSerialNumber == y.VolumeSerialNumber && x.FileIndexHigh == y.FileIndexHigh && x.FileIndexLow == y.FileIndexLow;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return false; }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FileInformation
+    {
+        public uint FileAttributes;
+        public long CreationTime, LastAccessTime, LastWriteTime;
+        public uint VolumeSerialNumber, FileSizeHigh, FileSizeLow, NumberOfLinks, FileIndexHigh, FileIndexLow;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetFileInformationByHandle(SafeFileHandle file, out FileInformation information);
 
     private static async Task<JsonElement> RunCliAsync(IReadOnlyList<string> arguments, CancellationToken token)
     {

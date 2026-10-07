@@ -6,7 +6,7 @@ public sealed record CodexResumeDiagnostic(DateTimeOffset ObservedAtUtc, CodexRe
     int ThreadCount = 0, string? ThreadId = null, string? BlockedTurnId = null,
     PausedThreadPhase? Phase = null, bool Armed = false, DateTimeOffset? ResetsAtUtc = null,
     CodexResumeFailureKind Failure = CodexResumeFailureKind.None, int? RpcCode = null,
-    int CurrentQuotaCount = 0, int QuotaCount = 0);
+    int CurrentQuotaCount = 0, int QuotaCount = 0, string? Detail = null);
 
 public static class CodexResumeScanPolicy
 {
