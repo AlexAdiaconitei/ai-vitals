@@ -61,6 +61,16 @@ public sealed class OrcaCodexContinuationTests : IDisposable
     [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
     private static extern bool CreateHardLink(string fileName, string existingFileName, IntPtr securityAttributes);
 
+    [Fact]
+    public void Orca_CLI_output_is_decoded_as_UTF8_regardless_of_the_console_code_page()
+    {
+        var start = OrcaCodexContinuation.CliStartInfo("orca.exe", ["terminal", "read"]);
+        Assert.Equal(65001, start.StandardOutputEncoding?.CodePage);
+        Assert.Equal(65001, start.StandardErrorEncoding?.CodePage);
+        Assert.Equal(["terminal", "read"], start.ArgumentList);
+        Assert.False(start.Environment.ContainsKey("ORCA_PAIRING_CODE"));
+    }
+
     [Theory]
     [InlineData("› Ask Codex to do anything", true)]
     [InlineData("›", true)]
