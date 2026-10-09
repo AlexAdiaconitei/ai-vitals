@@ -191,6 +191,16 @@ public sealed class CodexResumeTracker
         _lastLaunchUtc = nowUtc;
     }
 
+    /// <summary>The preflight quota read rejected a start before anything was sent.</summary>
+    public void DeferForQuota(PausedThreadInfo thread, DateTimeOffset nowUtc)
+    {
+        if (!_entries.TryGetValue(thread.BlockedTurnId, out var entry) ||
+            entry.Phase is PausedThreadPhase.Starting or PausedThreadPhase.Launched or
+                PausedThreadPhase.LaunchFailed or PausedThreadPhase.OutcomeUnknown) return;
+        _entries[thread.BlockedTurnId] = entry with
+        { Phase = PausedThreadPhase.WaitingForQuota, RetryAtUtc = nowUtc + _heldRetryInterval };
+    }
+
     public void ReportLaunch(PausedThreadInfo thread, PausedThreadLaunchOutcome outcome, DateTimeOffset nowUtc)
     {
         if (!_entries.TryGetValue(thread.BlockedTurnId, out var entry)) return;
