@@ -11,7 +11,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
-- Orca terminals with an empty Codex composer are continued. The app decoded Orca CLI output with the Windows ANSI code page, so the composer prompt `›` arrived as `â€º` and every attempt was held as `composer-missing`. Orca output is now read as UTF-8.
+- Orca terminals with an empty Codex composer are continued. The app decoded Orca CLI output with the Windows ANSI code page, so the composer prompt character arrived garbled and every attempt was held as `composer-missing`. Orca output is now read as UTF-8.
 
 ## 0.3.1 - 2026-10-08
 
