@@ -12,6 +12,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Fixed
 
 - Orca terminals with an empty Codex composer are continued. The app decoded Orca CLI output with the Windows ANSI code page, so the composer prompt character arrived garbled and every attempt was held as `composer-missing`. Orca output is now read as UTF-8.
+- A task whose start is rejected by the fresh quota check waits five minutes before the next attempt. It was retried on every one-minute tick, which filled the diagnostic log and rotated away older entries.
 
 ## 0.3.1 - 2026-10-08
 

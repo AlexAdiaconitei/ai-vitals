@@ -374,4 +374,24 @@ public sealed class CodexResumeTrackerTests
         Assert.Null(tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset.AddMinutes(1)).Launch);
         Assert.Equal(thread, tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset.AddMinutes(5)).Launch);
     }
+
+    [Fact]
+    public void Quota_denial_before_submission_waits_without_spending_an_attempt()
+    {
+        // The monitor may report quota that the fresh preflight read still rejects. Retrying on every
+        // one-minute tick filled the diagnostic log; the task waits like a held one instead.
+        var thread = Thread("a");
+        var tracker = Waiting(thread);
+        Assert.Equal(thread, tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset).Launch);
+        tracker.DeferForQuota(thread, AfterReset);
+        var entry = Assert.Single(tracker.State.Entries);
+        Assert.True(entry.Armed);
+        Assert.Equal(PausedThreadPhase.WaitingForQuota, entry.Phase);
+        Assert.Empty(tracker.State.LaunchCounts);
+        Assert.Null(tracker.State.LastLaunchUtc);
+        var waiting = tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset.AddMinutes(1));
+        Assert.Null(waiting.Launch);
+        Assert.Equal(PausedThreadPhase.WaitingForQuota, Assert.Single(waiting.Threads).Phase);
+        Assert.Equal(thread, tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset.AddMinutes(5)).Launch);
+    }
 }
