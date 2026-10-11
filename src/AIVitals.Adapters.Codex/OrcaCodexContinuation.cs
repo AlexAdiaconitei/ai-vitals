@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
 
@@ -188,13 +189,7 @@ public sealed class OrcaCodexContinuation
         var executable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Programs", "orca", "resources", "bin", "orca.exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("Orca CLI is unavailable.");
-        var start = new ProcessStartInfo(executable)
-        { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        // AI Vitals always targets this machine, even when launched inside a paired Orca terminal.
-        start.Environment.Remove("ORCA_PAIRING_CODE");
-        start.Environment.Remove("ORCA_ENVIRONMENT");
-        foreach (var argument in arguments) start.ArgumentList.Add(argument);
-        using var process = Process.Start(start) ?? throw new IOException("Orca CLI did not start.");
+        using var process = Process.Start(CliStartInfo(executable, arguments)) ?? throw new IOException("Orca CLI did not start.");
         try
         {
             var stdout = process.StandardOutput.ReadToEndAsync(token);
@@ -207,5 +202,21 @@ public sealed class OrcaCodexContinuation
             return document.RootElement.Clone();
         }
         finally { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+    }
+
+    internal static ProcessStartInfo CliStartInfo(string executable, IReadOnlyList<string> arguments)
+    {
+        // Orca writes UTF-8. A process without a console, such as the WPF app, would otherwise decode
+        // it with the ANSI code page and turn the composer prompt '›' into "â€º".
+        var start = new ProcessStartInfo(executable)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8
+        };
+        // AI Vitals always targets this machine, even when launched inside a paired Orca terminal.
+        start.Environment.Remove("ORCA_PAIRING_CODE");
+        start.Environment.Remove("ORCA_ENVIRONMENT");
+        foreach (var argument in arguments) start.ArgumentList.Add(argument);
+        return start;
     }
 }

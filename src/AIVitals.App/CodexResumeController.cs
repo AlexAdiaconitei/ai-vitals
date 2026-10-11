@@ -274,6 +274,8 @@ public sealed class CodexResumeController : IDisposable
                 _diagnostic(new(DateTimeOffset.UtcNow, CodexResumeDiagnosticEvent.QuotaRejected,
                     ThreadId: thread.ThreadId, BlockedTurnId: thread.BlockedTurnId,
                     CurrentQuotaCount: bands.Count(band => band.IsCurrent), QuotaCount: bands.Count));
+                _tracker.DeferForQuota(info, DateTimeOffset.UtcNow);
+                await SaveStateAsync();
                 ViewModel.Message = Text("CodexResumeMsgQuotaUnknown");
                 return;
             }
