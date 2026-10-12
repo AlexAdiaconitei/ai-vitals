@@ -319,10 +319,25 @@ public sealed class CodexResumeTrackerTests
         var thread = Thread("a");
         var tracker = Waiting(thread);
         tracker.ReportLaunch(thread, PausedThreadLaunchOutcome.OutcomeUnknown, AfterReset);
-        var another = Thread("a", AfterReset.AddMinutes(1), "another-turn");
-        var decision = tracker.Evaluate([another], Available(), true, NoneDismissed, AfterReset.AddMinutes(2));
+        var decision = tracker.Evaluate([thread], Available(), true, NoneDismissed, AfterReset.AddMinutes(2));
         Assert.Null(decision.Launch);
         Assert.False(Assert.Single(decision.Threads).Armed);
+    }
+
+    [Fact]
+    public void A_later_block_of_the_same_thread_resolves_an_ambiguous_send_and_is_continued()
+    {
+        // The unconfirmed prompt started a turn that hit the next limit. That new block must be
+        // continued after the following reset instead of staying disarmed forever.
+        var thread = Thread("a");
+        var tracker = Waiting(thread);
+        tracker.ReportLaunch(thread, PausedThreadLaunchOutcome.OutcomeUnknown, AfterReset);
+        var another = Thread("a", AfterReset.AddMinutes(1), "another-turn");
+        var decision = tracker.Evaluate([another], Available(), true, NoneDismissed, AfterReset.AddMinutes(2));
+        Assert.Equal(another, decision.Launch);
+        Assert.True(Assert.Single(decision.Threads).Armed);
+        Assert.Equal(PausedThreadPhase.Launched,
+            tracker.State.Entries.Single(entry => entry.BlockedTurnId == thread.BlockedTurnId).Phase);
     }
 
     [Fact]

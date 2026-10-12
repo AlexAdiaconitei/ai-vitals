@@ -31,6 +31,9 @@ public sealed record QuotaBandSnapshot(
 public static class QuotaBandProjection
 {
     private static readonly TimeSpan CurrentFor = TimeSpan.FromMinutes(5);
+    // Codex reports an unused window as starting at the server's "now". A local clock a few
+    // seconds behind would otherwise see that window as not yet started.
+    private static readonly TimeSpan ClockSkew = TimeSpan.FromMinutes(2);
 
     public static IReadOnlyList<QuotaBandSnapshot> Project(
         IEnumerable<UsageObservation> observations,
@@ -80,7 +83,7 @@ public static class QuotaBandProjection
         var duration = DurationOf(observation);
         var starts = observation.Window?.StartsAtUtc;
         var reset = observation.Window?.ResetsAtUtc;
-        var isActive = (starts is null || starts <= nowUtc) && (reset is null || reset > nowUtc);
+        var isActive = (starts is null || starts <= nowUtc + ClockSkew) && (reset is null || reset > nowUtc);
         var age = nowUtc - observation.ObservedAtUtc.ToUniversalTime();
         var isCurrent = isActive && age <= CurrentFor;
 
@@ -111,7 +114,7 @@ public static class QuotaBandProjection
             : QuotaSourceMetadata.NominalDuration(observation.Source);
 
     private static bool IsActive(UsageObservation observation, DateTimeOffset nowUtc) =>
-        (observation.Window?.StartsAtUtc is null || observation.Window.StartsAtUtc <= nowUtc) &&
+        (observation.Window?.StartsAtUtc is null || observation.Window.StartsAtUtc <= nowUtc + ClockSkew) &&
         (observation.Window?.ResetsAtUtc is null || observation.Window.ResetsAtUtc > nowUtc);
 
     private static bool IsCurrent(UsageObservation observation, DateTimeOffset nowUtc) =>

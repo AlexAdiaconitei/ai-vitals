@@ -79,10 +79,15 @@ public sealed class OrcaCodexContinuationTests : IDisposable
     public void Drafts_and_modals_are_not_overwritten(string preview, bool empty) =>
         Assert.Equal(empty, OrcaCodexContinuation.EmptyComposer(preview));
 
-    [Fact]
-    public async Task Original_terminal_is_used_and_only_a_new_backend_turn_confirms_resume()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("update-notice")]
+    [InlineData("unfinished-elsewhere")]
+    public async Task Original_terminal_is_used_and_only_a_new_backend_turn_confirms_resume(string? change)
     {
-        var fixture = CreateFixture();
+        // A stale Orca update notice does not hide an idle composer, and a turn running in the
+        // terminal is read from its rollout without a live status.
+        var fixture = CreateFixture(change);
         var result = await fixture.Adapter.TryContinueAsync(Thread, "continue", CancellationToken.None);
         Assert.Equal(OrcaCodexContinueResult.Continued, result);
         var send = Assert.Single(fixture.Calls, args => args[1] == "send");
@@ -93,6 +98,8 @@ public sealed class OrcaCodexContinuationTests : IDisposable
 
     [Theory]
     [InlineData("busy", OrcaCodexContinueResult.Held, "not-idle")]
+    [InlineData("update-modal", OrcaCodexContinueResult.Held, "composer-not-empty")]
+    [InlineData("update-draft", OrcaCodexContinueResult.Held, "not-idle")]
     [InlineData("draft", OrcaCodexContinueResult.Held, "composer-not-empty")]
     [InlineData("restarted", OrcaCodexContinueResult.Held, "terminal-changed")]
     [InlineData("quota", OrcaCodexContinueResult.QuotaUnavailable, "quota")]
@@ -132,16 +139,19 @@ public sealed class OrcaCodexContinuationTests : IDisposable
         File.WriteAllText(Path.Combine(_root, "agent-hooks", "last-status.json"), Status());
         var calls = new List<IReadOnlyList<string>>();
         var client = new Client(change);
+        var composer = change switch { "draft" => "› User draft", "update-modal" => "› 1. Update now", "update-draft" => "›", _ => "› Ask Codex to do anything" };
         Task<JsonElement> Run(IReadOnlyList<string> args, CancellationToken token)
         {
             calls.Add(args);
             return Task.FromResult(args[1] switch
             {
                 "list" => Listing(),
+                "wait" when change is "update-notice" or "update-modal" or "update-draft" =>
+                    Json(new { ok = true, result = new { wait = new { satisfied = false, blockedReason = "agent-update-prompt" } } }),
                 "wait" => Json(new { result = new { wait = new { satisfied = change != "busy" } } }),
                 "show" => Json(new { result = new { terminal = Terminal(incarnation: change == "restarted" ? "instance-b" : "instance-a",
-                    preview: change == "draft" ? "› User draft" : "› Ask Codex to do anything") } }),
-                "read" => Json(new { result = new { terminal = new { tail = new[] { change == "draft" ? "› User draft" : "› Ask Codex to do anything" } } } }),
+                    preview: composer) } }),
+                "read" => Json(new { result = new { terminal = new { tail = new[] { composer } } } }),
                 "send" when change == "lost-reply" => throw new IOException("Lost reply"),
                 "send" => Json(new { ok = true, result = new { accepted = true, stage = "input_accepted" } }),
                 _ => throw new InvalidOperationException()
@@ -173,7 +183,7 @@ public sealed class OrcaCodexContinuationTests : IDisposable
             Assert.Equal("thread/turns/list", method);
             TurnReads++;
             return Task.FromResult(Json(new { data = new[] { new { id = TurnReads == 1 ? "blocked-a" : "new-a",
-                status = TurnReads == 1 && change != "completed" ? "failed" : "completed",
+                status = TurnReads == 1 && change != "completed" ? "failed" : change == "unfinished-elsewhere" ? "interrupted" : "completed",
                 error = new { codexErrorInfo = "usageLimitExceeded" } } } }));
         }
         public async IAsyncEnumerable<CodexServerNotification> ReadNotificationsAsync(
