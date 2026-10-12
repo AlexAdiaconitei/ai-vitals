@@ -7,6 +7,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## Unreleased
 
+## 0.3.3 - 2026-10-12
+
+### Fixed
+
+- Tasks are continued when the five-hour window is unused after a reset. Codex reports that window as starting at the server's current second, so a local clock a few seconds behind saw it as not yet started and the fresh quota check rejected the start every five minutes.
+- A thread whose earlier continuation was sent but not confirmed is continued again when it hits the next limit. The new blocked turn proves the earlier prompt was consumed. Previously every later block of that thread stayed disarmed.
+- A prompt sent to an Orca terminal is confirmed by the new turn in the thread. The turn runs in the terminal, so the app's own read never reported it as in progress and the attempt was logged as an unknown outcome.
+- Orca terminals that Orca still marks with an old Codex update notice are continued when the composer shows its empty placeholder. Orca's wait command also exits with an error when the terminal is not idle; that is now read as a held attempt instead of a failure.
+
 ## 0.3.2 - 2026-10-10
 
 ### Fixed

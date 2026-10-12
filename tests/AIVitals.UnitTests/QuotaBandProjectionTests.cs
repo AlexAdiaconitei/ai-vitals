@@ -88,6 +88,19 @@ public sealed class QuotaBandProjectionTests
     }
 
     [Fact]
+    public void An_unused_window_reported_by_a_clock_slightly_ahead_is_current()
+    {
+        // Codex reports an unused five-hour window as starting at the server's current second.
+        var unused = Observation(0m, TimeSpan.FromHours(5), Now.AddHours(5).AddSeconds(2),
+            "codex:app-server:rate-limit:codex:primary");
+
+        var band = Assert.Single(QuotaBandProjection.Project([unused], Now));
+
+        Assert.True(band.IsActive);
+        Assert.True(band.IsCurrent);
+    }
+
+    [Fact]
     public void A_new_claude_observation_replaces_the_stale_value_as_current()
     {
         var stale = Observation(

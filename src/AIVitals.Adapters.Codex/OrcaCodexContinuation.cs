@@ -83,8 +83,12 @@ public sealed class OrcaCodexContinuation
         if (terminal is null) return Detail("not-owned", OrcaCodexContinueResult.NotOwned);
         var wait = await _run(["terminal", "wait", "--terminal", terminal.Handle, "--for", "tui-idle",
             "--timeout-ms", "1000", "--json"], cancellationToken).ConfigureAwait(false);
-        if (!wait.TryGetProperty("result", out var waitResult) || !waitResult.TryGetProperty("wait", out var waiting) ||
-            !True(waiting, "satisfied")) return Detail("not-idle", OrcaCodexContinueResult.Held);
+        if (!wait.TryGetProperty("result", out var waitResult) || !waitResult.TryGetProperty("wait", out var waiting))
+            return Detail("not-idle", OrcaCodexContinueResult.Held);
+        // Orca keeps an update notice it once saw in the output as a wait reason. The composer
+        // placeholder below and the blocked turn read later prove Codex is waiting for input.
+        var updateNotice = !True(waiting, "satisfied") && Text(waiting, "blockedReason") == "agent-update-prompt";
+        if (!True(waiting, "satisfied") && !updateNotice) return Detail("not-idle", OrcaCodexContinueResult.Held);
         var shown = await _run(["terminal", "show", "--terminal", terminal.Handle, "--json"], cancellationToken).ConfigureAwait(false);
         if (!shown.TryGetProperty("result", out var showResult) || !showResult.TryGetProperty("terminal", out var current) ||
             !EligibleTerminal(current) || Text(current, "incarnationId") != terminal.IncarnationId ||
@@ -97,6 +101,7 @@ public sealed class OrcaCodexContinuation
         var preview = string.Join('\n', tail.EnumerateArray().Where(line => line.ValueKind == JsonValueKind.String).Select(line => line.GetString()));
         if (!EmptyComposer(preview))
             return Detail(ComposerLine(preview) is null ? "composer-missing" : "composer-not-empty", OrcaCodexContinueResult.Held);
+        if (updateNotice && ComposerLine(preview) != Placeholder) return Detail("not-idle", OrcaCodexContinueResult.Held);
 
         await using var client = (_clientFactory ?? new CodexAppServerClientFactory(codexHome: thread.HomeDirectory)).Create();
         await client.StartAsync(cancellationToken).ConfigureAwait(false);
@@ -134,12 +139,16 @@ public sealed class OrcaCodexContinuation
         return result;
     }
 
+    // This app-server only reads the rollout the Orca terminal writes. A turn running there has no
+    // live status here, so any newer turn proves the prompt was submitted.
     internal static bool StartedNewTurn(JsonElement turns, string blockedTurnId) =>
         turns.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array &&
         data.EnumerateArray().FirstOrDefault() is { ValueKind: JsonValueKind.Object } last &&
-        Text(last, "id") is { Length: > 0 } id && id != blockedTurnId && Text(last, "status") is "inProgress" or "completed";
+        Text(last, "id") is { Length: > 0 } id && id != blockedTurnId;
 
-    internal static bool EmptyComposer(string? preview) => ComposerLine(preview) is "›" or "› Ask Codex to do anything";
+    private const string Placeholder = "› Ask Codex to do anything";
+
+    internal static bool EmptyComposer(string? preview) => ComposerLine(preview) is "›" or Placeholder;
 
     private static string? ComposerLine(string? preview) => preview?.Split('\n')
         .Select(line => line.Trim()).LastOrDefault(line => line.StartsWith('›'));
@@ -197,11 +206,19 @@ public sealed class OrcaCodexContinuation
             await process.WaitForExitAsync(token).ConfigureAwait(false);
             var output = await stdout.ConfigureAwait(false);
             await stderr.ConfigureAwait(false);
-            if (process.ExitCode != 0) throw new IOException("Orca CLI rejected the operation.");
-            using var document = JsonDocument.Parse(output);
+            // `terminal wait` exits with 1 when its condition is unmet but still prints the result.
+            using var document = process.ExitCode == 0 ? JsonDocument.Parse(output) : TryParse(output);
+            if (document is null || process.ExitCode != 0 && !True(document.RootElement, "ok"))
+                throw new IOException("Orca CLI rejected the operation.");
             return document.RootElement.Clone();
         }
         finally { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+    }
+
+    private static JsonDocument? TryParse(string output)
+    {
+        try { return JsonDocument.Parse(output); }
+        catch (JsonException) { return null; }
     }
 
     internal static ProcessStartInfo CliStartInfo(string executable, IReadOnlyList<string> arguments)
