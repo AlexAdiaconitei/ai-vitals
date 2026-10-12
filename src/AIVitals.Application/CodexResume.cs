@@ -106,6 +106,11 @@ public sealed class CodexResumeTracker
             {
                 entry = new(thread.ThreadId, thread.BlockedTurnId, thread.BlockedAtUtc, [], UserDisarmed: false);
             }
+            // A later blocked turn proves an ambiguous earlier send reached the thread: that send's
+            // prompt was consumed by a turn, so it cannot be submitted a second time.
+            foreach (var old in _entries.Values.Where(old => old.ThreadId == thread.ThreadId &&
+                old.BlockedAtUtc < thread.BlockedAtUtc && old.Phase is PausedThreadPhase.OutcomeUnknown).ToArray())
+                _entries[old.BlockedTurnId] = old with { Phase = PausedThreadPhase.Launched, Armed = false };
             var uncertainThread = _entries.Values.Any(old => old.ThreadId == thread.ThreadId &&
                 old.Phase is PausedThreadPhase.Starting or PausedThreadPhase.OutcomeUnknown);
             var terminal = entry.Phase is PausedThreadPhase.Starting or PausedThreadPhase.Launched or
